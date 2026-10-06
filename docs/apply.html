@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Apply | Recovery Forward Foundation</title>
+
+  <meta
+    name="description"
+    content="Recovery Forward Foundation assistance application."
+  >
+
+  <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    .application-page {
+      min-height: 100vh;
+      background:
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(139,195,74,.10),
+          transparent 35%
+        ),
+        #07100d;
+    }
+
+    .application-shell {
+      width: min(900px, 92%);
+      margin: auto;
+      padding: 70px 0 110px;
+    }
+
+    .back-link {
+      color: #8bc34a;
+      text-decoration: none;
+      font-size: .8rem;
+      font-weight: 800;
+    }
+
+    .application-heading {
+      margin: 35px 0 40px;
+    }
+
+    .application-heading h1 {
+      color: #f5f8f6;
+      font-size: clamp(2.5rem, 7vw, 5rem);
+      line-height: .95;
+    }
+
+    .application-heading h1 span {
+      color: #a4d65e;
+    }
+
+    .application-heading > p:last-child {
+      max-width: 680px;
+      color: #8c9a92;
+      margin-top: 20px;
+    }
+
+    .privacy-banner {
+      padding: 20px;
+      margin-bottom: 25px;
+      background: rgba(139,195,74,.07);
+      border: 1px solid rgba(139,195,74,.25);
+      border-radius: 7px;
+      color: #bdc9c2;
+    }
+
+    .privacy-banner strong {
+      color: #a4d65e;
+    }
+
+    .application-form {
+      background: #101b17;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0,0,0,.30);
+    }
+
+    .form-section {
+      padding: 35px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    .form-section:last-child {
+      border-bottom: 0;
+    }
+
+    .form-step {
+      color: #8bc34a;
+      font-size: .68rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+    }
+
+    .form-section h2 {
+      color: #f5f8f6;
+      margin: 8px 0 8px;
+      font-size: 1.45rem;
+    }
+
+    .form-help {
+      color: #7f8d85;
+      font-size: .85rem;
+      margin-bottom: 24px;
+    }
+
+    .field {
+      margin-top: 22px;
+    }
+
+    .field label,
+    .field-title {
+      display: block;
+      color: #d7dfda;
+      font-size: .8rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 13px;
+      background: #09120e;
+      color: #e4ebe7;
+      border: 1px solid #34453c;
+      border-radius: 5px;
+      font: inherit;
+      outline: none;
+    }
+
+    .field select:focus,
+    .field textarea:focus {
+      border-color: #8bc34a;
+      box-shadow: 0 0 0 3px rgba(139,195,74,.08);
+    }
+
+    .field textarea {
+      min-height: 115px;
+      resize: vertical;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .choice {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 13px;
+      background: #0b1511;
+      border: 1px solid #2d3c34;
+      border-radius: 5px;
+      color: #b8c3bd;
+      cursor: pointer;
+    }
+
+    .choice:hover {
+      border-color: #8bc34a;
+    }
+
+    .choice input {
+      accent-color: #8bc34a;
+    }
+
+    .agreement {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      color: #9eaba4;
+      font-size: .85rem;
+    }
+
+    .agreement input {
+      margin-top: 4px;
+      accent-color: #8bc34a;
+    }
+
+    .submit-button {
+      width: 100%;
+      margin-top: 25px;
+      padding: 16px;
+      border: 0;
+      border-radius: 5px;
+      background: #8bc34a;
+      color: #07100d;
+      cursor: pointer;
+      font-weight: 950;
+      letter-spacing: .7px;
+    }
+
+    .submit-button:hover {
+      background: #a4d65e;
+    }
+
+    .demo-notice {
+      margin-top: 15px;
+      color: #738179;
+      text-align: center;
+      font-size: .75rem;
+    }
+
+    .result {
+      display: none;
+      padding: 55px 35px;
+      text-align: center;
+    }
+
+    .result.visible {
+      display: block;
+    }
+
+    .result-icon {
+      width: 70px;
+      height: 70px;
+      margin: auto;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(139,195,74,.12);
+      border: 1px solid #8bc34a;
+      color: #a4d65e;
+      font-size: 2rem;
+    }
+
+    .result h2 {
+      color: #f5f8f6;
+      margin-top: 20px;
+      font-size: 2rem;
+    }
+
+    .result > p {
+      color: #8c9a92;
+      max-width: 600px;
+      margin: 12px auto;
+    }
+
+    .generated-id {
+      margin: 30px auto;
+      max-width: 500px;
+      padding: 20px;
+      background: #07100d;
+      border: 1px solid #8bc34a;
+      border-radius: 6px;
+      color: #a4d65e;
+      font-family: Consolas, monospace;
+      font-size: clamp(1rem, 4vw, 1.5rem);
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+
+    .warning-box {
+      max-width: 600px;
+      margin: 25px auto;
+      padding: 18px;
+      background: rgba(244,166,42,.07);
+      border: 1px solid rgba(244,166,42,.35);
+      border-radius: 6px;
+      color: #d9b979;
+      font-size: .85rem;
+    }
+
+    @media (max-width: 650px) {
+      .choice-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-section {
+        padding: 25px 20px;
+      }
+    }
+  </style>
+</head>
+
+<body class="application-page">
+
+<header class="site-header">
+
+  <a class="brand" href="index.html">
+    <span class="brand-mark">RFF</span>
+
+    <span class="brand-name">
+      <strong>RECOVERY FORWARD</strong>
+      <small>FOUNDATION</small>
+    </span>
+  </a>
+
+  <a class="header-apply" href="index.html">
+    ← Home
+  </a>
+
+</header>
+
+
+<main class="application-shell">
+
+  <a class="back-link" href="index.html">
+    ← BACK TO RECOVERY FORWARD
+  </a>
+
+  <div class="application-heading">
+
+    <p class="section-kicker">
+      RECOVERY ASSISTANCE
+    </p>
+
+    <h1>
+      TAKE YOUR NEXT STEP
+      <span>FORWARD.</span>
+    </h1>
+
+    <p>
+      Tell us about your recovery journey, the support you need
+      and what moving forward looks like for you.
+    </p>
+
+  </div>
+
+
+  <div class="privacy-banner">
+
+    <strong>Privacy first.</strong>
+
+    This application does not ask for your name,
+    Social Security number, street address or wallet private keys.
+
+    Never provide passwords, seed phrases or private keys
+    anywhere in this application.
+
+  </div>
+
+
+  <form id="application-form" class="application-form">
+
+    <div id="form-content">
+
+      <section class="form-section">
+
+        <p class="form-step">01 — RECOVERY</p>
+
+        <h2>Your Recovery Journey</h2>
+
+        <p class="form-help">
+          Give us enough information to understand where you are
+          in your recovery journey without identifying yourself.
+        </p>
+
+        <div class="field">
+
+          <label for="recovery-stage">
+            Where are you currently in your recovery journey?
+          </label>
+
+          <select id="recovery-stage" required>
+
+            <option value="">
+              Select one
+            </option>
+
+            <option>
+              Currently in treatment
+            </option>
+
+            <option>
+              Less than 3 months in recovery
+            </option>
+
+            <option>
+              3–6 months in recovery
+            </option>
+
+            <option>
+              6–12 months in recovery
+            </option>
+
+            <option>
+              More than 1 year in recovery
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="recovery-support">
+            What recovery support are you currently involved with?
+          </label>
+
+          <textarea
+            id="recovery-support"
+            maxlength="1000"
+            placeholder="For example: treatment program, recovery meetings, peer support, counseling, sober living, community support..."
+            required
+          ></textarea>
+
+        </div>
+
+      </section>
+
+
+      <section class="form-section">
+
+        <p class="form-step">02 — CURRENT NEEDS</p>
+
+        <h2>What would help you move forward?</h2>
+
+        <p class="form-help">
+          Select the areas where assistance could make
+          the biggest difference.
+        </p>
+
+        <div class="choice-grid">
+
+          <label class="choice">
+            <input type="checkbox" name="needs" value="employment">
+            Employment
+          </label>
+
+          <label class="choice">
+            <input type="checkbox" name="needs" value="education">
+            Education
+          </label>
+
+          <label class="choice">
+            <input type="checkbox" name="needs" value="transportation">
+            Transportation
+          </label>
+
+          <label class="choice">
+            <input type="checkbox" name="needs" value="housing">
+            Housing Stability
+          </label>
+
+          <label class="choice">
+            <input type="checkbox" name="needs" value="recovery-support">
+            Recovery Support
+          </label>
+
+          <label class="choice">
+            <input type="checkbox" name="needs" value="other">
+            Other Essential Need
+          </label>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="need-description">
+            Tell us how assistance would help.
+          </label>
+
+          <textarea
+            id="need-description"
+            maxlength="1500"
+            placeholder="Describe the challenge you're facing and how assistance could help you continue moving forward."
+            required
+          ></textarea>
+
+        </div>
+
+      </section>
+
+
+      <section class="form-section">
+
+        <p class="form-step">03 — YOUR GOALS</p>
+
+        <h2>What are you working toward?</h2>
+
+        <div class="field">
+
+          <label for="goals">
+            Describe one or two goals you're currently working toward.
+          </label>
+
+          <textarea
+            id="goals"
+            maxlength="1500"
+            placeholder="Employment, education, stable housing, transportation, rebuilding relationships, continued recovery..."
+            required
+          ></textarea>
+
+        </div>
+
+      </section>
+
+
+      <section class="form-section">
+
+        <p class="form-step">04 — CONFIRM</p>
+
+        <h2>Before continuing</h2>
+
+        <label class="agreement">
+
+          <input
+            id="confirmation"
+            type="checkbox"
+            required
+          >
+
+          <span>
+            I confirm that the information I provided is accurate
+            to the best of my knowledge. I understand that generating
+            an RCGI ID on this demo page does not currently constitute
+            submission or approval of a Recovery Forward Foundation grant.
+          </span>
+
+        </label>
+
+        <button class="submit-button" type="submit">
+          GENERATE DEMO RCGI ID →
+        </button>
+
+        <p class="demo-notice">
+          Demo mode — application data is not transmitted or stored.
+        </p>
+
+      </section>
+
+    </div>
+
+
+    <section id="application-result" class="result">
+
+      <div class="result-icon">✓</div>
+
+      <h2>Your Demo RCGI ID</h2>
+
+      <p>
+        Your reference ID has been generated locally in your browser.
+      </p>
+
+      <div id="generated-id" class="generated-id"></div>
+
+      <div class="warning-box">
+
+        <strong>Save this ID if you're testing the portal.</strong>
+
+        This is currently a demonstration ID only.
+        The application has not been sent to Recovery Forward Foundation
+        and has not been entered into the Recovery Grant Registry.
+
+      </div>
+
+      <a class="button button-primary" href="index.html">
+        RETURN HOME
+      </a>
+
+    </section>
+
+  </form>
+
+</main>
+
+
+<script>
+  const form = document.getElementById("application-form");
+  const formContent = document.getElementById("form-content");
+  const result = document.getElementById("application-result");
+  const generatedId = document.getElementById("generated-id");
+
+  function createRcgiId() {
+    const bytes = new Uint8Array(6);
+    crypto.getRandomValues(bytes);
+
+    const hex = Array.from(
+      bytes,
+      byte => byte.toString(16).padStart(2, "0")
+    ).join("");
+
+    return `RCGI-${hex}`;
+  }
+
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+
+    const selectedNeeds =
+      document.querySelectorAll(
+        'input[name="needs"]:checked'
+      );
+
+    if (selectedNeeds.length === 0) {
+      alert(
+        "Please select at least one area where assistance could help."
+      );
+
+      return;
+    }
+
+    const id = createRcgiId();
+
+    generatedId.textContent = id;
+
+    formContent.style.display = "none";
+    result.classList.add("visible");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  });
+</script>
+
+</body>
+</html>
