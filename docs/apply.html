@@ -509,21 +509,22 @@
           >
 
           <span>
-            I confirm that the information I provided is accurate
-            to the best of my knowledge. I understand that generating
-            an RCGI ID on this demo page does not currently constitute
-            submission or approval of a Recovery Forward Foundation grant.
-          </span>
+  I confirm that the information I provided is accurate
+  to the best of my knowledge. I understand that creating
+  an RCGI ID registers an anonymous application reference
+  and does not guarantee assistance, eligibility or approval.
+</span>
 
         </label>
 
         <button class="submit-button" type="submit">
-          GENERATE DEMO RCGI ID →
+          CREATE RCGI ID →
         </button>
 
         <p class="demo-notice">
-          Demo mode — application data is not transmitted or stored.
-        </p>
+  Your recovery responses stay in this browser and are not sent to the public registry.
+  Only an anonymous RCGI reference is created.
+</p>
 
       </section>
 
@@ -534,7 +535,7 @@
 
       <div class="result-icon">✓</div>
 
-      <h2>Your Demo RCGI ID</h2>
+      <h2>Your RCGI ID</h2>
 
       <p>
         Your reference ID has been generated locally in your browser.
@@ -544,13 +545,12 @@
 
       <div class="warning-box">
 
-        <strong>Save this ID if you're testing the portal.</strong>
+  <strong>Save your RCGI ID.</strong>
 
-        This is currently a demonstration ID only.
-        The application has not been sent to Recovery Forward Foundation
-        and has not been entered into the Recovery Grant Registry.
+  You will need this anonymous reference ID to check your application status.
+  Creating an RCGI ID does not guarantee eligibility, funding or approval.
 
-      </div>
+</div>
 
       <a class="button button-primary" href="index.html">
         RETURN HOME
@@ -568,20 +568,9 @@
   const formContent = document.getElementById("form-content");
   const result = document.getElementById("application-result");
   const generatedId = document.getElementById("generated-id");
+  const submitButton = form.querySelector(".submit-button");
 
-  function createRcgiId() {
-    const bytes = new Uint8Array(6);
-    crypto.getRandomValues(bytes);
-
-    const hex = Array.from(
-      bytes,
-      byte => byte.toString(16).padStart(2, "0")
-    ).join("");
-
-    return `RCGI-${hex}`;
-  }
-
-  form.addEventListener("submit", event => {
+  form.addEventListener("submit", async event => {
     event.preventDefault();
 
     const selectedNeeds =
@@ -593,21 +582,50 @@
       alert(
         "Please select at least one area where assistance could help."
       );
-
       return;
     }
 
-    const id = createRcgiId();
+    submitButton.disabled = true;
+    submitButton.textContent = "CREATING YOUR RCGI ID...";
 
-    generatedId.textContent = id;
+    try {
+      const response = await fetch(
+        "https://api.recoveryforwardfoundation.org/applications",
+        {
+          method: "POST"
+        }
+      );
 
-    formContent.style.display = "none";
-    result.classList.add("visible");
+      if (response.status === 429) {
+        alert(
+          "Too many application attempts were made from this connection. Please try again later."
+        );
+        return;
+      }
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
+      if (!response.ok) {
+        throw new Error("Application request failed");
+      }
+
+      const application = await response.json();
+
+      generatedId.textContent = application.participantId;
+
+      formContent.style.display = "none";
+      result.classList.add("visible");
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    } catch {
+      alert(
+        "We could not create your RCGI ID right now. Please try again later."
+      );
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = "CREATE RCGI ID →";
+    }
   });
 </script>
 
