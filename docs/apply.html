@@ -559,6 +559,14 @@
       </p>
 
       <div id="generated-id" class="generated-id"></div>
+<button
+  id="copy-rcgi-button"
+  class="submit-button"
+  type="button"
+  style="max-width: 300px; display: block; margin: 0 auto 25px;"
+>
+  📋 COPY MY RCGI ID
+</button>
 
       <div class="warning-box">
   <h3>⚠️ IMPORTANT — DO NOT LOSE YOUR RCGI ID!</h3>
@@ -597,6 +605,21 @@
   const formContent = document.getElementById("form-content");
   const result = document.getElementById("application-result");
   const generatedId = document.getElementById("generated-id");
+const copyButton = document.getElementById("copy-rcgi-button");
+
+copyButton.addEventListener("click", async () => {
+  const id = generatedId.textContent.trim();
+
+  if (!/^RCGI-[0-9a-f]{12}$/.test(id)) return;
+
+  try {
+    await navigator.clipboard.writeText(id);
+
+    copyButton.textContent = "✓ COPIED!";
+  } catch {
+    copyButton.textContent = "COPY FAILED — PLEASE SELECT YOUR ID";
+  }
+});
   const submitButton = form.querySelector(".submit-button");
 
   form.addEventListener("submit", async event => {
