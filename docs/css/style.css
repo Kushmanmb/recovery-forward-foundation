@@ -762,3 +762,21 @@ footer > div:last-child {
     text-align: left;
   }
 }
+
+/* Official Recovery Forward Foundation logo */
+
+.brand-logo {
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: #ffffff;
+  padding: 2px;
+}
+
+@media (max-width: 700px) {
+  .brand-logo {
+    width: 48px;
+    height: 48px;
+  }
+}
