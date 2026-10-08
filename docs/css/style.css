@@ -45,7 +45,7 @@ a {
   padding: 0 5%;
   display: flex;
   align-items: center;
-  gap: 38px;
+  gap: 12px;
   background: rgba(5, 12, 9, .97);
   border-bottom: 1px solid var(--border);
   position: sticky;
@@ -99,7 +99,10 @@ a {
 .main-nav {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 14px;
+min-width: 0;
+flex: 1;
+overflow-x: auto;
 }
 
 .main-nav a {
@@ -651,9 +654,18 @@ footer > div:last-child {
 /* RESPONSIVE */
 
 @media (max-width: 1050px) {
-
   .main-nav {
-    display: none;
+    display: flex;
+    gap: 18px;
+    overflow-x: auto;
+    min-width: 0;
+    flex: 1;
+    scrollbar-width: thin;
+  }
+
+  .main-nav a {
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   .process {
@@ -693,6 +705,8 @@ footer > div:last-child {
     border-right: 0 !important;
   }
 }
+
+
 
 
 @media (max-width: 700px) {
