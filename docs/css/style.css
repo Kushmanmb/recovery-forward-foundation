@@ -1125,3 +1125,48 @@ body.programs-page .program-journey-image {
   border-radius: 50%;
   border: 1px solid #a9cf72;
 }
+/* PRAYER OF THE DAY — LAYOUT FIX */
+
+.daily-prayer-section {
+  width: min(760px, 92%);
+  margin: 50px auto;
+}
+
+.daily-prayer-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 35px 25px;
+  text-align: center;
+}
+
+.daily-prayer-card .daily-prayer-image {
+  display: block;
+  width: 96px !important;
+  height: 96px !important;
+  max-width: 96px !important;
+  min-width: 0 !important;
+  flex: none;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #a9cf72;
+  margin: 12px auto 18px;
+}
+
+.daily-prayer-card #daily-prayer-text {
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto 25px;
+  padding: 0;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.8;
+  overflow-wrap: break-word;
+}
+
+.daily-prayer-card h2 {
+  margin: 8px 0 15px;
+}
+
+.daily-prayer-card #daily-prayer-date {
+  margin-bottom: 25px;
+}
