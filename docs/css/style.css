@@ -937,3 +937,14 @@ footer > div:last-child {
     border-radius: 14px;
     object-fit: contain;
 }
+/* Keep numbered lists inside expandable sections */
+details ol {
+    list-style-position: inside;
+    padding-left: 0;
+    margin-left: 0;
+}
+
+details ol li {
+    padding-left: 0;
+    margin-bottom: 12px;
+}
