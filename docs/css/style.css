@@ -1121,7 +1121,7 @@ body.programs-page .program-journey-image {
   max-width: 32px !important;
   min-width: 0 !important;
   object-fit: cover;
-  margin: 0 auto 8px;
+  margin: 0 auto 10px;
   border-radius: 50%;
   border: 1px solid #a9cf72;
 }
