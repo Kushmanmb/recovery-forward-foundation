@@ -918,3 +918,12 @@ footer > div:last-child {
 .nav-dropdown:not([open]) .dropdown-links {
   display: none;
 }
+/* Keep numbered lists inside their cards */
+.card ol {
+    padding-left: 32px;
+    margin-left: 0;
+}
+
+.card ol li {
+    padding-left: 4px;
+}
