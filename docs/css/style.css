@@ -1035,3 +1035,59 @@ body.programs-page .program-journey-image {
     padding: 22px;
   }
 }
+/* PRAYER OF THE DAY */
+
+.daily-prayer-section {
+  width: min(900px, 90%);
+  margin: 65px auto;
+}
+
+.daily-prayer-card {
+  padding: 45px 35px;
+  text-align: center;
+  background: linear-gradient(
+    145deg,
+    #172b22,
+    #101c17
+  );
+  border: 1px solid rgba(180, 210, 125, 0.35);
+  border-top: 4px solid #a9cf72;
+  border-radius: 18px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+}
+
+.daily-prayer-card h2 {
+  color: #ffffff;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  margin: 15px 0;
+}
+
+#daily-prayer-date {
+  color: #b6cb9b;
+  font-size: 0.9rem;
+  margin-bottom: 25px;
+}
+
+#daily-prayer-text {
+  color: #f0f4ed;
+  font-size: clamp(1.05rem, 2.5vw, 1.3rem);
+  line-height: 1.9;
+  font-style: italic;
+  max-width: 680px;
+  margin: 0 auto 30px;
+  padding: 0;
+  border: 0;
+}
+
+.daily-prayer-footer {
+  color: #a9cf72;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 600px) {
+  .daily-prayer-card {
+    padding: 30px 20px;
+  }
+}
