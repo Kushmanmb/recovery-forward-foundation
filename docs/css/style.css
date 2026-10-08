@@ -1113,12 +1113,12 @@ body.programs-page .program-journey-image {
   border-radius: 50%;
   border: 3px solid #a9cf72;
 }
-/* EXTRA SMALL JESUS PRAYING ICON */
+/* JESUS PRAYING ICON — 32x32 */
 
 .daily-prayer-card .daily-prayer-image {
-  width: 16px !important;
-  height: 16px !important;
-  max-width: 16px !important;
+  width: 32px !important;
+  height: 32px !important;
+  max-width: 32px !important;
   min-width: 0 !important;
   object-fit: cover;
   margin: 0 auto 8px;
