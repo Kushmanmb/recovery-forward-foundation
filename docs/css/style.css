@@ -927,3 +927,13 @@ footer > div:last-child {
 .card ol li {
     padding-left: 4px;
 }
+/* Recovery Program Journey Image */
+.program-journey-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    margin: 20px auto;
+    border-radius: 14px;
+    object-fit: contain;
+}
