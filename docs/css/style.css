@@ -914,3 +914,7 @@ footer > div:last-child {
     width: min(230px, 80vw);
   }
 }
+/* Show dropdown links only when the menu is open */
+.nav-dropdown:not([open]) .dropdown-links {
+  display: none;
+}
