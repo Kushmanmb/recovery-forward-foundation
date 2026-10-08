@@ -1100,3 +1100,16 @@ body.programs-page .program-journey-image {
   border-radius: 18px;
   object-fit: cover;
 }
+/* SMALL JESUS PRAYING PORTRAIT */
+
+.daily-prayer-card .daily-prayer-image {
+  display: block;
+  width: 140px;
+  max-width: 100%;
+  height: 140px;
+  object-fit: cover;
+  object-position: center;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  border: 3px solid #a9cf72;
+}
