@@ -1091,3 +1091,12 @@ body.programs-page .program-journey-image {
     padding: 30px 20px;
   }
 }
+.daily-prayer-image {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  margin: 0 auto 24px;
+  border-radius: 18px;
+  object-fit: cover;
+}
