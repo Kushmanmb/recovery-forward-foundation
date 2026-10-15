@@ -1,0 +1,8 @@
+{
+  "name": "rff-control-center-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Domain core for the President Control Center. Library only: no server, no deployment.",
+  "type": "module",
+  "scripts": { "test": "node --test test/core.test.js" }
+}
