@@ -284,19 +284,19 @@ async function handleApi(request, env, identity, url) {
     return createSession(request, env, identity);
   }
 
-  const member = await currentMember(request, env.DB, identity);
-  if (!member) return json({ error: "authentication_required" }, 401);
-
   if (url.pathname === "/api/session" && request.method === "DELETE") {
     if (!sameOrigin(request)) return json({ error: "forbidden" }, 403);
     const token = sessionToken(request);
     if (token) {
-      await env.DB.prepare("UPDATE sessions SET revoked_at = ? WHERE session_hash = ? AND revoked_at IS NULL")
-        .bind(Date.now(), await digest(token)).run();
+      await env.DB.prepare("UPDATE sessions SET revoked_at = ? WHERE session_hash = ? AND member_email = ? AND revoked_at IS NULL")
+        .bind(Date.now(), await digest(token), identity.email).run();
     }
-    await audit(env.DB, member.email, "session_revoked");
+    await audit(env.DB, identity.email, "session_revoked");
     return json({ ok: true }, 200, { "set-cookie": sessionCookie("", 0) });
   }
+
+  const member = await currentMember(request, env.DB, identity);
+  if (!member) return json({ error: "authentication_required" }, 401);
 
   if (url.pathname === "/api/me" && request.method === "GET") return json(await profile(member));
 

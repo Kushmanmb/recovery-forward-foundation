@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
 import { handleRequest, verifyAccessAssertion } from "../src/worker.js";
 
 let domainNumber = 0;
@@ -59,6 +61,24 @@ function mockDb(role, status = "active") {
   };
 }
 
+function databaseDb() {
+  const database = new DatabaseSync(":memory:");
+  database.exec(readFileSync(new URL("../migrations/0001_initial.sql", import.meta.url), "utf8"));
+  return {
+    database,
+    prepare(sql) {
+      const statement = database.prepare(sql);
+      let values = [];
+      return {
+        bind(...args) { values = args; return this; },
+        first() { return statement.get(...values) || null; },
+        all() { return { results: statement.all(...values) }; },
+        run() { return statement.run(...values); },
+      };
+    },
+  };
+}
+
 function bootstrapDb() {
   let member = null;
   const sessions = new Map();
@@ -107,6 +127,18 @@ function requestEnv(identity, extra = {}) {
     PRESIDENT_EMAIL: "president@example.org",
     ...extra,
   };
+}
+
+async function sessionRequest(identity, env, path, { method = "GET", cookie, body } = {}) {
+  const headers = { "cf-access-jwt-assertion": identity.token };
+  if (cookie) headers.cookie = cookie;
+  if (method !== "GET") headers.origin = "https://admin.example.org";
+  if (body !== undefined) headers["content-type"] = "application/json";
+  return withIdentity(identity, () => handleRequest(new Request(`https://admin.example.org${path}`, {
+    method,
+    headers,
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+  }), env));
 }
 
 async function withIdentity(identity, callback) {
@@ -244,6 +276,71 @@ test("pending members cannot access administrative APIs or claim role permission
       permissions: [],
     });
   });
+});
+
+test("database-backed sessions enforce issuance, identity, expiry, revocation, and suspension", async () => {
+  const identity = await signedIdentity("member@example.org");
+  const otherIdentity = await signedIdentity("other@example.org");
+  const DB = databaseDb();
+  const env = requestEnv(identity, { DB });
+  DB.database.prepare("INSERT INTO members (email, role, status, created_at) VALUES (?, ?, ?, ?)")
+    .run("member@example.org", "Treasurer", "active", Date.now());
+
+  try {
+    const nonexistentCookie = `__Host-rff_session=${"A".repeat(43)}`;
+    assert.equal((await sessionRequest(identity, env, "/api/me", { cookie: nonexistentCookie })).status, 401);
+
+    const login = await sessionRequest(identity, env, "/api/session", { method: "POST" });
+    assert.equal(login.status, 200);
+    const cookie = login.headers.get("set-cookie").split(";")[0];
+    const token = cookie.split("=")[1];
+    const session = DB.database.prepare("SELECT session_hash, member_email, expires_at FROM sessions").get();
+    assert.equal(session.member_email, "member@example.org");
+    assert.match(session.session_hash, /^[a-f0-9]{64}$/);
+    assert.notEqual(session.session_hash, token);
+    assert.equal((await sessionRequest(identity, env, "/api/me", { cookie })).status, 200);
+    assert.equal((await sessionRequest(otherIdentity, requestEnv(otherIdentity, { DB }), "/api/me", { cookie })).status, 401);
+
+    DB.database.prepare("UPDATE sessions SET expires_at = 0 WHERE session_hash = ?").run(session.session_hash);
+    assert.equal((await sessionRequest(identity, env, "/api/me", { cookie })).status, 401);
+
+    const secondLogin = await sessionRequest(identity, env, "/api/session", { method: "POST" });
+    assert.equal(secondLogin.status, 200);
+    const secondCookie = secondLogin.headers.get("set-cookie").split(";")[0];
+    const logout = await sessionRequest(identity, env, "/api/session", { method: "DELETE", cookie: secondCookie });
+    assert.equal(logout.status, 200);
+    assert.match(logout.headers.get("set-cookie"), /Max-Age=0/);
+    const secondSession = DB.database.prepare("SELECT session_hash, revoked_at FROM sessions ORDER BY rowid DESC LIMIT 1").get();
+    assert.notEqual(secondSession.revoked_at, null);
+    assert.equal((await sessionRequest(identity, env, "/api/me", { cookie: secondCookie })).status, 401);
+
+    const thirdLogin = await sessionRequest(identity, env, "/api/session", { method: "POST" });
+    const thirdCookie = thirdLogin.headers.get("set-cookie").split(";")[0];
+    DB.database.prepare("UPDATE members SET status = 'suspended' WHERE email = ?").run("member@example.org");
+    assert.equal((await sessionRequest(identity, env, "/api/me", { cookie: thirdCookie })).status, 401);
+    assert.equal((await sessionRequest(identity, env, "/api/session", { method: "DELETE", cookie: thirdCookie })).status, 200);
+    assert.notEqual(DB.database.prepare("SELECT revoked_at FROM sessions ORDER BY rowid DESC LIMIT 1").get().revoked_at, null);
+  } finally {
+    DB.database.close();
+  }
+});
+
+test("database-backed pending President sessions cannot access administrative endpoints", async () => {
+  const identity = await signedIdentity("president@example.org");
+  const DB = databaseDb();
+  const env = requestEnv(identity, { DB });
+
+  try {
+    const login = await sessionRequest(identity, env, "/api/session", { method: "POST" });
+    assert.equal(login.status, 200);
+    assert.equal((await login.json()).status, "pending");
+    const cookie = login.headers.get("set-cookie").split(";")[0];
+    for (const path of ["/api/audit", "/api/registry/summary", "/api/unknown"]) {
+      assert.equal((await sessionRequest(identity, env, path, { cookie })).status, 403, path);
+    }
+  } finally {
+    DB.database.close();
+  }
 });
 
 test("only the configured President can bootstrap and activate the first account", async () => {

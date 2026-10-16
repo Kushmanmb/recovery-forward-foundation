@@ -3,6 +3,7 @@
   var nav = document.getElementById("nav");
   var current = "overview";
   var member = null;
+  var renderVersion = 0;
 
   function esc(value) {
     var element = document.createElement("span");
@@ -69,16 +70,20 @@
 
   async function render() {
     if (!member || member.setupRequired) return;
+    var requestedSection = current;
+    var version = ++renderVersion;
     try {
-      if (current === "security") return renderSecurity();
+      if (requestedSection === "security") return renderSecurity();
       var response = await api("/api/registry/summary");
+      if (version !== renderVersion || !member || current !== requestedSection) return;
       var counts = response.summary.statusCounts;
       var summary = { pending: counts.pending, verified: counts.verified, closed: counts.closed };
-      if (current === "registry") renderRegistry(summary);
+      if (requestedSection === "registry") renderRegistry(summary);
       else renderOverview(summary);
     } catch (error) {
+      if (version !== renderVersion || !member || current !== requestedSection) return;
       if (error.message === "authentication_required") return showError(error.message);
-      if (current === "registry") return renderRegistry(null);
+      if (requestedSection === "registry") return renderRegistry(null);
       renderOverview(null);
     }
   }
@@ -110,10 +115,12 @@
   });
 
   document.getElementById("logout").addEventListener("click", async function () {
+    renderVersion += 1;
     try {
       await api("/api/session", { method: "DELETE" });
       member = null;
-      window.location.reload();
+      renderVersion += 1;
+      window.location.assign("/cdn-cgi/access/logout");
     } catch (error) {
       showError(error.message);
     }
