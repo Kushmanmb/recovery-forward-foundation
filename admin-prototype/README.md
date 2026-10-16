@@ -1,8 +1,8 @@
-# President Control Center — Phase 1 Prototype
+# President Control Center UI
 
-Mobile-friendly, **sample-data-only** UI prototype. All controls are non-functional prototypes: no authentication, no storage, no network. Reloading resets state.
+Mobile-friendly interface for the separate `control-center/` Cloudflare Worker application. The UI obtains identity and role information from authenticated server endpoints; it contains no sample applicant, financial, or board data.
 
-- Not under `docs/`, so it is **not** published by GitHub Pages. Do not move it there.
-- Preview locally: `cd admin-prototype && python3 -m http.server` and open http://localhost:8000.
-- Never add passwords, API keys, or real personal data.
-- Phase 2 plan: [docs/PHASE2-REQUIREMENTS.md](docs/PHASE2-REQUIREMENTS.md)
+- This directory is outside `docs/`, so it is **not** published by GitHub Pages. Do not move it there.
+- Do not serve this directory directly with a static development server; the Worker must validate Cloudflare Access identity even for UI assets.
+- Deployment and manual security configuration are documented in [`control-center/README.md`](../control-center/README.md).
+- Never add passwords, API keys, tokens, or real applicant personal information.
