@@ -197,7 +197,7 @@ async function profile(member) {
     role: member.role,
     status: member.status,
     setupRequired: member.status === "pending" && member.role === "President",
-    permissions: ROLE_PERMISSIONS[member.role] || [],
+    permissions: member.status === "active" ? ROLE_PERMISSIONS[member.role] || [] : [],
   };
 }
 
@@ -300,6 +300,12 @@ async function handleApi(request, env, identity, url) {
 
   if (url.pathname === "/api/me" && request.method === "GET") return json(await profile(member));
 
+  if (member.status === "pending"
+    && !(url.pathname === "/api/bootstrap/complete" && request.method === "POST")) {
+    await audit(env.DB, member.email, "authorization_denied", { status: "pending" });
+    return json({ error: "forbidden" }, 403);
+  }
+
   if (url.pathname === "/api/audit" && request.method === "GET") {
     if (!can(member, "audit:read")) {
       await audit(env.DB, member.email, "authorization_denied", { permission: "audit:read" });
@@ -317,7 +323,9 @@ async function handleApi(request, env, identity, url) {
   }
 
   if (url.pathname === "/api/bootstrap/complete" && request.method === "POST") {
-    if (!sameOrigin(request) || member.role !== "President" || member.status !== "pending") return json({ error: "forbidden" }, 403);
+    const presidentEmail = typeof env.PRESIDENT_EMAIL === "string" ? env.PRESIDENT_EMAIL.trim().toLowerCase() : "";
+    if (!sameOrigin(request) || !presidentEmail || member.email !== presidentEmail
+      || member.role !== "President" || member.status !== "pending") return json({ error: "forbidden" }, 403);
     if (request.headers.get("content-type")?.split(";")[0] !== "application/json"
       || Number(request.headers.get("content-length") || 0) > 1024) return json({ error: "invalid_request" }, 400);
     let body;

@@ -59,6 +59,47 @@ function mockDb(role, status = "active") {
   };
 }
 
+function bootstrapDb() {
+  let member = null;
+  const sessions = new Map();
+  return {
+    get member() { return member; },
+    prepare(sql) {
+      let values = [];
+      return {
+        bind(...args) { values = args; return this; },
+        async first() {
+          if (sql.includes("FROM sessions JOIN members")) {
+            const session = sessions.get(values[0]);
+            return session && !session.revokedAt && session.expiresAt > values[1] && member
+              ? { email: member.email, role: member.role, status: member.status }
+              : null;
+          }
+          if (sql.includes("SELECT COUNT(*) AS count FROM members")) return { count: member ? 1 : 0 };
+          if (sql.includes("FROM members WHERE email = ?")) {
+            return member?.email === values[0] ? { ...member } : null;
+          }
+          return null;
+        },
+        async all() { return { results: [] }; },
+        async run() {
+          if (sql.includes("INSERT OR IGNORE INTO members")) {
+            member ||= { email: values[0], role: "President", status: "pending" };
+          } else if (sql.includes("INSERT INTO sessions")) {
+            sessions.set(values[0], { expiresAt: values[3], revokedAt: null });
+          } else if (sql.includes("UPDATE members SET status = 'active'")) {
+            if (member?.email === values[1] && member.role === "President" && member.status === "pending") member.status = "active";
+          } else if (sql.includes("UPDATE sessions SET revoked_at")) {
+            const session = sessions.get(values[1]);
+            if (session) session.revokedAt = values[0];
+          }
+          return { success: true };
+        },
+      };
+    },
+  };
+}
+
 function requestEnv(identity, extra = {}) {
   return {
     ACCESS_TEAM_DOMAIN: identity.domain,
@@ -66,6 +107,13 @@ function requestEnv(identity, extra = {}) {
     PRESIDENT_EMAIL: "president@example.org",
     ...extra,
   };
+}
+
+async function withIdentity(identity, callback) {
+  return withFetch(
+    async () => Response.json({ keys: [identity.jwk] }),
+    callback,
+  );
 }
 
 test("Cloudflare Access assertions require a valid signature and matching claims", async () => {
@@ -165,4 +213,111 @@ test("public registration is denied for identities other than the configured Pre
     }), env),
   );
   assert.equal(response.status, 403);
+});
+
+test("pending members cannot access administrative APIs or claim role permissions", async () => {
+  const identity = await signedIdentity("member@example.org");
+  const env = requestEnv(identity, { DB: mockDb("President", "pending") });
+
+  await withIdentity(identity, async () => {
+    for (const path of ["/api/audit", "/api/registry/summary", "/api/unknown"]) {
+      const response = await handleRequest(new Request(`https://admin.example.org${path}`, {
+        headers: {
+          "cf-access-jwt-assertion": identity.token,
+          cookie: "__Host-rff_session=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        },
+      }), env);
+      assert.equal(response.status, 403, path);
+    }
+
+    const profile = await handleRequest(new Request("https://admin.example.org/api/me", {
+      headers: {
+        "cf-access-jwt-assertion": identity.token,
+        cookie: "__Host-rff_session=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      },
+    }), env);
+    assert.deepEqual(await profile.json(), {
+      email: "member@example.org",
+      role: "President",
+      status: "pending",
+      setupRequired: true,
+      permissions: [],
+    });
+  });
+});
+
+test("only the configured President can bootstrap and activate the first account", async () => {
+  const unauthorizedIdentity = await signedIdentity("attacker@example.org");
+  const emptyDB = bootstrapDb();
+  await withIdentity(unauthorizedIdentity, async () => {
+    const denied = await handleRequest(new Request("https://admin.example.org/api/session", {
+      method: "POST",
+      headers: {
+        origin: "https://admin.example.org",
+        "cf-access-jwt-assertion": unauthorizedIdentity.token,
+      },
+    }), requestEnv(unauthorizedIdentity, { DB: emptyDB }));
+    assert.equal(denied.status, 403);
+    assert.equal(emptyDB.member, null);
+  });
+
+  const identity = await signedIdentity("president@example.org");
+  const DB = bootstrapDb();
+  const env = requestEnv(identity, { DB });
+
+  await withIdentity(identity, async () => {
+    const login = await handleRequest(new Request("https://admin.example.org/api/session", {
+      method: "POST",
+      headers: { origin: "https://admin.example.org", "cf-access-jwt-assertion": identity.token },
+    }), env);
+    assert.equal(login.status, 200);
+    assert.deepEqual((await login.clone().json()).permissions, []);
+    assert.equal(DB.member.status, "pending");
+    const cookie = login.headers.get("set-cookie").split(";")[0];
+
+    const noAcknowledgement = await handleRequest(new Request("https://admin.example.org/api/bootstrap/complete", {
+      method: "POST",
+      headers: {
+        origin: "https://admin.example.org",
+        "content-type": "application/json",
+        cookie,
+        "cf-access-jwt-assertion": identity.token,
+      },
+      body: JSON.stringify({ policyAck: false }),
+    }), env);
+    assert.equal(noAcknowledgement.status, 400);
+    assert.equal(DB.member.status, "pending");
+
+    const mismatch = await handleRequest(new Request("https://admin.example.org/api/bootstrap/complete", {
+      method: "POST",
+      headers: {
+        origin: "https://admin.example.org",
+        "content-type": "application/json",
+        cookie,
+        "cf-access-jwt-assertion": identity.token,
+      },
+      body: JSON.stringify({ policyAck: true }),
+    }), { ...env, PRESIDENT_EMAIL: "different@example.org" });
+    assert.equal(mismatch.status, 403);
+    assert.equal(DB.member.status, "pending");
+
+    const activation = await handleRequest(new Request("https://admin.example.org/api/bootstrap/complete", {
+      method: "POST",
+      headers: {
+        origin: "https://admin.example.org",
+        "content-type": "application/json",
+        cookie,
+        "cf-access-jwt-assertion": identity.token,
+      },
+      body: JSON.stringify({ policyAck: true }),
+    }), env);
+    assert.equal(activation.status, 200);
+    assert.equal((await activation.json()).status, "active");
+    assert.equal(DB.member.status, "active");
+
+    const audit = await handleRequest(new Request("https://admin.example.org/api/audit", {
+      headers: { cookie, "cf-access-jwt-assertion": identity.token },
+    }), env);
+    assert.equal(audit.status, 200);
+  });
 });
