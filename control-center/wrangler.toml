@@ -1,4 +1,4 @@
-name = "rff-president-control-center"
+name = "recovery-forward-control-center"
 main = "src/worker.js"
 compatibility_date = "2026-10-16"
 workers_dev = false
@@ -9,8 +9,8 @@ zone_name = "recoveryforwardfoundation.org"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "rff-president-control-center"
-database_id = "REPLACE_WITH_CREATED_D1_DATABASE_ID"
+database_name = "recovery-forward-control-center-db"
+database_id = "3c02163b-1451-4221-b49c-73b4c908dda7"
 migrations_dir = "migrations"
 
 [assets]
