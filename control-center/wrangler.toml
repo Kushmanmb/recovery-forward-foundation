@@ -1,0 +1,19 @@
+name = "rff-president-control-center"
+main = "src/worker.js"
+compatibility_date = "2026-10-16"
+workers_dev = false
+
+[[routes]]
+pattern = "admin.recoveryforwardfoundation.org/*"
+zone_name = "recoveryforwardfoundation.org"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "rff-president-control-center"
+database_id = "REPLACE_WITH_CREATED_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[assets]
+directory = "../admin-prototype"
+binding = "ASSETS"
+run_worker_first = true
