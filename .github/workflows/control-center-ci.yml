@@ -1,0 +1,17 @@
+name: control-center-ci
+on:
+  pull_request:
+    paths: ["control-center/**", "admin-prototype/**"]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm test
+        working-directory: control-center
+      - name: Fail if prototype is placed under the Pages directory
+        run: test ! -e docs/admin-prototype && test ! -e docs/control-center
