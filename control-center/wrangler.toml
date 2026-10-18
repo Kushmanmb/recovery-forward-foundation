@@ -13,3 +13,5 @@ migrations_dir = "migrations"
 directory = "../admin-prototype"
 binding = "ASSETS"
 run_worker_first = true
+
+[previews]
