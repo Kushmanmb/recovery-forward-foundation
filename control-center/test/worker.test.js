@@ -418,3 +418,44 @@ test("only the configured President can bootstrap and activate the first account
     assert.equal(audit.status, 200);
   });
 });
+
+test("authentication_unavailable logs only a non-sensitive reason code", async () => {
+  const cases = [
+    ["config_team_domain", { ACCESS_TEAM_DOMAIN: "evil.example.com" }, null],
+    ["config_aud", { ACCESS_AUD: "" }, null],
+    ["certs_fetch_failed", {}, async () => { throw new TypeError("network"); }],
+    ["certs_status", {}, async () => new Response("no", { status: 502 })],
+    ["certs_not_json", {}, async () => new Response("<html>")],
+    ["certs_no_keys", {}, async () => Response.json({ keys: [] })],
+  ];
+  for (const [reason, override, mock] of cases) {
+    const identity = await signedIdentity("president@example.org");
+    const env = requestEnv(identity, override);
+    const logs = [];
+    const original = console.error;
+    console.error = (...args) => logs.push(args);
+    let response;
+    try {
+      response = await withFetch(mock || (async () => Response.json({ keys: [identity.jwk] })), () => handleRequest(new Request("https://admin.example.org/api/me", {
+        headers: { "cf-access-jwt-assertion": identity.token },
+      }), env));
+    } finally {
+      console.error = original;
+    }
+    assert.equal(response.status, 503, reason);
+    assert.deepEqual(await response.json(), { error: "authentication_unavailable" });
+    assert.equal(logs[0][1].reason, reason);
+    const output = JSON.stringify(logs);
+    assert.ok(!output.includes(identity.token) && !output.includes("president@example.org") && !output.includes("test-audience"));
+  }
+});
+
+test("team domain with scheme, slash, case, or whitespace is normalized without weakening checks", async () => {
+  const identity = await signedIdentity("president@example.org");
+  await withIdentity(identity, async () => {
+    const env = requestEnv(identity, { ACCESS_TEAM_DOMAIN: ` https://${identity.domain.toUpperCase()}/\n` });
+    assert.deepEqual(await verifyAccessAssertion(identity.token, env), { email: "president@example.org", subject: "verified-subject" });
+    const wrong = requestEnv(identity, { ACCESS_AUD: "other" });
+    assert.equal(await verifyAccessAssertion(identity.token, wrong), null);
+  });
+});
