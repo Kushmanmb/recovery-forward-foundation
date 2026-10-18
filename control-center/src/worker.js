@@ -6,7 +6,13 @@ const MAX_REGISTRY_RESPONSE_BYTES = 64 * 1024;
 const ACCESS_KEY_CACHE_MS = 5 * 60 * 1000;
 let accessKeyCache;
 
-class AccessUnavailable extends Error {}
+class AccessUnavailable extends Error {
+  constructor(reason, status) {
+    super(reason);
+    this.reason = reason;
+    this.status = status;
+  }
+}
 
 const json = (body, status = 200, headers = {}) => new Response(JSON.stringify(body), {
   status,
@@ -34,8 +40,10 @@ function decodeSegment(value) {
   return JSON.parse(new TextDecoder().decode(base64UrlBytes(value)));
 }
 
-function validTeamDomain(domain) {
-  return typeof domain === "string" && /^[a-z0-9-]+\.cloudflareaccess\.com$/i.test(domain);
+function normalizeTeamDomain(domain) {
+  if (typeof domain !== "string") return null;
+  const normalized = domain.trim().toLowerCase().replace(/^https:\/\//, "").replace(/\/$/, "");
+  return /^[a-z0-9-]+\.cloudflareaccess\.com$/.test(normalized) ? normalized : null;
 }
 
 async function getAccessKeys(domain, refresh = false) {
@@ -46,25 +54,25 @@ async function getAccessKeys(domain, refresh = false) {
       redirect: "error",
       signal: AbortSignal.timeout(5000),
     });
-  } catch {
-    throw new AccessUnavailable();
+  } catch (error) {
+    throw new AccessUnavailable(error?.name === "TimeoutError" ? "certs_timeout" : "certs_fetch_failed");
   }
-  if (!response.ok) throw new AccessUnavailable();
+  if (!response.ok) throw new AccessUnavailable("certs_status", response.status);
   let jwks;
   try {
     jwks = await response.json();
   } catch {
-    throw new AccessUnavailable();
+    throw new AccessUnavailable("certs_not_json");
   }
-  if (!Array.isArray(jwks.keys)) throw new AccessUnavailable();
+  if (!Array.isArray(jwks?.keys) || !jwks.keys.some((key) => key?.kty === "RSA")) throw new AccessUnavailable("certs_no_keys");
   accessKeyCache = { domain, keys: jwks.keys, expires: Date.now() + ACCESS_KEY_CACHE_MS };
   return jwks.keys;
 }
 
 export async function verifyAccessAssertion(assertion, env) {
-  if (!validTeamDomain(env.ACCESS_TEAM_DOMAIN) || typeof env.ACCESS_AUD !== "string" || !env.ACCESS_AUD) {
-    throw new AccessUnavailable();
-  }
+  const teamDomain = normalizeTeamDomain(env.ACCESS_TEAM_DOMAIN);
+  if (!teamDomain) throw new AccessUnavailable("config_team_domain");
+  if (typeof env.ACCESS_AUD !== "string" || !env.ACCESS_AUD) throw new AccessUnavailable("config_aud");
   if (typeof assertion !== "string" || assertion.length > 16_384) return null;
 
   let encodedHeader, encodedClaims, encodedSignature, header, claims;
@@ -79,10 +87,10 @@ export async function verifyAccessAssertion(assertion, env) {
   }
   if (header.alg !== "RS256" || typeof header.kid !== "string") return null;
 
-  let keys = await getAccessKeys(env.ACCESS_TEAM_DOMAIN);
+  let keys = await getAccessKeys(teamDomain);
   let jwk = keys.find((key) => key.kid === header.kid && key.kty === "RSA" && (!key.use || key.use === "sig") && (!key.alg || key.alg === "RS256"));
   if (!jwk) {
-    keys = await getAccessKeys(env.ACCESS_TEAM_DOMAIN, true);
+    keys = await getAccessKeys(teamDomain, true);
     jwk = keys.find((key) => key.kid === header.kid && key.kty === "RSA" && (!key.use || key.use === "sig") && (!key.alg || key.alg === "RS256"));
   }
   if (!jwk) return null;
@@ -102,7 +110,7 @@ export async function verifyAccessAssertion(assertion, env) {
   if (!signatureValid) return null;
 
   const now = Math.floor(Date.now() / 1000);
-  const issuer = `https://${env.ACCESS_TEAM_DOMAIN}`;
+  const issuer = `https://${teamDomain}`;
   const audiences = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
   if (
     claims.iss !== issuer
@@ -354,7 +362,10 @@ export async function handleRequest(request, env) {
   try {
     identity = await verifyAccessAssertion(request.headers.get("cf-access-jwt-assertion"), env);
   } catch (error) {
-    if (error instanceof AccessUnavailable) return secureHeaders(json({ error: "authentication_unavailable" }, 503));
+    if (error instanceof AccessUnavailable) {
+      console.error("access_unavailable", { reason: error.reason, ...(error.status ? { status: error.status } : {}) });
+      return secureHeaders(json({ error: "authentication_unavailable" }, 503));
+    }
     return secureHeaders(json({ error: "authentication_required" }, 401));
   }
   if (!identity) return secureHeaders(json({ error: "authentication_required" }, 401));
