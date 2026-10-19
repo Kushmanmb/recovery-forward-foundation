@@ -54,7 +54,7 @@ async function getAccessKeys(domain, refresh = false) {
   let response;
   try {
     response = await fetch(`https://${domain}/cdn-cgi/access/certs`, {
-      redirect: "error",
+      redirect: "manual",
       signal: AbortSignal.timeout(5000),
     });
   } catch (error) {
