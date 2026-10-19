@@ -57,8 +57,11 @@ async function getAccessKeys(domain, refresh = false) {
       redirect: "error",
       signal: AbortSignal.timeout(5000),
     });
-  } catch {
-    throw new AccessUnavailable("jwks_fetch_failed");
+  } catch (error) {
+    throw new AccessUnavailable("jwks_fetch_failed", {
+      fetch_error_name: error.name,
+      fetch_error_message: error.message,
+    });
   }
   if (!response.ok) throw new AccessUnavailable("jwks_non_200", { status: response.status });
   let jwks;

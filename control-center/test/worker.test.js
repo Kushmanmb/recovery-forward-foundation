@@ -425,7 +425,7 @@ test("authentication_unavailable emits safe distinct diagnostics", async () => {
   const cases = [
     ["access_env_missing", {}, null],
     ["access_team_domain_invalid", { ACCESS_TEAM_DOMAIN: "evil.example.com", ACCESS_AUD: "a" }, null],
-    ["jwks_fetch_failed", null, () => { throw new Error("network"); }],
+    ["jwks_fetch_failed", null, () => { throw new TypeError("synthetic fetch failure"); }],
     ["jwks_non_200", null, () => new Response("no", { status: 502 })],
     ["jwks_invalid_json", null, () => new Response("not json")],
     ["jwks_missing_keys", null, () => new Response(JSON.stringify({ keys: [] }))],
@@ -442,7 +442,16 @@ test("authentication_unavailable emits safe distinct diagnostics", async () => {
       assert.equal(response.status, 503);
       assert.deepEqual(await response.json(), { error: "authentication_unavailable" });
       assert.equal(logs.length, 1);
-      assert.equal(JSON.parse(logs[0]).reason, reason);
+      const diagnostic = JSON.parse(logs[0]);
+      assert.equal(diagnostic.reason, reason);
+      if (reason === "jwks_fetch_failed") {
+        assert.deepEqual(diagnostic, {
+          event: "access_authentication_unavailable",
+          reason,
+          fetch_error_name: "TypeError",
+          fetch_error_message: "synthetic fetch failure",
+        });
+      }
       assert.ok(!logs[0].includes(identity.token));
       assert.ok(!logs[0].includes("president@example.org"));
     }
