@@ -13,3 +13,11 @@ migrations_dir = "migrations"
 directory = "../admin-prototype"
 binding = "ASSETS"
 run_worker_first = true
+
+# Preview configuration. Previews do not inherit production bindings, so only the
+# static assets binding is declared. Add a preview-only D1 database here before
+# exercising session routes in previews; never point previews at the production DB.
+[previews.assets]
+directory = "../admin-prototype"
+binding = "ASSETS"
+run_worker_first = true
