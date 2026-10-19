@@ -6,7 +6,18 @@ const MAX_REGISTRY_RESPONSE_BYTES = 64 * 1024;
 const ACCESS_KEY_CACHE_MS = 5 * 60 * 1000;
 let accessKeyCache;
 
-class AccessUnavailable extends Error {}
+class AccessUnavailable extends Error {
+  constructor(reason = "unknown", details = {}) {
+    super(reason);
+    this.reason = reason;
+    this.details = details;
+  }
+}
+
+function logAccessDiagnostic(error) {
+  // Only fixed reason codes and non-sensitive metadata are logged; never JWTs, secrets or env values.
+  console.error(JSON.stringify({ event: "access_authentication_unavailable", reason: error.reason, ...error.details }));
+}
 
 const json = (body, status = 200, headers = {}) => new Response(JSON.stringify(body), {
   status,
@@ -47,23 +58,28 @@ async function getAccessKeys(domain, refresh = false) {
       signal: AbortSignal.timeout(5000),
     });
   } catch {
-    throw new AccessUnavailable();
+    throw new AccessUnavailable("jwks_fetch_failed");
   }
-  if (!response.ok) throw new AccessUnavailable();
+  if (!response.ok) throw new AccessUnavailable("jwks_non_200", { status: response.status });
   let jwks;
   try {
     jwks = await response.json();
   } catch {
-    throw new AccessUnavailable();
+    throw new AccessUnavailable("jwks_invalid_json");
   }
-  if (!Array.isArray(jwks.keys)) throw new AccessUnavailable();
+  if (!Array.isArray(jwks?.keys) || jwks.keys.length === 0) throw new AccessUnavailable("jwks_missing_keys");
   accessKeyCache = { domain, keys: jwks.keys, expires: Date.now() + ACCESS_KEY_CACHE_MS };
   return jwks.keys;
 }
 
 export async function verifyAccessAssertion(assertion, env) {
-  if (!validTeamDomain(env.ACCESS_TEAM_DOMAIN) || typeof env.ACCESS_AUD !== "string" || !env.ACCESS_AUD) {
-    throw new AccessUnavailable();
+  const teamDomainSet = typeof env.ACCESS_TEAM_DOMAIN === "string" && env.ACCESS_TEAM_DOMAIN !== "";
+  const audSet = typeof env.ACCESS_AUD === "string" && env.ACCESS_AUD !== "";
+  if (!teamDomainSet || !audSet) {
+    throw new AccessUnavailable("access_env_missing", { access_team_domain_set: teamDomainSet, access_aud_set: audSet });
+  }
+  if (!validTeamDomain(env.ACCESS_TEAM_DOMAIN)) {
+    throw new AccessUnavailable("access_team_domain_invalid");
   }
   if (typeof assertion !== "string" || assertion.length > 16_384) return null;
 
@@ -354,7 +370,10 @@ export async function handleRequest(request, env) {
   try {
     identity = await verifyAccessAssertion(request.headers.get("cf-access-jwt-assertion"), env);
   } catch (error) {
-    if (error instanceof AccessUnavailable) return secureHeaders(json({ error: "authentication_unavailable" }, 503));
+    if (error instanceof AccessUnavailable) {
+      logAccessDiagnostic(error);
+      return secureHeaders(json({ error: "authentication_unavailable" }, 503));
+    }
     return secureHeaders(json({ error: "authentication_required" }, 401));
   }
   if (!identity) return secureHeaders(json({ error: "authentication_required" }, 401));

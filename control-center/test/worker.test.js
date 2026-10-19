@@ -418,3 +418,36 @@ test("only the configured President can bootstrap and activate the first account
     assert.equal(audit.status, 200);
   });
 });
+
+test("authentication_unavailable emits safe distinct diagnostics", async () => {
+  const realFetch = globalThis.fetch;
+  const realError = console.error;
+  const cases = [
+    ["access_env_missing", {}, null],
+    ["access_team_domain_invalid", { ACCESS_TEAM_DOMAIN: "evil.example.com", ACCESS_AUD: "a" }, null],
+    ["jwks_fetch_failed", null, () => { throw new Error("network"); }],
+    ["jwks_non_200", null, () => new Response("no", { status: 502 })],
+    ["jwks_invalid_json", null, () => new Response("not json")],
+    ["jwks_missing_keys", null, () => new Response(JSON.stringify({ keys: [] }))],
+  ];
+  try {
+    for (const [reason, env, fetcher] of cases) {
+      const identity = await signedIdentity("president@example.org");
+      const logs = [];
+      console.error = (line) => logs.push(line);
+      globalThis.fetch = fetcher ? async () => fetcher() : realFetch;
+      const response = await handleRequest(new Request("https://admin.example.org/api/me", {
+        headers: { "cf-access-jwt-assertion": identity.token },
+      }), env ?? requestEnv(identity));
+      assert.equal(response.status, 503);
+      assert.deepEqual(await response.json(), { error: "authentication_unavailable" });
+      assert.equal(logs.length, 1);
+      assert.equal(JSON.parse(logs[0]).reason, reason);
+      assert.ok(!logs[0].includes(identity.token));
+      assert.ok(!logs[0].includes("president@example.org"));
+    }
+  } finally {
+    globalThis.fetch = realFetch;
+    console.error = realError;
+  }
+});
