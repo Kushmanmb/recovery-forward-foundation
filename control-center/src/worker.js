@@ -277,7 +277,7 @@ async function registrySummary(env, member) {
   }
 
   try {
-    const response = await fetch(url, {
+    const response = await fetch(new URL("/integration/summary", url), {
       method: "GET",
       headers: { accept: "application/json", authorization: "Bearer " + env.REGISTRY_API_TOKEN },
       redirect: "error",
