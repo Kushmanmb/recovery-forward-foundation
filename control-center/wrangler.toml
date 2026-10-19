@@ -3,6 +3,22 @@ main = "src/worker.js"
 compatibility_date = "2026-10-16"
 workers_dev = false
 
+# ACCESS_AUD, ACCESS_TEAM_DOMAIN and PRESIDENT_EMAIL are managed in Cloudflare
+# (dashboard/secrets). They are intentionally not declared here; keep_vars stops
+# deploys from overwriting them.
+keep_vars = true
+
+routes = [
+  { pattern = "admin.recoveryforwardfoundation.org", custom_domain = true }
+]
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+
 [[d1_databases]]
 binding = "DB"
 database_name = "recovery-forward-control-center-db"
@@ -10,14 +26,6 @@ database_id = "3c02163b-1451-4221-b49c-73b4c908dda7"
 migrations_dir = "migrations"
 
 [assets]
-directory = "../admin-prototype"
-binding = "ASSETS"
-run_worker_first = true
-
-# Preview configuration. Previews do not inherit production bindings, so only the
-# static assets binding is declared. Add a preview-only D1 database here before
-# exercising session routes in previews; never point previews at the production DB.
-[previews.assets]
 directory = "../admin-prototype"
 binding = "ASSETS"
 run_worker_first = true
