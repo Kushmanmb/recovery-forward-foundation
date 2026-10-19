@@ -168,6 +168,27 @@ test("Cloudflare Access assertions require a valid signature and matching claims
   });
 });
 
+test("Cloudflare Access JWKS fetch does not follow redirects", async () => {
+  const identity = await signedIdentity("president@example.org");
+  let fetchCount = 0;
+  let redirectMode;
+
+  await withFetch(async (url, options) => {
+    fetchCount += 1;
+    redirectMode = options.redirect;
+    assert.equal(String(url), `https://${identity.domain}/cdn-cgi/access/certs`);
+    return new Response(null, { status: 302, headers: { location: "https://redirect.example.org/certs" } });
+  }, async () => {
+    await assert.rejects(
+      verifyAccessAssertion(identity.token, requestEnv(identity)),
+      { message: "jwks_non_200" },
+    );
+  });
+
+  assert.equal(redirectMode, "manual");
+  assert.equal(fetchCount, 1);
+});
+
 test("unverified requests cannot reach the UI or API", async () => {
   const response = await handleRequest(new Request("https://admin.example.org/"), {
     ACCESS_TEAM_DOMAIN: "test.cloudflareaccess.com",
