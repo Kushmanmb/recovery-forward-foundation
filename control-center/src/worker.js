@@ -379,30 +379,36 @@ async function handleApplications(request, env, rawMember, url) {
       return json({ error: "invalid_request" }, 400);
     }
     const now = Date.now();
+    let changed;
     if (body.authorized) {
-      const results = await env.DB.batch([
-        env.DB.prepare(
-          `INSERT INTO application_reviewers (member_email, authorized_by, authorized_at)
-           SELECT ?, ?, ? WHERE ${PRESIDENT_ACTIVE_SQL}
-             AND EXISTS (SELECT 1 FROM members WHERE email = ? AND status = 'active' AND role != 'President')
-           ON CONFLICT(member_email) DO UPDATE SET authorized_by = excluded.authorized_by, authorized_at = excluded.authorized_at, revoked_at = NULL WHERE application_reviewers.revoked_at IS NOT NULL`,
-        ).bind(email, member.email, now, member.email, email),
-        auditStatement(env.DB, member.email, "application_reviewer_authorized", { reviewer: email }, { requirePresident: true }),
-      ]);
-      if (!results?.[1]?.meta?.changes) return json({ error: "conflict" }, 409);
+      changed = await changeWithAudit(env.DB, env.DB.prepare(
+        `INSERT INTO application_reviewers (member_email, authorized_by, authorized_at)
+         SELECT ?, ?, ? WHERE ${PRESIDENT_ACTIVE_SQL}
+           AND EXISTS (SELECT 1 FROM members WHERE email = ? AND status = 'active' AND role != 'President')
+         ON CONFLICT(member_email) DO UPDATE SET authorized_by = excluded.authorized_by, authorized_at = excluded.authorized_at, revoked_at = NULL WHERE application_reviewers.revoked_at IS NOT NULL`,
+      ).bind(email, member.email, now, member.email, email),
+      auditStatement(env.DB, member.email, "application_reviewer_authorized", { reviewer: email }, { onChange: true, requirePresident: true }));
     } else {
+      // The audit row must follow the revocation directly: later statements would overwrite changes().
       const results = await env.DB.batch([
         env.DB.prepare(
           `UPDATE application_reviewers SET revoked_at = ? WHERE member_email = ? AND revoked_at IS NULL AND ${PRESIDENT_ACTIVE_SQL}`,
         ).bind(now, email, member.email),
+        auditStatement(env.DB, member.email, "application_reviewer_revoked", { reviewer: email }, { onChange: true, requirePresident: true }),
         env.DB.prepare(
           `UPDATE applications SET assigned_to = NULL, assigned_by = NULL, assigned_at = NULL, status = 'new', updated_at = ?
            WHERE assigned_to = ? AND status != 'closed' AND ${PRESIDENT_ACTIVE_SQL}
              AND NOT EXISTS (SELECT 1 FROM application_reviewers WHERE member_email = ? AND revoked_at IS NULL)`,
         ).bind(now, email, member.email, email),
-        auditStatement(env.DB, member.email, "application_reviewer_revoked", { reviewer: email }, { requirePresident: true }),
       ]);
-      if (!results?.[2]?.meta?.changes) return json({ error: "conflict" }, 409);
+      changed = (results?.[1]?.meta?.changes ?? 0) > 0;
+    }
+    if (!changed) {
+      // Repeating a request that already holds is idempotent and unaudited; anything else lost a race.
+      const authorizedNow = await isAuthorizedReviewer(env.DB, email);
+      if (authorizedNow !== body.authorized || !(await env.DB.prepare(`SELECT 1 AS ok WHERE ${PRESIDENT_ACTIVE_SQL}`).bind(member.email).first())) {
+        return json({ error: "conflict" }, 409);
+      }
     }
     return json({ ok: true });
   }

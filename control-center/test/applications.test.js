@@ -656,3 +656,58 @@ test("a suspended President cannot change application state even with a stale se
   assert.equal(db.database.prepare("SELECT status FROM applications").get().status, "new");
   assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM audit_log WHERE action = 'application_assigned'").get().c, 0);
 });
+
+function raceAfterQuery(db, matchSql, onRead) {
+  const prepare = db.prepare;
+  let raced = false;
+  db.prepare = function (sql) {
+    const query = prepare.call(this, sql);
+    if (sql !== matchSql) return query;
+    return {
+      bind(...values) { query.bind(...values); return this; },
+      first() {
+        const row = query.first();
+        if (!raced) { raced = true; onRead(); }
+        return row;
+      },
+      all() { return query.all(); },
+      run() { return query.run(); },
+      _run() { return query._run(); },
+    };
+  };
+}
+
+const auditCount = (db, action) => db.database.prepare("SELECT COUNT(*) AS c FROM audit_log WHERE action = ?").get(action).c;
+
+test("authorizing a member suspended mid-request writes no reviewer row and no audit entry", async () => {
+  const { db, actors, people } = await setup();
+  raceAfterQuery(db, "SELECT email, role, status FROM members WHERE email = ?", () => {
+    db.database.prepare("UPDATE members SET status = 'suspended' WHERE email = ?").run(people.reviewer);
+  });
+  assert.equal((await authorize(actors, people.reviewer)).status, 409);
+  assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM application_reviewers").get().c, 0);
+  assert.equal(auditCount(db, "application_reviewer_authorized"), 0);
+});
+
+test("repeated authorization and revocation are idempotent and not re-audited; a lost revocation race is not audited", async () => {
+  const { db, actors, people } = await setup();
+  assert.equal((await authorize(actors, people.reviewer)).status, 200);
+  assert.equal((await authorize(actors, people.reviewer)).status, 200);
+  assert.equal(auditCount(db, "application_reviewer_authorized"), 1);
+  assert.equal((await authorize(actors, people.reviewer, false)).status, 200);
+  assert.equal((await authorize(actors, people.reviewer, false)).status, 200);
+  assert.equal(auditCount(db, "application_reviewer_revoked"), 1);
+
+  // The President is suspended after the permission check: nothing changes and nothing is audited.
+  assert.equal((await authorize(actors, people.reviewer)).status, 200);
+  await store(db, RCGI);
+  await actors.president.api(`${APP}/assign`, { method: "POST", body: { assignee: people.reviewer } });
+  const before = snapshot(db);
+  const audits = db.database.prepare("SELECT COUNT(*) AS c FROM audit_log").get().c;
+  raceAfterQuery(db, "SELECT email, role, status FROM members WHERE email = ?", () => {
+    db.database.prepare("UPDATE members SET status = 'suspended' WHERE email = ?").run(people.president);
+  });
+  assert.equal((await authorize(actors, people.reviewer, false)).status, 409);
+  assert.deepEqual(snapshot(db), before);
+  assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM audit_log").get().c, audits);
+});
