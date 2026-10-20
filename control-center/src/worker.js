@@ -280,7 +280,7 @@ async function registrySummary(env, member) {
     const response = await fetch(new URL("/integration/summary", url), {
       method: "GET",
       headers: { accept: "application/json", authorization: "Bearer " + env.REGISTRY_API_TOKEN },
-      redirect: "error",
+      redirect: "manual",
       signal: AbortSignal.timeout(5000),
     });
     if (!response.ok) throw new Error("registry error");
