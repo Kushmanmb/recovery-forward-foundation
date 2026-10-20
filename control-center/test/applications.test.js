@@ -138,6 +138,28 @@ async function setup() {
   return { db, actors, people };
 }
 
+function raceAfterApplicationRead(db, onRead) {
+  const prepare = db.prepare;
+  let raced = false;
+  db.prepare = function (sql) {
+    const query = prepare.call(this, sql);
+    if (sql !== "SELECT * FROM applications WHERE rcgi = ?") return query;
+    return {
+      bind(...values) { query.bind(...values); return this; },
+      first() {
+        const row = query.first();
+        if (!raced) {
+          raced = true;
+          onRead();
+        }
+        return row;
+      },
+      all() { return query.all(); },
+      run() { return query.run(); },
+    };
+  };
+}
+
 const store = async (db, rcgi) => assert.equal((await intake(db, validBody(rcgi))).status, 202);
 
 test("intake stores a validated submission with an RCGI reference and a content-free audit entry", async () => {
@@ -440,6 +462,66 @@ test("unassigning, same-origin and body checks, and status/assignee consistency"
   assert.equal((await actors.president.api(`${path}/assign`, { method: "POST", body: { assignee: null } })).status, 200);
   assert.deepEqual({ ...db.database.prepare("SELECT status, assigned_to FROM applications").get() }, { status: "new", assigned_to: null });
   assert.equal((await actors.president.api(`${path}/assign`, { method: "POST", body: { assignee: 5 } })).status, 400);
+});
+
+test("concurrent reassignment prevents a stale President assignment from overwriting it", async () => {
+  const { db, actors, people } = await setup();
+  await store(db, "RCGI-0123456789ab");
+  for (const email of [people.reviewer, people.other]) {
+    assert.equal((await actors.president.api("/api/applications/reviewers", {
+      method: "POST",
+      body: { email, authorized: true },
+    })).status, 200);
+  }
+  const path = "/api/applications/RCGI-0123456789ab";
+  assert.equal((await actors.president.api(`${path}/assign`, {
+    method: "POST",
+    body: { assignee: people.reviewer },
+  })).status, 200);
+
+  raceAfterApplicationRead(db, () => {
+    db.database.prepare(
+      "UPDATE applications SET assigned_to = ?, assigned_by = ?, assigned_at = ?, status = 'assigned' WHERE rcgi = ?",
+    ).run(people.other, people.president, Date.now(), "RCGI-0123456789ab");
+  });
+  const staleAssignment = await actors.president.api(`${path}/assign`, {
+    method: "POST",
+    body: { assignee: people.reviewer },
+  });
+  assert.equal(staleAssignment.status, 409);
+  const row = db.database.prepare("SELECT assigned_to, status FROM applications WHERE rcgi = ?").get("RCGI-0123456789ab");
+  assert.deepEqual({ ...row }, { assigned_to: people.other, status: "assigned" });
+  assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM audit_log WHERE action = 'application_assigned'").get().c, 1);
+});
+
+test("reviewer authorization and assignment are rechecked atomically for status updates", async () => {
+  const { db, actors, people } = await setup();
+  await store(db, "RCGI-0123456789ab");
+  for (const email of [people.reviewer, people.other]) {
+    assert.equal((await actors.president.api("/api/applications/reviewers", {
+      method: "POST",
+      body: { email, authorized: true },
+    })).status, 200);
+  }
+  const path = "/api/applications/RCGI-0123456789ab";
+  assert.equal((await actors.president.api(`${path}/assign`, {
+    method: "POST",
+    body: { assignee: people.reviewer },
+  })).status, 200);
+
+  raceAfterApplicationRead(db, () => {
+    db.database.prepare(
+      "UPDATE applications SET assigned_to = ?, assigned_by = ?, assigned_at = ? WHERE rcgi = ?",
+    ).run(people.other, people.president, Date.now(), "RCGI-0123456789ab");
+  });
+  const oldReviewerUpdate = await actors.reviewer.api(`${path}/status`, {
+    method: "POST",
+    body: { status: "recommended" },
+  });
+  assert.equal(oldReviewerUpdate.status, 404);
+  const row = db.database.prepare("SELECT assigned_to, status FROM applications WHERE rcgi = ?").get("RCGI-0123456789ab");
+  assert.deepEqual({ ...row }, { assigned_to: people.other, status: "assigned" });
+  assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM audit_log WHERE action = 'application_status_changed'").get().c, 0);
 });
 
 test("every inbox action and denial is audited without application content", async () => {

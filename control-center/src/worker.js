@@ -407,15 +407,25 @@ async function handleApplications(request, env, rawMember, url) {
     if (row.status === "closed") return json({ error: "conflict" }, 409);
     const now = Date.now();
     if (body.assignee === null) {
-      await env.DB.prepare("UPDATE applications SET assigned_to = NULL, assigned_by = NULL, assigned_at = NULL, status = 'new', updated_at = ? WHERE rcgi = ? AND status != 'closed'")
-        .bind(now, rcgi).run();
+      const updated = await env.DB.prepare(
+        "UPDATE applications SET assigned_to = NULL, assigned_by = NULL, assigned_at = NULL, status = 'new', updated_at = ? WHERE rcgi = ? AND status = ? AND assigned_to IS ? AND status != 'closed' RETURNING rcgi",
+      ).bind(now, rcgi, row.status, row.assigned_to).first();
+      if (!updated) return json({ error: "conflict" }, 409);
       await audit(env.DB, member.email, "application_unassigned", { rcgi });
       return json({ ok: true });
     }
     const assignee = typeof body.assignee === "string" ? body.assignee.trim().toLowerCase() : "";
     if (!assignee || !(await isAuthorizedReviewer(env.DB, assignee))) return json({ error: "invalid_request" }, 400);
-    await env.DB.prepare("UPDATE applications SET assigned_to = ?, assigned_by = ?, assigned_at = ?, status = 'assigned', updated_at = ? WHERE rcgi = ? AND status != 'closed'")
-      .bind(assignee, member.email, now, now, rcgi).run();
+    const updated = await env.DB.prepare(
+      `UPDATE applications SET assigned_to = ?, assigned_by = ?, assigned_at = ?, status = 'assigned', updated_at = ?
+       WHERE rcgi = ? AND status = ? AND assigned_to IS ? AND status != 'closed'
+         AND EXISTS (
+           SELECT 1 FROM application_reviewers ar JOIN members m ON m.email = ar.member_email
+           WHERE ar.member_email = ? AND ar.revoked_at IS NULL AND m.status = 'active' AND m.role != 'President'
+         )
+       RETURNING rcgi`,
+    ).bind(assignee, member.email, now, now, rcgi, row.status, row.assigned_to, assignee).first();
+    if (!updated) return json({ error: "conflict" }, 409);
     await audit(env.DB, member.email, "application_assigned", { rcgi, assignee });
     return json({ ok: true });
   }
@@ -436,7 +446,26 @@ async function handleApplications(request, env, rawMember, url) {
     if (body.status !== "closed" && !row.assigned_to) {
       return json({ error: "conflict" }, 409);
     }
-    await env.DB.prepare("UPDATE applications SET status = ?, updated_at = ? WHERE rcgi = ?").bind(body.status, Date.now(), rcgi).run();
+    const updated = asPresident
+      ? await env.DB.prepare(
+        `UPDATE applications SET status = ?, updated_at = ?
+         WHERE rcgi = ? AND status = ? AND assigned_to IS ?
+           AND (? = 'closed' OR assigned_to IS NOT NULL)
+         RETURNING rcgi`,
+      ).bind(body.status, Date.now(), rcgi, row.status, row.assigned_to, body.status).first()
+      : await env.DB.prepare(
+        `UPDATE applications SET status = ?, updated_at = ?
+         WHERE rcgi = ? AND status = ? AND assigned_to = ? AND status != 'closed'
+           AND EXISTS (
+             SELECT 1 FROM application_reviewers ar JOIN members m ON m.email = ar.member_email
+             WHERE ar.member_email = ? AND ar.revoked_at IS NULL AND m.status = 'active' AND m.role != 'President'
+           )
+         RETURNING rcgi`,
+      ).bind(body.status, Date.now(), rcgi, row.status, member.email, member.email).first();
+    if (!updated) {
+      if (!asPresident) await audit(env.DB, member.email, "authorization_denied", { permission: "applications:review:assigned", rcgi });
+      return json({ error: asPresident ? "conflict" : "not_found" }, asPresident ? 409 : 404);
+    }
     await audit(env.DB, member.email, "application_status_changed", { rcgi, from: row.status, to: body.status });
     return json({ ok: true });
   }
