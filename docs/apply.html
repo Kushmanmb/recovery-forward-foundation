@@ -559,10 +559,8 @@ font-size: .85rem;
         </button>
 
         <p class="demo-notice">
-  Your responses are not sent to the public registry or shown on this website.
-  They are delivered privately to the Foundation President and any board
-  member the President assigns to review your application.
-  The public registry receives only an anonymous RCGI reference.
+  Your recovery responses stay in this browser and are not sent to the public registry.
+  Only an anonymous RCGI reference is created.
 </p>
 
       </section>
@@ -686,36 +684,6 @@ copyButton.addEventListener("click", async () => {
       const application = await response.json();
 
       generatedId.textContent = application.participantId;
-
-      // Details go only to the private intake, never to the Registry or any public page.
-      let delivered = false;
-      try {
-        const intake = await fetch(
-          "https://intake.recoveryforwardfoundation.org/applications",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              rcgi: application.participantId,
-              recoveryStage: document.getElementById("recovery-stage").value,
-              recoverySupport: document.getElementById("recovery-support").value,
-              needs: Array.from(selectedNeeds, input => input.value),
-              needDescription: document.getElementById("need-description").value,
-              goals: document.getElementById("goals").value,
-              confirmation: document.getElementById("confirmation").checked
-            })
-          }
-        );
-        delivered = intake.ok;
-      } catch {
-        delivered = false;
-      }
-
-      if (!delivered) {
-        alert(
-          "Your RCGI ID was created, but your application details could not be delivered. Please save your RCGI ID and contact us to resubmit."
-        );
-      }
 
       formContent.style.display = "none";
       result.classList.add("visible");
