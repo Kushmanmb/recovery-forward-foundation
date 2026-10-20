@@ -408,8 +408,11 @@ async function handleApplications(request, env, rawMember, url) {
     const now = Date.now();
     if (body.assignee === null) {
       const updated = await env.DB.prepare(
-        "UPDATE applications SET assigned_to = NULL, assigned_by = NULL, assigned_at = NULL, status = 'new', updated_at = ? WHERE rcgi = ? AND status = ? AND assigned_to IS ? AND status != 'closed' RETURNING rcgi",
-      ).bind(now, rcgi, row.status, row.assigned_to).first();
+        `UPDATE applications SET assigned_to = NULL, assigned_by = NULL, assigned_at = NULL, status = 'new', updated_at = ?
+         WHERE rcgi = ? AND status = ? AND assigned_to IS ? AND status != 'closed'
+           AND EXISTS (SELECT 1 FROM members WHERE email = ? AND role = 'President' AND status = 'active')
+         RETURNING rcgi`,
+      ).bind(now, rcgi, row.status, row.assigned_to, member.email).first();
       if (!updated) return json({ error: "conflict" }, 409);
       await audit(env.DB, member.email, "application_unassigned", { rcgi });
       return json({ ok: true });
@@ -423,8 +426,9 @@ async function handleApplications(request, env, rawMember, url) {
            SELECT 1 FROM application_reviewers ar JOIN members m ON m.email = ar.member_email
            WHERE ar.member_email = ? AND ar.revoked_at IS NULL AND m.status = 'active' AND m.role != 'President'
          )
+         AND EXISTS (SELECT 1 FROM members WHERE email = ? AND role = 'President' AND status = 'active')
        RETURNING rcgi`,
-    ).bind(assignee, member.email, now, now, rcgi, row.status, row.assigned_to, assignee).first();
+    ).bind(assignee, member.email, now, now, rcgi, row.status, row.assigned_to, assignee, member.email).first();
     if (!updated) return json({ error: "conflict" }, 409);
     await audit(env.DB, member.email, "application_assigned", { rcgi, assignee });
     return json({ ok: true });
@@ -451,8 +455,9 @@ async function handleApplications(request, env, rawMember, url) {
         `UPDATE applications SET status = ?, updated_at = ?
          WHERE rcgi = ? AND status = ? AND assigned_to IS ?
            AND (? = 'closed' OR assigned_to IS NOT NULL)
+           AND EXISTS (SELECT 1 FROM members WHERE email = ? AND role = 'President' AND status = 'active')
          RETURNING rcgi`,
-      ).bind(body.status, Date.now(), rcgi, row.status, row.assigned_to, body.status).first()
+      ).bind(body.status, Date.now(), rcgi, row.status, row.assigned_to, body.status, member.email).first()
       : await env.DB.prepare(
         `UPDATE applications SET status = ?, updated_at = ?
          WHERE rcgi = ? AND status = ? AND assigned_to = ? AND status != 'closed'
