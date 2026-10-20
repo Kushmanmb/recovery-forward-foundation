@@ -211,11 +211,17 @@ overflow-x: auto;
   display: flex;
   gap: 14px;
   flex-wrap: wrap;
+  max-width: 100%;
   margin-top: 32px;
 }
 
 .button {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  box-sizing: border-box;
   border-radius: 5px;
   padding: 14px 24px;
   text-decoration: none;
@@ -744,8 +750,21 @@ footer > div:last-child {
   }
 
   .hero-actions {
-    flex-direction: column;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .hero-actions .button {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 10px;
+    text-align: center;
+  }
+
+  .hero-actions .button-facebook {
+    grid-column: 1 / -1;
   }
 
   .process-steps {
@@ -1179,12 +1198,58 @@ body.programs-page .program-journey-image {
   gap: 8px;
   color: #ffffff;
   background: #1877f2;
-  border: 1px solid #1877f2;
+  border: 2px solid #1877f2;
+}
+
+.hero-actions .button-facebook {
+  padding: 16px 28px;
+  min-height: 52px;
+  font-size: .85rem;
+  box-shadow: 0 0 18px rgba(24,119,242,.55);
 }
 
 .button-facebook:hover,
 .button-facebook:focus-visible {
   background: #0f5fd0;
+  border-color: #ffffff;
+  box-shadow: 0 0 24px rgba(24,119,242,.8);
+}
+
+.hero-actions .button-learn {
+  color: #ffffff;
+  background: rgba(5,5,5,.78);
+  border: 2px solid #ffffff;
+}
+
+.hero-actions .button-learn:hover,
+.hero-actions .button-learn:focus-visible {
+  background: #ffffff;
+  color: #050505;
+  border-color: #ffffff;
+}
+
+.hero-actions .button-share {
+  color: #ffc247;
+  background: rgba(15,10,0,.78);
+  border: 2px solid #ffc247;
+  box-shadow: 0 0 14px rgba(255,194,71,.3);
+}
+
+.hero-actions .button-share:hover,
+.hero-actions .button-share:focus-visible {
+  background: #ffc247;
+  color: #1a1100;
+  border-color: #ffc247;
+  box-shadow: 0 0 22px rgba(255,194,71,.6);
+}
+
+.hero-actions .button:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.btn-icon {
+  flex: none;
 }
 
 .fb-icon {
