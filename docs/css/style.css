@@ -763,10 +763,6 @@ footer > div:last-child {
     text-align: center;
   }
 
-  .hero-actions .button-facebook {
-    grid-column: 1 / -1;
-  }
-
   .process-steps {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -1271,4 +1267,47 @@ body.programs-page .program-journey-image {
 .footer-facebook:hover,
 .footer-facebook:focus-visible {
   text-decoration: underline;
+}
+
+
+/* MOBILE HERO: the hero artwork has headline/body copy baked into its left
+   side, so on narrow screens crop to the text-free right side of the image
+   and darken it for legibility of the real HTML text. */
+@media (max-width: 700px) {
+
+  .hero {
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(5,12,9,.78) 0%,
+        rgba(5,12,9,.62) 55%,
+        rgba(5,12,9,.85) 100%
+      ),
+      url("../assets/images/recovery-forward-hero.png");
+    background-size: cover;
+    background-position: 100% center;
+    padding: 48px 0;
+  }
+
+  .hero-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero-actions .button,
+  .hero-actions .button-facebook {
+    min-height: 48px;
+    padding: 12px 8px;
+    font-size: .74rem;
+    line-height: 1.25;
+    letter-spacing: .4px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+}
+
+@media (max-width: 340px) {
+  .hero-actions {
+    grid-template-columns: 1fr;
+  }
 }
