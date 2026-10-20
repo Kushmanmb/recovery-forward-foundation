@@ -291,10 +291,16 @@ async function registrySummary(env, member) {
     }
     await audit(env.DB, member.email, "registry_summary_read");
     return json({ summary: { statusCounts: { pending: counts.pending, verified: counts.verified, closed: counts.closed } } });
-  } catch {
-    await audit(env.DB, member.email, "registry_read_failed");
-    return json({ error: "registry_unavailable" }, 503);
-  }
+  
+} catch (error) {
+  console.error("Registry summary request failed", {
+    errorType: error instanceof Error ? error.name : "UnknownError",
+    httpStatus: typeof response !== "undefined" ? response.status : null
+  });
+  await audit(env.DB, member.email, "registry_read_failed");
+  return json({ error: "registry_unavailable" }, 503);
+}
+
 }
 
 async function handleApi(request, env, identity, url) {
