@@ -8,6 +8,7 @@ import { validateSubmission } from "../src/applications.js";
 
 const ORIGIN = "https://admin.example.org";
 const SITE = "https://recoveryforwardfoundation.org";
+const SERVER_REGISTRY_TOKEN = ["synthetic", "registry", "token"].join("-");
 const encode = (value) => Buffer.from(JSON.stringify(value)).toString("base64url");
 let counter = 0;
 
@@ -28,7 +29,7 @@ async function signedIdentity(email) {
 
 function makeDb() {
   const database = new DatabaseSync(":memory:");
-  for (const file of ["0001_initial.sql", "0002_applications.sql"]) {
+  for (const file of ["0001_initial.sql", "0002_applications.sql", "0003_intake_abuse_controls.sql"]) {
     database.exec(readFileSync(new URL(`../migrations/${file}`, import.meta.url), "utf8"));
   }
   return {
@@ -41,7 +42,19 @@ function makeDb() {
         first() { return statement.get(...values) || null; },
         all() { return { results: statement.all(...values) }; },
         run() { return statement.run(...values); },
+        _run() { return statement.run(...values); },
       };
+    },
+    async batch(statements) {
+      database.exec("BEGIN");
+      try {
+        const results = statements.map((statement) => statement._run());
+        database.exec("COMMIT");
+        return results.map((result) => ({ meta: { changes: Number(result.changes) } }));
+      } catch (error) {
+        database.exec("ROLLBACK");
+        throw error;
+      }
     },
   };
 }
@@ -56,12 +69,35 @@ const validBody = (rcgi = "RCGI-0123456789ab") => ({
   confirmation: true,
 });
 
-function intake(db, body, { origin = SITE, method = "POST", raw, headers = {} } = {}) {
-  return handleIntake(new Request("https://intake.example.org/applications", {
+async function intake(db, body, {
+  origin = SITE,
+  method = "POST",
+  raw,
+  headers = {},
+  ip = "192.0.2.1",
+  botScore,
+  registry = async () => Response.json({ exists: true }),
+  env: envOverrides = {},
+} = {}) {
+  const request = new Request("https://intake.example.org/applications", {
     method,
-    headers: { origin, "content-type": "application/json", ...headers },
+    headers: { ...(origin ? { origin } : {}), "cf-connecting-ip": ip, "content-type": "application/json", ...headers },
     ...(method === "POST" ? { body: raw ?? JSON.stringify(body) } : {}),
-  }), { DB: db });
+  });
+  if (botScore !== undefined) Object.defineProperty(request, "cf", { value: { botManagement: { score: botScore } } });
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = registry;
+  try {
+    return await handleIntake(request, {
+      DB: db,
+      INTAKE_RATE_LIMIT_SECRET: "synthetic-intake-rate-limit-secret-0123456789",
+      REGISTRY_RCGI_VERIFY_URL: "https://api.recoveryforwardfoundation.org/integration/rcgi-exists",
+      REGISTRY_RCGI_VERIFY_TOKEN: SERVER_REGISTRY_TOKEN,
+      ...envOverrides,
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 }
 
 async function setup() {
@@ -106,11 +142,21 @@ const store = async (db, rcgi) => assert.equal((await intake(db, validBody(rcgi)
 
 test("intake stores a validated submission with an RCGI reference and a content-free audit entry", async () => {
   const db = makeDb();
-  const response = await intake(db, validBody());
+  let registryRequest;
+  const response = await intake(db, validBody(), {
+    registry: async (url, options) => {
+      registryRequest = { url: new URL(url), options };
+      return Response.json({ exists: true });
+    },
+  });
   assert.equal(response.status, 202);
   assert.deepEqual(await response.json(), { received: true });
   assert.equal(response.headers.get("access-control-allow-origin"), SITE);
   assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.equal(registryRequest.url.pathname, "/integration/rcgi-exists");
+  assert.equal(registryRequest.url.searchParams.get("rcgi"), "RCGI-0123456789ab");
+  assert.equal(registryRequest.options.headers.authorization.split(" ")[1], SERVER_REGISTRY_TOKEN);
+  assert.equal(registryRequest.options.redirect, "manual");
   const row = db.database.prepare("SELECT * FROM applications").get();
   assert.equal(row.rcgi, "RCGI-0123456789ab");
   assert.equal(row.status, "new");
@@ -124,15 +170,23 @@ test("intake stores a validated submission with an RCGI reference and a content-
 
 test("intake rejects bad origins, methods, content types, oversize and invalid bodies", async () => {
   const db = makeDb();
-  assert.equal((await intake(db, validBody(), { origin: "https://evil.example.org" })).status, 403);
-  assert.equal((await intake(db, validBody(), { origin: null })).status, 403);
+  let invalidRequestIndex = 0;
+  const crossOriginDb = makeDb();
+  const crossOriginPost = await intake(crossOriginDb, validBody(), { origin: "https://evil.example.org" });
+  assert.equal(crossOriginPost.status, 202);
+  assert.equal(crossOriginPost.headers.get("access-control-allow-origin"), null);
+  const serverPost = await intake(makeDb(), validBody(), { origin: null });
+  assert.equal(serverPost.status, 202);
+  assert.equal(serverPost.headers.get("access-control-allow-origin"), null);
   const preflight = await intake(db, null, { method: "OPTIONS" });
   assert.equal(preflight.status, 204);
   assert.equal(preflight.headers.get("access-control-allow-origin"), SITE);
+  assert.equal((await intake(db, null, { method: "OPTIONS", origin: "https://evil.example.org" })).status, 403);
   assert.equal((await intake(db, null, { method: "GET" })).status, 405);
-  assert.equal((await intake(db, validBody(), { headers: { "content-type": "text/plain" } })).status, 415);
-  assert.equal((await intake(db, null, { raw: "x".repeat(9000) })).status, 413);
-  assert.equal((await intake(db, null, { raw: "{not json" })).status, 400);
+  assert.equal((await intake(db, validBody(), { ip: "192.0.2.30", headers: { "content-type": "text/plain" } })).status, 415);
+  assert.equal((await intake(db, null, { ip: "192.0.2.31", raw: "x".repeat(9000) })).status, 413);
+  assert.equal((await intake(db, null, { ip: "192.0.2.32", raw: "{not json" })).status, 400);
+  let invalidRcgiLookups = 0;
   for (const bad of [
     { ...validBody(), rcgi: "RCGI-XYZ" },
     { ...validBody(), recoveryStage: "other" },
@@ -145,8 +199,16 @@ test("intake rejects bad origins, methods, content types, oversize and invalid b
     { ...validBody(), email: "applicant@example.org" },
   ]) {
     assert.equal(validateSubmission(bad), null);
-    assert.equal((await intake(db, bad)).status, 400);
+    invalidRequestIndex += 1;
+    assert.equal((await intake(db, bad, {
+      ip: `192.0.2.${32 + invalidRequestIndex}`,
+      registry: async () => {
+        invalidRcgiLookups += 1;
+        return Response.json({ exists: true });
+      },
+    })).status, 400);
   }
+  assert.equal(invalidRcgiLookups, 0);
   const notFound = await handleIntake(new Request("https://intake.example.org/other", { headers: { origin: SITE } }), { DB: db });
   assert.equal(notFound.status, 404);
   assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM applications").get().c, 0);
@@ -163,14 +225,111 @@ test("duplicate RCGI submissions are indistinguishable and cannot overwrite", as
   assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM audit_log WHERE action = 'application_received'").get().c, 1);
 });
 
+test("well-formed RCGIs not issued by the Registry are acknowledged without storage", async () => {
+  const db = makeDb();
+  const response = await intake(db, validBody(), { registry: async () => Response.json({ exists: false }) });
+  assert.equal(response.status, 202);
+  assert.deepEqual(await response.json(), { received: true });
+  assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM applications").get().c, 0);
+  assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM audit_log").get().c, 0);
+});
+
+test("unauthorized Registry access fails closed and caller credentials are never forwarded", async () => {
+  const db = makeDb();
+  const response = await intake(db, validBody(), {
+    headers: { authorization: "caller-supplied" },
+    registry: async (_url, options) => {
+      assert.equal(options.headers.authorization.split(" ")[1], SERVER_REGISTRY_TOKEN);
+      return Response.json({ error: "unauthorized" }, { status: 401 });
+    },
+  });
+  assert.equal(response.status, 503);
+  assert.ok(!(await response.text()).includes("synthetic-registry-token"));
+  assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM applications").get().c, 0);
+});
+
+test("Registry failures, redirects, and invalid responses fail closed without storing", async () => {
+  for (const registry of [
+    async () => { throw new Error("secret and applicant data must not be logged"); },
+    async () => Response.json({ exists: true }, { status: 500 }),
+    async () => new Response(null, { status: 302, headers: { location: "https://attacker.example/" } }),
+    async () => Response.json({ exists: "yes" }),
+  ]) {
+    const db = makeDb();
+    const response = await intake(db, validBody(), { registry });
+    assert.equal(response.status, 503);
+    assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM applications").get().c, 0);
+    assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM audit_log").get().c, 0);
+  }
+});
+
+test("server-side rate limits and bot scores suppress abusive submissions", async () => {
+  const db = makeDb();
+  let registryCalls = 0;
+  const registry = async () => {
+    registryCalls += 1;
+    return Response.json({ exists: true });
+  };
+  for (let index = 0; index < 5; index += 1) {
+    const rcgi = `RCGI-${index.toString(16).padStart(12, "0")}`;
+    assert.equal((await intake(db, validBody(rcgi), { ip: "192.0.2.20", registry })).status, 202);
+  }
+  const limited = await intake(db, validBody("RCGI-000000000005"), { ip: "192.0.2.20", registry });
+  assert.equal(limited.status, 429);
+  assert.equal(limited.headers.get("retry-after"), "600");
+  assert.equal(registryCalls, 5);
+
+  let botRegistryCalls = 0;
+  const botDb = makeDb();
+  const bot = await intake(botDb, validBody(), {
+    ip: "192.0.2.21",
+    botScore: 1,
+    registry: async () => {
+      botRegistryCalls += 1;
+      return Response.json({ exists: true });
+    },
+  });
+  assert.equal(bot.status, 202);
+  assert.equal(botRegistryCalls, 0);
+  assert.equal(botDb.database.prepare("SELECT COUNT(*) AS c FROM applications").get().c, 0);
+});
+
+test("intake fails closed when the rate-limit secret is missing", async () => {
+  const db = makeDb();
+  let registryCalls = 0;
+  const response = await intake(db, validBody(), {
+    env: { INTAKE_RATE_LIMIT_SECRET: "" },
+    registry: async () => {
+      registryCalls += 1;
+      return Response.json({ exists: true });
+    },
+  });
+  assert.equal(response.status, 503);
+  assert.equal(registryCalls, 0);
+  assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM applications").get().c, 0);
+});
+
+test("application insertion and its audit entry roll back together on audit failure", async () => {
+  const db = makeDb();
+  db.database.exec(`
+    CREATE TRIGGER fail_intake_audit BEFORE INSERT ON audit_log
+    WHEN NEW.actor_email = 'system:intake'
+    BEGIN SELECT RAISE(ABORT, 'synthetic audit failure'); END;
+  `);
+  const response = await intake(db, validBody());
+  assert.equal(response.status, 503);
+  assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM applications").get().c, 0);
+  assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM audit_log").get().c, 0);
+});
+
 test("intake storage failure returns a generic 503 and logs no content", async () => {
   const logs = [];
   const original = console.error;
   console.error = (...args) => logs.push(args.join(" "));
   try {
-    const response = await handleIntake(new Request("https://intake.example.org/applications", {
-      method: "POST", headers: { origin: SITE, "content-type": "application/json" }, body: JSON.stringify(validBody()),
-    }), { DB: { prepare() { throw new Error("SYNTHETIC-NEED-TEXT leaked"); } } });
+    const db = makeDb();
+    const brokenDb = { ...db, async batch() { throw new Error("SYNTHETIC-NEED-TEXT leaked"); } };
+    const response = await intake(brokenDb, validBody());
     assert.equal(response.status, 503);
   } finally {
     console.error = original;

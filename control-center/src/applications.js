@@ -33,19 +33,18 @@ export function validateSubmission(body) {
   return { rcgi: body.rcgi, recoveryStage: body.recoveryStage, needs: [...body.needs], ...text };
 }
 
-/** Insert-only. A repeated RCGI is ignored so a resubmission cannot overwrite or reveal an existing record. */
+/** Insert-only. Application and content-free audit insertion share one D1 transaction. */
 export async function storeSubmission(db, submission) {
   const now = Date.now();
-  const result = await db.prepare(
+  const insertApplication = db.prepare(
     "INSERT OR IGNORE INTO applications (rcgi, recovery_stage, recovery_support, needs_json, need_description, goals, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'new', ?, ?)",
   ).bind(submission.rcgi, submission.recoveryStage, submission.recoverySupport, JSON.stringify(submission.needs),
-    submission.needDescription, submission.goals, now, now).run();
-  const inserted = (result?.meta?.changes ?? result?.changes ?? 0) > 0;
-  if (inserted) {
-    await db.prepare("INSERT INTO audit_log (actor_email, action, detail_json, created_at) VALUES (?, ?, ?, ?)")
-      .bind("system:intake", "application_received", JSON.stringify({ rcgi: submission.rcgi }), now).run();
-  }
-  return inserted;
+    submission.needDescription, submission.goals, now, now);
+  const insertAuditIfInserted = db.prepare(
+    "INSERT INTO audit_log (actor_email, action, detail_json, created_at) SELECT ?, ?, ?, ? WHERE changes() > 0",
+  ).bind("system:intake", "application_received", JSON.stringify({ rcgi: submission.rcgi }), now);
+  const results = await db.batch([insertApplication, insertAuditIfInserted]);
+  return (results?.[0]?.meta?.changes ?? results?.[0]?.changes ?? 0) > 0;
 }
 
 export function applicationSummary(row) {

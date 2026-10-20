@@ -9,11 +9,11 @@
 | Role escalation | Default-deny server-side permission checks; audit endpoint restricted to President; new members are not self-registerable | Implemented for available endpoints; officer provisioning workflow incomplete |
 | CSRF | Same-origin checks on state-changing endpoints; SameSite=Strict cookie; no cross-origin API support | Implemented |
 | Cross-site scripting / framing | Escaped UI content, restrictive CSP, frame denial, no inline executable scripts | Implemented; independently review before deployment |
-| Registry credential/data exposure | Server-only bearer token; fixed official API host, HTTPS GET only, response size/schema checks, allowlisted aggregate response fields | Adapter boundary implemented; upstream contract and endpoint not verified; disabled until approved |
-| Applicant personal information | Registry summary exposes aggregate counts only. Application answers (Phase 1) are stored in D1, readable only by the President and the assigned authorized reviewer, with audited access; see 06-APPLICATION-INBOX.md | Implemented at application boundary; verify upstream aggregate endpoint before enabling |
+| Registry credential/data exposure | Separate server-only bearer tokens; fixed official API host, HTTPS GET only, response size/schema checks, allowlisted response fields | Summary adapter exists; RCGI verification contract and endpoint remain unverified and fail closed until approved |
+| Applicant personal information | Registry summary exposes aggregate counts only. Application answers are stored only after server-side Registry RCGI verification, readable only by the President and assigned authorized reviewer, with audited access; duplicate and nonexistent RCGIs receive indistinguishable intake responses | Implemented fail-closed against a configured response contract; actual Registry existence endpoint remains unverified |
 | Audit alteration | D1 triggers reject update/delete; API writes minimal actor/action details and reads are President-only | Implemented; not tamper-proof against D1 administrators and not externally anchored |
 | Credential leakage | No credentials in source, HTML, browser storage, URLs, or error responses | Environment setup documented; secret scanning required before commit |
-| Abuse / excessive requests | Cloudflare Access in front of all routes; D1-backed sessions | Configure Cloudflare rate limiting and alerting before production; app-level rate limiting is not implemented |
+| Public intake abuse | D1-backed per-client-IP request limit using HMAC pseudonyms; Cloudflare Bot Management score suppression when available; fixed response bodies and no content logging | Worker controls implemented; requires a random rate-limit secret, Bot Management, and WAF managed challenge/network rate limits before production |
 | Financial misuse | No payment execution or Registry write endpoint exists | Not implemented; no live transactions |
 
 ## Deployment approval checklist
@@ -24,8 +24,12 @@
 - [ ] Bootstrap works only for the configured President when the member table is empty; policy acknowledgement is recorded; uninvited identities cannot register.
 - [ ] Every API route has a role-authorization test; session expiry, logout revocation, suspended-account denial, and CSRF checks are verified.
 - [ ] Registry owners approve the exact read-only endpoint/schema and least-privilege token; an integration test confirms no applicant data or token reaches the browser or logs.
+- [ ] Registry owners verify the configured RCGI existence endpoint and response contract; staging proves invalid, nonexistent, valid, duplicate, unauthorized, and unavailable cases fail safely.
+- [ ] Set `REGISTRY_RCGI_VERIFY_URL`, a least-privilege `REGISTRY_RCGI_VERIFY_TOKEN`, and a random `INTAKE_RATE_LIMIT_SECRET` only in the intake Worker environment; verify secrets never appear in browser responses, logs, or URLs.
+- [ ] Configure and test Cloudflare Bot Management, WAF managed challenge, and network-level rate limits for the public intake hostname; verify the Worker receives the expected bot score.
+- [ ] Apply migrations `0002_applications.sql` and `0003_intake_abuse_controls.sql` only to the approved environment after backup and President authorization.
 - [ ] D1 backups, retention, restore drill, audit export/retention, monitoring, and incident response are approved.
 - [ ] External security review, penetration test, dependency/secret scanning, and legal/privacy review are complete.
 - [ ] Confirm public GitHub Pages and the Registry API are unchanged; confirm no deployment automation is enabled.
 
-Officer invitations and lifecycle administration, app-level rate limiting, durable audit anchoring, alerting, external review, and production MFA verification remain incomplete. Keep the Worker undeployed until all applicable checks are approved.
+Officer invitations and lifecycle administration, distributed-abuse mitigation, durable audit anchoring, alerting, external review, and production MFA verification remain incomplete. The Registry endpoint contract is unverified and the public form is not wired to the intake Worker. Keep the Worker undeployed until all applicable checks are approved.

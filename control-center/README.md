@@ -18,7 +18,7 @@ This is a separate Cloudflare Worker application for `admin.recoveryforwardfound
 1. Confirm that the Cloudflare account, Workers plan, D1 location/retention, backups, and organization privacy requirements are appropriate.
 2. Configure Cloudflare Access for the exact admin hostname. Initially allow only the President's approved identity and require MFA. Set the maximum Access session lifetime to 8 hours. Verify the policy actually blocks sign-in without MFA; the Worker cannot infer MFA from an unverified browser claim. Keep Access in front of both the UI and API.
 3. Additional officer account invitation, delivery, acceptance, activation, recovery, and suspension administration are not yet implemented as UI/API workflows. Do not insert members directly into production D1 without a reviewed, audited provisioning procedure.
-4. The Recovery Grant Registry repository/API schema was unavailable for inspection. The adapter expects a reviewed, read-only endpoint returning `{"summary":{"statusCounts":{"pending":0,"verified":0,"closed":0}}}`. Confirm endpoint, authorization scope, response meaning, and privacy review before setting Registry credentials. No applicant record payload is returned to this app.
+4. The Recovery Grant Registry repository/API schema was unavailable for inspection. The Control Center summary adapter expects a reviewed, read-only endpoint returning `{"summary":{"statusCounts":{"pending":0,"verified":0,"closed":0}}}`. The public intake also requires a Registry RCGI existence endpoint returning `{"exists":true|false}` for a supplied RCGI. Registry owners must confirm the real endpoint paths, authorization scopes, response meanings, and privacy review before setting credentials. Both integrations fail closed if unavailable; no applicant record payload is returned to the browser.
 5. D1 sessions and audit rows are not encrypted by application code, externally anchored, or configured for backup/restore here. Confirm Cloudflare's at-rest controls and perform a restore drill before any production use.
 6. Perform an independent security review and test the deployed Access/DNS policy in staging. No live finance transactions, applicant records, or Registry writes are supported.
 
@@ -30,13 +30,15 @@ This is a separate Cloudflare Worker application for `admin.recoveryforwardfound
    - `ACCESS_TEAM_DOMAIN`: the Access team hostname, e.g. `<team>.cloudflareaccess.com` (no scheme).
    - `ACCESS_AUD`: the Access application audience tag for the admin application.
    - `PRESIDENT_EMAIL`: the one approved bootstrap identity.
-   - `REGISTRY_API_URL` and `REGISTRY_API_TOKEN`: optional and **leave unset** until the upstream read-only contract is reviewed. The URL must use HTTPS and the exact official Registry API hostname.
-4. Apply `migrations/` to the intended D1 environment, then test authentication, MFA enforcement, bootstrap, account suspension, session revocation, role-denied audit access, and Registry failure behavior with synthetic data.
+   - `REGISTRY_API_URL` and `REGISTRY_API_TOKEN`: for the Control Center aggregate summary only; optional and **leave unset** until that upstream read-only contract is reviewed. The URL must use HTTPS and the exact official Registry API hostname.
+   - For the separate intake Worker only, set `REGISTRY_RCGI_VERIFY_URL` to the Registry-approved RCGI existence endpoint and `REGISTRY_RCGI_VERIFY_TOKEN` to a dedicated least-privilege secret. Do not configure these until the real endpoint contract is confirmed.
+   - For the separate intake Worker only, set `INTAKE_RATE_LIMIT_SECRET` as a random secret of at least 32 characters. The rate limiter fails closed when this secret or its D1 storage is unavailable.
+4. Apply `migrations/` to the intended D1 environment only after backup and President approval. The intake migration `0003_intake_abuse_controls.sql` is not applied automatically. Test authentication, MFA enforcement, bootstrap, account suspension, session revocation, role-denied audit access, Registry verification/failure behavior, rate limits, and atomic intake writes with synthetic data.
 5. Only after written approval, deploy manually with the reviewed Wrangler version and environment. No CI workflow deploys this Worker.
 
 ### Required secrets and safe handling
 
-Do not add real values to source, `.env` files, build artifacts, browser storage, or logs. Use Cloudflare Worker secrets for the President email and Registry token; keep Access domain/audience as environment configuration. Never put the Registry token in a URL or client response.
+Do not add real values to source, `.env` files, build artifacts, browser storage, or logs. Use Cloudflare Worker secrets for the President email, each Registry token, and `INTAKE_RATE_LIMIT_SECRET`; keep Access domain/audience and endpoint URLs as environment configuration. Never put a Registry token in a URL or client response.
 
 ### Rollback
 
