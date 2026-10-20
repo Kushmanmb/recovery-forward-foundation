@@ -210,6 +210,7 @@ overflow-x: auto;
 .hero-actions {
   display: flex;
   gap: 14px;
+  flex-wrap: wrap;
   margin-top: 32px;
 }
 
@@ -1169,4 +1170,40 @@ body.programs-page .program-journey-image {
 
 .daily-prayer-card #daily-prayer-date {
   margin-bottom: 25px;
+}
+/* Facebook links */
+
+.button-facebook {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  background: #1877f2;
+  border: 1px solid #1877f2;
+}
+
+.button-facebook:hover,
+.button-facebook:focus-visible {
+  background: #0f5fd0;
+}
+
+.fb-icon {
+  flex: none;
+}
+
+.footer-social {
+  margin-top: 10px;
+}
+
+.footer-facebook {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--green-bright);
+  text-decoration: none;
+}
+
+.footer-facebook:hover,
+.footer-facebook:focus-visible {
+  text-decoration: underline;
 }
