@@ -1,0 +1,16 @@
+# Public write-only application intake. NOT approved for deployment; no route is
+# configured on purpose. Choosing the hostname and WAF rate limits is a rollout step
+# (see docs/06-APPLICATION-INBOX.md). Shares the Control Center D1 database.
+name = "recovery-forward-application-intake"
+main = "src/intake.js"
+compatibility_date = "2026-10-16"
+workers_dev = false
+
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "recovery-forward-control-center-db"
+database_id = "3c02163b-1451-4221-b49c-73b4c908dda7"
+migrations_dir = "migrations"

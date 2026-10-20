@@ -1,4 +1,5 @@
 import { ROLE_PERMISSIONS, ROLES, can } from "./rbac.js";
+import { RCGI_PATTERN, REVIEWER_STATUSES, STATUSES, applicationDetail, applicationSummary } from "./applications.js";
 
 const COOKIE_NAME = "__Host-rff_session";
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
@@ -300,6 +301,149 @@ async function registrySummary(env, member) {
 
 }
 
+async function readJsonBody(request) {
+  if (!sameOrigin(request)) return { error: json({ error: "forbidden" }, 403) };
+  if (request.headers.get("content-type")?.split(";")[0] !== "application/json"
+    || Number(request.headers.get("content-length") || 0) > 1024) return { error: json({ error: "invalid_request" }, 400) };
+  try {
+    const body = await request.json();
+    if (body && typeof body === "object" && !Array.isArray(body)) return { body };
+  } catch {
+    // fall through
+  }
+  return { error: json({ error: "invalid_request" }, 400) };
+}
+
+async function deny(env, member, permission) {
+  await audit(env.DB, member.email, "authorization_denied", { permission });
+  return json({ error: "forbidden" }, 403);
+}
+
+async function isAuthorizedReviewer(db, email) {
+  const row = await db.prepare(
+    "SELECT members.email FROM application_reviewers JOIN members ON members.email = application_reviewers.member_email WHERE application_reviewers.member_email = ? AND application_reviewers.revoked_at IS NULL AND members.status = 'active' AND members.role != 'President'",
+  ).bind(email).first();
+  return Boolean(row);
+}
+
+// Authorized reviewers receive one extra permission via the individual-grant mechanism.
+async function withReviewerGrant(db, member) {
+  if (member.role === "President" || !(await isAuthorizedReviewer(db, member.email))) return member;
+  return { ...member, grants: ["applications:review:assigned"] };
+}
+
+async function handleApplications(request, env, rawMember, url) {
+  const member = await withReviewerGrant(env.DB, rawMember);
+  const isPresident = can(member, "applications:read:all");
+  const isReviewer = can(member, "applications:review:assigned");
+  const { pathname } = url;
+
+  if (pathname === "/api/applications/reviewers") {
+    if (!can(member, "applications:reviewers:manage")) return deny(env, member, "applications:reviewers:manage");
+    if (request.method === "GET") {
+      const { results = [] } = await env.DB.prepare(
+        "SELECT member_email, authorized_at FROM application_reviewers WHERE revoked_at IS NULL ORDER BY member_email",
+      ).all();
+      return json({ reviewers: results.map((row) => ({ email: row.member_email, authorizedAt: row.authorized_at })) });
+    }
+    if (request.method !== "POST") return json({ error: "not_found" }, 404);
+    const { body, error } = await readJsonBody(request);
+    if (error) return error;
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    if (!email || typeof body.authorized !== "boolean") return json({ error: "invalid_request" }, 400);
+    const target = await env.DB.prepare("SELECT email, role, status FROM members WHERE email = ?").bind(email).first();
+    if (!target || target.status !== "active" || target.role === "President" || !ROLES.includes(target.role)) {
+      return json({ error: "invalid_request" }, 400);
+    }
+    const now = Date.now();
+    if (body.authorized) {
+      await env.DB.prepare(
+        "INSERT INTO application_reviewers (member_email, authorized_by, authorized_at) VALUES (?, ?, ?) ON CONFLICT(member_email) DO UPDATE SET authorized_by = excluded.authorized_by, authorized_at = excluded.authorized_at, revoked_at = NULL WHERE application_reviewers.revoked_at IS NOT NULL",
+      ).bind(email, member.email, now).run();
+      await audit(env.DB, member.email, "application_reviewer_authorized", { reviewer: email });
+    } else {
+      await env.DB.prepare("UPDATE application_reviewers SET revoked_at = ? WHERE member_email = ? AND revoked_at IS NULL")
+        .bind(now, email).run();
+      await env.DB.prepare(
+        "UPDATE applications SET assigned_to = NULL, assigned_by = NULL, assigned_at = NULL, status = 'new', updated_at = ? WHERE assigned_to = ? AND status != 'closed'",
+      ).bind(now, email).run();
+      await audit(env.DB, member.email, "application_reviewer_revoked", { reviewer: email });
+    }
+    return json({ ok: true });
+  }
+
+  if (pathname === "/api/applications" && request.method === "GET") {
+    if (!isPresident && !isReviewer) return deny(env, member, "applications:read:all");
+    const query = isPresident
+      ? env.DB.prepare("SELECT rcgi, status, assigned_to, created_at, updated_at FROM applications ORDER BY created_at DESC LIMIT 200")
+      : env.DB.prepare("SELECT rcgi, status, assigned_to, created_at, updated_at FROM applications WHERE assigned_to = ? ORDER BY created_at DESC LIMIT 200").bind(member.email);
+    const { results = [] } = await query.all();
+    await audit(env.DB, member.email, "application_list_read", { scope: isPresident ? "all" : "assigned" });
+    return json({ applications: results.map(applicationSummary) });
+  }
+
+  const match = pathname.match(/^\/api\/applications\/([^/]+)(?:\/(assign|status))?$/);
+  if (!match || !RCGI_PATTERN.test(match[1])) return json({ error: "not_found" }, 404);
+  const [, rcgi, action] = match;
+  const row = await env.DB.prepare("SELECT * FROM applications WHERE rcgi = ?").bind(rcgi).first();
+
+  if (!action && request.method === "GET") {
+    // Reviewers get the same response for missing and unassigned records.
+    if (!isPresident && !(isReviewer && row?.assigned_to === member.email)) {
+      if (!isPresident && !isReviewer) return deny(env, member, "applications:review:assigned");
+      await audit(env.DB, member.email, "authorization_denied", { permission: "applications:review:assigned", rcgi });
+      return json({ error: "not_found" }, 404);
+    }
+    if (!row) return json({ error: "not_found" }, 404);
+    await audit(env.DB, member.email, "application_viewed", { rcgi });
+    return json({ application: applicationDetail(row) });
+  }
+
+  if (action === "assign" && request.method === "POST") {
+    if (!can(member, "applications:assign")) return deny(env, member, "applications:assign");
+    const { body, error } = await readJsonBody(request);
+    if (error) return error;
+    if (!row) return json({ error: "not_found" }, 404);
+    if (row.status === "closed") return json({ error: "conflict" }, 409);
+    const now = Date.now();
+    if (body.assignee === null) {
+      await env.DB.prepare("UPDATE applications SET assigned_to = NULL, assigned_by = NULL, assigned_at = NULL, status = 'new', updated_at = ? WHERE rcgi = ? AND status != 'closed'")
+        .bind(now, rcgi).run();
+      await audit(env.DB, member.email, "application_unassigned", { rcgi });
+      return json({ ok: true });
+    }
+    const assignee = typeof body.assignee === "string" ? body.assignee.trim().toLowerCase() : "";
+    if (!assignee || !(await isAuthorizedReviewer(env.DB, assignee))) return json({ error: "invalid_request" }, 400);
+    await env.DB.prepare("UPDATE applications SET assigned_to = ?, assigned_by = ?, assigned_at = ?, status = 'assigned', updated_at = ? WHERE rcgi = ? AND status != 'closed'")
+      .bind(assignee, member.email, now, now, rcgi).run();
+    await audit(env.DB, member.email, "application_assigned", { rcgi, assignee });
+    return json({ ok: true });
+  }
+
+  if (action === "status" && request.method === "POST") {
+    const asPresident = can(member, "applications:status:write");
+    if (!asPresident && !isReviewer) return deny(env, member, "applications:status:write");
+    const { body, error } = await readJsonBody(request);
+    if (error) return error;
+    // "new"/"assigned" change only through assignment, so status and assignee cannot disagree.
+    const allowed = asPresident ? STATUSES.filter((status) => !["new", "assigned"].includes(status)) : REVIEWER_STATUSES;
+    if (!allowed.includes(body.status)) return json({ error: "invalid_request" }, 400);
+    if (!row || (!asPresident && row.assigned_to !== member.email)) {
+      if (row) await audit(env.DB, member.email, "authorization_denied", { permission: "applications:review:assigned", rcgi });
+      return json({ error: "not_found" }, 404);
+    }
+    if (row.status === "closed" && !asPresident) return json({ error: "conflict" }, 409);
+    if (body.status !== "closed" && !row.assigned_to) {
+      return json({ error: "conflict" }, 409);
+    }
+    await env.DB.prepare("UPDATE applications SET status = ?, updated_at = ? WHERE rcgi = ?").bind(body.status, Date.now(), rcgi).run();
+    await audit(env.DB, member.email, "application_status_changed", { rcgi, from: row.status, to: body.status });
+    return json({ ok: true });
+  }
+
+  return json({ error: "not_found" }, 404);
+}
+
 async function handleApi(request, env, identity, url) {
   if (url.pathname === "/api/session" && request.method === "POST") {
     if (!sameOrigin(request)) return json({ error: "forbidden" }, 403);
@@ -326,6 +470,10 @@ async function handleApi(request, env, identity, url) {
     && !(url.pathname === "/api/bootstrap/complete" && request.method === "POST")) {
     await audit(env.DB, member.email, "authorization_denied", { status: "pending" });
     return json({ error: "forbidden" }, 403);
+  }
+
+  if (url.pathname === "/api/applications" || url.pathname.startsWith("/api/applications/")) {
+    return handleApplications(request, env, member, url);
   }
 
   if (url.pathname === "/api/audit" && request.method === "GET") {

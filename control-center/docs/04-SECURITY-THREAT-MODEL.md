@@ -10,7 +10,7 @@
 | CSRF | Same-origin checks on state-changing endpoints; SameSite=Strict cookie; no cross-origin API support | Implemented |
 | Cross-site scripting / framing | Escaped UI content, restrictive CSP, frame denial, no inline executable scripts | Implemented; independently review before deployment |
 | Registry credential/data exposure | Server-only bearer token; fixed official API host, HTTPS GET only, response size/schema checks, allowlisted aggregate response fields | Adapter boundary implemented; upstream contract and endpoint not verified; disabled until approved |
-| Applicant personal information | UI and API expose aggregate status counts only; no applicant detail endpoint | Implemented at application boundary; verify upstream aggregate endpoint before enabling |
+| Applicant personal information | Registry summary exposes aggregate counts only. Application answers (Phase 1) are stored in D1, readable only by the President and the assigned authorized reviewer, with audited access; see 06-APPLICATION-INBOX.md | Implemented at application boundary; verify upstream aggregate endpoint before enabling |
 | Audit alteration | D1 triggers reject update/delete; API writes minimal actor/action details and reads are President-only | Implemented; not tamper-proof against D1 administrators and not externally anchored |
 | Credential leakage | No credentials in source, HTML, browser storage, URLs, or error responses | Environment setup documented; secret scanning required before commit |
 | Abuse / excessive requests | Cloudflare Access in front of all routes; D1-backed sessions | Configure Cloudflare rate limiting and alerting before production; app-level rate limiting is not implemented |
