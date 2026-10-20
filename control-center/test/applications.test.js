@@ -561,3 +561,98 @@ test("state-changing application endpoints require same-origin JSON", async () =
   assert.equal((await actors.president.api("/api/applications/RCGI-0123456789ab/status", { method: "POST" })).status, 400);
   assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM application_reviewers").get().c, 0);
 });
+
+const RCGI = "RCGI-0123456789ab";
+const APP = `/api/applications/${RCGI}`;
+const authorize = (actors, email, authorized = true) => actors.president.api("/api/applications/reviewers", { method: "POST", body: { email, authorized } });
+const snapshot = (db) => ({
+  app: { ...db.database.prepare("SELECT status, assigned_to, assigned_by, assigned_at, updated_at FROM applications").get() },
+  reviewers: db.database.prepare("SELECT member_email, revoked_at FROM application_reviewers ORDER BY member_email").all().map((r) => ({ ...r })),
+});
+const failAudit = (db, action) => db.database.exec(
+  `CREATE TRIGGER fail_audit BEFORE INSERT ON audit_log WHEN NEW.action = '${action}' BEGIN SELECT RAISE(ABORT, 'synthetic audit failure'); END;`,
+);
+
+test("a reviewer revoked between authorization and the read cannot see details or the list", async () => {
+  const { db, actors, people } = await setup();
+  await store(db, RCGI);
+  await authorize(actors, people.reviewer);
+  await actors.president.api(`${APP}/assign`, { method: "POST", body: { assignee: people.reviewer } });
+  raceAfterApplicationRead(db, () => {
+    db.database.prepare("UPDATE application_reviewers SET revoked_at = ? WHERE member_email = ?").run(Date.now(), people.reviewer);
+  });
+  const detail = await actors.reviewer.api(APP);
+  assert.equal(detail.status, 404);
+  assert.ok(!(await detail.text()).includes("SYNTHETIC-GOALS-TEXT"));
+  db.database.prepare("UPDATE application_reviewers SET revoked_at = NULL").run();
+  db.database.prepare("UPDATE application_reviewers SET revoked_at = ?").run(Date.now());
+  assert.equal((await actors.reviewer.api(APP)).status, 403);
+  assert.equal((await actors.reviewer.api("/api/applications")).status, 403);
+});
+
+test("a stale reviewer read after reassignment returns nothing and the new assignee sees the record", async () => {
+  const { db, actors, people } = await setup();
+  await store(db, RCGI);
+  await authorize(actors, people.reviewer);
+  await authorize(actors, people.other);
+  await actors.president.api(`${APP}/assign`, { method: "POST", body: { assignee: people.reviewer } });
+  raceAfterApplicationRead(db, () => {
+    db.database.prepare("UPDATE applications SET assigned_to = ?").run(people.other);
+  });
+  assert.equal((await actors.reviewer.api(APP)).status, 404);
+  assert.equal((await actors.reviewer.api("/api/applications").then((r) => r.json())).applications.length, 0);
+  assert.equal((await actors.other.api(APP)).status, 200);
+  assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM audit_log WHERE action = 'application_viewed'").get().c, 1);
+});
+
+test("reassignment away from a reviewer revokes their access and revocation with unassignment is atomic with audit", async () => {
+  const { db, actors, people } = await setup();
+  await store(db, RCGI);
+  await authorize(actors, people.reviewer);
+  await authorize(actors, people.other);
+  await actors.president.api(`${APP}/assign`, { method: "POST", body: { assignee: people.reviewer } });
+  await actors.president.api(`${APP}/assign`, { method: "POST", body: { assignee: people.other } });
+  assert.equal((await actors.reviewer.api(APP)).status, 404);
+  assert.equal((await actors.reviewer.api(`${APP}/status`, { method: "POST", body: { status: "in_review" } })).status, 404);
+
+  const before = snapshot(db);
+  failAudit(db, "application_reviewer_revoked");
+  const failed = await authorize(actors, people.other, false).catch(() => ({ status: 500 }));
+  assert.ok(failed.status >= 500);
+  assert.deepEqual(snapshot(db), before);
+  assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM audit_log WHERE action = 'application_reviewer_revoked'").get().c, 0);
+});
+
+test("audit-write failures roll back assignment, unassignment, status, authorization and revocation", async () => {
+  for (const [action, run] of [
+    ["application_assigned", (a, p) => a.president.api(`${APP}/assign`, { method: "POST", body: { assignee: p.reviewer } })],
+    ["application_unassigned", (a) => a.president.api(`${APP}/assign`, { method: "POST", body: { assignee: null } })],
+    ["application_status_changed", (a) => a.reviewer.api(`${APP}/status`, { method: "POST", body: { status: "in_review" } })],
+    ["application_reviewer_authorized", (a, p) => authorize(a, p.other)],
+    ["application_reviewer_revoked", (a, p) => authorize(a, p.reviewer, false)],
+  ]) {
+    const { db, actors, people } = await setup();
+    await store(db, RCGI);
+    await authorize(actors, people.reviewer);
+    if (action !== "application_assigned") await actors.president.api(`${APP}/assign`, { method: "POST", body: { assignee: people.reviewer } });
+    const before = snapshot(db);
+    const auditCount = db.database.prepare("SELECT COUNT(*) AS c FROM audit_log").get().c;
+    failAudit(db, action);
+    const response = await run(actors, people).catch(() => ({ status: 500 }));
+    assert.ok(response.status >= 500, action);
+    assert.deepEqual(snapshot(db), before, action);
+    assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM audit_log").get().c, auditCount, action);
+  }
+});
+
+test("a suspended President cannot change application state even with a stale session", async () => {
+  const { db, actors, people } = await setup();
+  await store(db, RCGI);
+  await authorize(actors, people.reviewer);
+  raceAfterApplicationRead(db, () => {
+    db.database.prepare("UPDATE members SET status = 'suspended' WHERE email = ?").run(people.president);
+  });
+  assert.equal((await actors.president.api(`${APP}/assign`, { method: "POST", body: { assignee: people.reviewer } })).status, 409);
+  assert.equal(db.database.prepare("SELECT status FROM applications").get().status, "new");
+  assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM audit_log WHERE action = 'application_assigned'").get().c, 0);
+});
