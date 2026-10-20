@@ -91,8 +91,8 @@ async function intake(db, body, {
     return await handleIntake(request, {
       DB: db,
       INTAKE_RATE_LIMIT_SECRET: "synthetic-intake-rate-limit-secret-0123456789",
-      REGISTRY_RCGI_VERIFY_URL: "https://api.recoveryforwardfoundation.org/integration/rcgi-exists",
-      REGISTRY_RCGI_VERIFY_TOKEN: SERVER_REGISTRY_TOKEN,
+      REGISTRY_RCGI_VERIFY_URL: "https://api.recoveryforwardfoundation.org/integration/participants",
+      REGISTRY_INTEGRATION_TOKEN: SERVER_REGISTRY_TOKEN,
       ...envOverrides,
     });
   } finally {
@@ -153,8 +153,8 @@ test("intake stores a validated submission with an RCGI reference and a content-
   assert.deepEqual(await response.json(), { received: true });
   assert.equal(response.headers.get("access-control-allow-origin"), SITE);
   assert.equal(response.headers.get("cache-control"), "no-store");
-  assert.equal(registryRequest.url.pathname, "/integration/rcgi-exists");
-  assert.equal(registryRequest.url.searchParams.get("rcgi"), "RCGI-0123456789ab");
+  assert.equal(registryRequest.url.pathname, "/integration/participants/RCGI-0123456789ab/exists");
+  assert.equal(registryRequest.url.search, "");
   assert.equal(registryRequest.options.headers.authorization.split(" ")[1], SERVER_REGISTRY_TOKEN);
   assert.equal(registryRequest.options.redirect, "manual");
   const row = db.database.prepare("SELECT * FROM applications").get();
@@ -225,7 +225,7 @@ test("duplicate RCGI submissions are indistinguishable and cannot overwrite", as
   assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM audit_log WHERE action = 'application_received'").get().c, 1);
 });
 
-test("well-formed RCGIs not issued by the Registry are acknowledged without storage", async () => {
+test("Registry existence false is acknowledged without storing", async () => {
   const db = makeDb();
   const response = await intake(db, validBody(), { registry: async () => Response.json({ exists: false }) });
   assert.equal(response.status, 202);
@@ -248,12 +248,26 @@ test("unauthorized Registry access fails closed and caller credentials are never
   assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM applications").get().c, 0);
 });
 
-test("Registry failures, redirects, and invalid responses fail closed without storing", async () => {
+test("malformed Registry responses fail closed without storing", async () => {
+  for (const registry of [
+    async () => new Response("{ malformed", { headers: { "content-type": "application/json" } }),
+    async () => Response.json({ exists: "yes" }),
+    async () => Response.json({}),
+    async () => Response.json([ { exists: true } ]),
+  ]) {
+    const db = makeDb();
+    const response = await intake(db, validBody(), { registry });
+    assert.equal(response.status, 503);
+    assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM applications").get().c, 0);
+  }
+});
+
+test("Registry unavailable responses and redirects fail closed without storing", async () => {
   for (const registry of [
     async () => { throw new Error("secret and applicant data must not be logged"); },
     async () => Response.json({ exists: true }, { status: 500 }),
+    async () => Response.json({ exists: true }, { status: 503 }),
     async () => new Response(null, { status: 302, headers: { location: "https://attacker.example/" } }),
-    async () => Response.json({ exists: "yes" }),
   ]) {
     const db = makeDb();
     const response = await intake(db, validBody(), { registry });

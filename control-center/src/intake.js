@@ -108,7 +108,7 @@ async function readRegistryJson(response) {
 }
 
 async function verifyRegistryRcgi(rcgi, env) {
-  if (!env.REGISTRY_RCGI_VERIFY_URL || !env.REGISTRY_RCGI_VERIFY_TOKEN) throw new Error("registry verification unavailable");
+  if (!env.REGISTRY_RCGI_VERIFY_URL || !env.REGISTRY_INTEGRATION_TOKEN) throw new Error("registry verification unavailable");
   let url;
   try {
     url = new URL(env.REGISTRY_RCGI_VERIFY_URL);
@@ -119,10 +119,10 @@ async function verifyRegistryRcgi(rcgi, env) {
     || url.username || url.password || url.search || url.hash) {
     throw new Error("registry verification unavailable");
   }
-  url.searchParams.set("rcgi", rcgi);
+  url.pathname = `${url.pathname.replace(/\/+$/, "")}/${encodeURIComponent(rcgi)}/exists`;
   const response = await fetch(url, {
     method: "GET",
-    headers: { accept: "application/json", authorization: "Bearer " + env.REGISTRY_RCGI_VERIFY_TOKEN },
+    headers: { accept: "application/json", authorization: "Bearer " + env.REGISTRY_INTEGRATION_TOKEN },
     redirect: "manual",
     signal: AbortSignal.timeout(5000),
   });
@@ -131,7 +131,7 @@ async function verifyRegistryRcgi(rcgi, env) {
   if (!body || typeof body !== "object" || Array.isArray(body) || typeof body.exists !== "boolean") {
     throw new Error("registry response invalid");
   }
-  return body.exists;
+  return body.exists === true;
 }
 
 export async function handleIntake(request, env) {
