@@ -293,10 +293,7 @@ async function registrySummary(env, member) {
     return json({ summary: { statusCounts: { pending: counts.pending, verified: counts.verified, closed: counts.closed } } });
   
 } catch (error) {
-  console.error("Registry summary request failed", {
-    errorType: error instanceof Error ? error.name : "UnknownError",
-    httpStatus: typeof response !== "undefined" ? response.status : null
-  });
+  console.error("Registry summary request failed", error?.name, error?.message);
   await audit(env.DB, member.email, "registry_read_failed");
   return json({ error: "registry_unavailable" }, 503);
 }
