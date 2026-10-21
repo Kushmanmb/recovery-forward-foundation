@@ -1311,3 +1311,113 @@ body.programs-page .program-journey-image {
     grid-template-columns: 1fr;
   }
 }
+
+/* Crypto donations */
+.crypto-section {
+  padding: 40px 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.crypto-card {
+  width: 100%;
+  max-width: 640px;
+  box-sizing: border-box;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.crypto-heart {
+  font-size: 2.5rem;
+  margin: 0 0 8px;
+}
+
+.crypto-card h2 {
+  margin: 0 0 12px;
+}
+
+.crypto-network {
+  display: inline-block;
+  margin: 8px 0;
+  padding: 4px 12px;
+  border: 1px solid var(--green-dark);
+  border-radius: 999px;
+  color: var(--green-bright);
+  font-weight: 700;
+  font-size: .9rem;
+}
+
+.crypto-label {
+  margin: 12px 0 6px;
+  color: var(--muted);
+  font-size: .85rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.crypto-address {
+  margin: 0 0 16px;
+  padding: 12px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .95rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  -webkit-user-select: all;
+  user-select: all;
+  text-align: left;
+}
+
+.crypto-copy {
+  width: 100%;
+  max-width: 320px;
+  min-height: 48px;
+  cursor: pointer;
+}
+
+.crypto-copy:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.crypto-status {
+  min-height: 1.5em;
+  margin: 10px 0;
+  color: var(--green-bright);
+  font-weight: 600;
+}
+
+.crypto-status.is-error {
+  color: var(--gold);
+}
+
+.crypto-warning,
+.crypto-note {
+  margin: 12px 0 0;
+  font-size: .9rem;
+  line-height: 1.5;
+}
+
+.crypto-warning {
+  padding: 10px 12px;
+  border-left: 4px solid var(--gold);
+  background: rgba(244,166,42,.08);
+  text-align: left;
+}
+
+.crypto-note {
+  color: var(--muted);
+}
+
+@media (min-width: 600px) {
+  .crypto-card { padding: 36px 40px; }
+  .crypto-address { font-size: 1.05rem; }
+}
