@@ -66,3 +66,6 @@
   }
   #lifeline-pause, .lifeline label { display: none; }
 }
+
+/* Hide heartbeat pause controls. */
+#lifeline-pause, .lifeline label { display: none; }
