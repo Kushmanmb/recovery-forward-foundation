@@ -611,6 +611,18 @@ Keep this number safe to check your registration status.
   </p>
 </div>
 
+      <p id="intake-status" role="status" aria-live="polite" hidden></p>
+
+      <button
+        id="intake-retry-button"
+        class="submit-button"
+        type="button"
+        hidden
+        style="max-width: 300px; display: block; margin: 0 auto 25px;"
+      >
+        TRY SENDING AGAIN
+      </button>
+
       <a class="button button-primary" href="index.html">
         RETURN HOME
       </a>
@@ -643,6 +655,65 @@ copyButton.addEventListener("click", async () => {
   }
 });
   const submitButton = form.querySelector(".submit-button");
+  const intakeStatus = document.getElementById("intake-status");
+  const retryButton = document.getElementById("intake-retry-button");
+
+  // INTAKE-BEGIN
+  // Dormant until the intake endpoint is separately approved. While null, no answers are transmitted.
+  const INTAKE_URL = null;
+
+  function intakeErrorMessage(status) {
+    if (status === 429) return "Too many attempts were made from this connection. Please try again later.";
+    if (status === 413) return "Your answers are too long to send. Please shorten them and try again.";
+    if (status === 400 || status === 415) return "Your answers could not be accepted. Please review them and try again.";
+    if (status === 503) return "The application service is temporarily unavailable. Please try again later.";
+    return "We could not send your answers right now. Please try again later.";
+  }
+
+  async function sendIntake(payload, fetchImpl) {
+    if (INTAKE_URL === null) return { sent: false, disabled: true, message: "" };
+
+    let response;
+    try {
+      response = await fetchImpl(INTAKE_URL, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+        credentials: "omit",
+        referrerPolicy: "no-referrer"
+      });
+    } catch {
+      return { sent: false, disabled: false, message: intakeErrorMessage(0) };
+    }
+
+    if (response.status === 202) return { sent: true, disabled: false, message: "" };
+    return { sent: false, disabled: false, message: intakeErrorMessage(response.status) };
+  }
+  // INTAKE-END
+
+  let pendingIntake = null;
+
+  async function attemptIntake() {
+    if (!pendingIntake) return;
+
+    retryButton.disabled = true;
+    const outcome = await sendIntake(pendingIntake, fetch);
+    retryButton.disabled = false;
+
+    if (outcome.disabled) return;
+
+    intakeStatus.hidden = false;
+    if (outcome.sent) {
+      pendingIntake = null;
+      retryButton.hidden = true;
+      intakeStatus.textContent = "Your answers were sent for review.";
+    } else {
+      retryButton.hidden = false;
+      intakeStatus.textContent = outcome.message;
+    }
+  }
+
+  retryButton.addEventListener("click", attemptIntake);
 
   form.addEventListener("submit", async event => {
     event.preventDefault();
@@ -685,6 +756,16 @@ copyButton.addEventListener("click", async () => {
 
       generatedId.textContent = application.participantId;
 
+      pendingIntake = {
+        rcgi: application.participantId,
+        recoveryStage: document.getElementById("recovery-stage").value,
+        recoverySupport: document.getElementById("recovery-support").value,
+        needs: Array.from(selectedNeeds, input => input.value),
+        needDescription: document.getElementById("need-description").value,
+        goals: document.getElementById("goals").value,
+        confirmation: document.getElementById("confirmation").checked
+      };
+
       formContent.style.display = "none";
       result.classList.add("visible");
 
@@ -692,6 +773,8 @@ copyButton.addEventListener("click", async () => {
         top: 0,
         behavior: "smooth"
       });
+
+      attemptIntake();
     } catch {
       alert(
         "We could not create your RCGI ID right now. Please try again later."
