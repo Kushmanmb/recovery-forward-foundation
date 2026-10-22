@@ -1,0 +1,71 @@
+
+.lifeline {
+  padding: 40px 5%;
+  text-align: center;
+  background: radial-gradient(ellipse, #301744, #100c19);
+  border-block: 1px solid #69418a;
+  color: #eadcf5;
+}
+.lifeline .lifeline-kicker {
+  color: #d8b4fe;
+  font-weight: 800;
+  letter-spacing: .18em;
+  font-size: .75rem;
+}
+.lifeline h2 {
+  max-width: 760px;
+  margin: 12px auto;
+  color: #faf5ff;
+  font-size: clamp(1.5rem, 4vw, 2.4rem);
+  line-height: 1.2;
+}
+.lifeline-monitor { max-width: 1000px; margin: 16px auto; }
+.lifeline svg {
+  display: block;
+  width: 100%;
+  height: clamp(100px, 18vw, 160px);
+}
+.lifeline path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.lifeline-trace { stroke: #a855f7; stroke-width: 2; opacity: .55; }
+.lifeline-pulse {
+  stroke: #d8b4fe;
+  stroke-width: 3;
+  stroke-dasharray: 18 82;
+  filter: drop-shadow(0 0 5px #a855f7);
+  animation: lifeline-sweep 3.6s linear infinite;
+}
+@keyframes lifeline-sweep {
+  from { stroke-dashoffset: 18; }
+  to { stroke-dashoffset: -82; }
+}
+#lifeline-pause { accent-color: #a855f7; }
+.lifeline label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 8px;
+  cursor: pointer;
+}
+#lifeline-pause:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 4px;
+}
+#lifeline-pause:checked ~ svg .lifeline-pulse {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lifeline-pulse {
+    animation: none;
+    stroke-dasharray: none;
+    filter: none;
+  }
+  #lifeline-pause, .lifeline label { display: none; }
+}
+
+/* Hide heartbeat pause controls. */
+#lifeline-pause, .lifeline label { display: none; }

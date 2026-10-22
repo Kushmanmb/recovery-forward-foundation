@@ -19,6 +19,8 @@ This is a separate Cloudflare Worker application for `admin.recoveryforwardfound
 2. Configure Cloudflare Access for the exact admin hostname. Initially allow only the President's approved identity and require MFA. Set the maximum Access session lifetime to 8 hours. Verify the policy actually blocks sign-in without MFA; the Worker cannot infer MFA from an unverified browser claim. Keep Access in front of both the UI and API.
 3. Additional officer account invitation, delivery, acceptance, activation, recovery, and suspension administration are not yet implemented as UI/API workflows. Do not insert members directly into production D1 without a reviewed, audited provisioning procedure.
 4. The Control Center summary adapter expects a reviewed, read-only endpoint returning `{"summary":{"statusCounts":{"pending":0,"verified":0,"closed":0}}}`. The public intake verifies RCGIs with `GET /integration/participants/{RCGI-ID}/exists`, returning `{"exists":true|false}`. Registry owners must approve the authorization scopes and privacy review before setting credentials. Both integrations fail closed if unavailable; no applicant record payload is returned to the browser.
+3. Board invitation, acceptance, manual activation, suspension, and reinstatement now have persistent API/UI workflows; see `docs/07-BOARD-ACCESS.md`. Invitation delivery is manual. Identity and MFA verification are explicitly attested by the President; Access must enforce MFA independently. Automated delivery, recovery, and step-up authentication are still outstanding. Do not insert members directly into production D1.
+4. The Recovery Grant Registry repository/API schema was unavailable for inspection. The adapter expects a reviewed, read-only endpoint returning `{"summary":{"statusCounts":{"pending":0,"verified":0,"closed":0}}}`. Confirm endpoint, authorization scope, response meaning, and privacy review before setting Registry credentials. No applicant record payload is returned to this app.
 5. D1 sessions and audit rows are not encrypted by application code, externally anchored, or configured for backup/restore here. Confirm Cloudflare's at-rest controls and perform a restore drill before any production use.
 6. Perform an independent security review and test the deployed Access/DNS policy in staging. No live finance transactions, applicant records, or Registry writes are supported.
 
@@ -53,3 +55,11 @@ npm test --prefix control-center
 ```
 
 The test suite uses synthetic identity keys/data and never contacts production services. Local development against a real Cloudflare account is intentionally not configured by default.
+
+
+## Implementation status
+
+- Working Worker/UI workflows: verified Access identity, D1 sessions, President bootstrap, board access administration, audit activity, optional read-only Registry summary.
+- Application inbox: separate open PR #12; not included in this board-access branch.
+- Domain logic only: governance, grant approvals, payment authorization, document classification, and mailbox permissions. These are not persistent operational modules yet.
+- Remaining integration work: meetings/agendas/votes/minutes and official records, document storage and version history, grants/reviewer UI, finance/reconciliation, provider-backed communications, notifications and recovery operations. Each needs its own persisted API, UI, authorization checks, and end-to-end validation.
