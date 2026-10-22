@@ -1,6 +1,6 @@
 # President Control Center
 
-This is a separate Cloudflare Worker application for `admin.recoveryforwardfoundation.org`. The public GitHub Pages site in `docs/` is unchanged. The mobile-friendly UI is sourced from `admin-prototype/`; it is not safe to serve that directory independently because the Worker verifies Cloudflare Access identity on every request.
+This is a separate Cloudflare Worker application for `admin.recoveryforwardfoundation.org`. Public GitHub Pages content is maintained in `docs/`. The mobile-friendly admin UI is sourced from `admin-prototype/`; it is not safe to serve that directory independently because the Worker verifies Cloudflare Access identity on every request.
 
 **Undeployed and not approved for production.** Do not deploy until the President reviews the authentication, Access MFA policy, D1 configuration, Registry contract, operational controls, and the incomplete items below. CI runs tests only and never deploys.
 
@@ -10,17 +10,15 @@ This is a separate Cloudflare Worker application for `admin.recoveryforwardfound
 - A configured President email can bootstrap the first pending President account only when the member table is empty. The President must acknowledge the security/privacy requirements before the account becomes active. There is no public registration.
 - All API requests require both a verified Access assertion and a non-expired, server-side D1 session bound to that identity. Session cookies are random, hashed before storage, `Secure`, `HttpOnly`, `SameSite=Strict`, and revoked on sign-out.
 - Server authorization uses the role permission table in `src/rbac.js`; the audit endpoint is President-only. Suspended or pending accounts cannot access protected APIs.
-- The Registry adapter is GET-only, holds its token server-side, and returns only validated aggregate counts. It is disabled without configuration. The actual Registry API contract has not been inspected; see blockers.
+- The Registry summary adapter is GET-only, holds its token server-side, and returns only validated aggregate counts. It is disabled without configuration. The actual Registry API contract has not been inspected; see blockers. The intake's Registry `/exists` integration is also unverified and must remain unconfigured until owners confirm the endpoint, response semantics, and token scope.
 - Audit events are stored in D1 with update/delete-blocking triggers. This does not protect against a database administrator or provide external tamper evidence.
 
 ## Manual prerequisites and blockers
 
 1. Confirm that the Cloudflare account, Workers plan, D1 location/retention, backups, and organization privacy requirements are appropriate.
 2. Configure Cloudflare Access for the exact admin hostname. Initially allow only the President's approved identity and require MFA. Set the maximum Access session lifetime to 8 hours. Verify the policy actually blocks sign-in without MFA; the Worker cannot infer MFA from an unverified browser claim. Keep Access in front of both the UI and API.
-3. Additional officer account invitation, delivery, acceptance, activation, recovery, and suspension administration are not yet implemented as UI/API workflows. Do not insert members directly into production D1 without a reviewed, audited provisioning procedure.
-4. The Control Center summary adapter expects a reviewed, read-only endpoint returning `{"summary":{"statusCounts":{"pending":0,"verified":0,"closed":0}}}`. The public intake verifies RCGIs with `GET /integration/participants/{RCGI-ID}/exists`, returning `{"exists":true|false}`. Registry owners must approve the authorization scopes and privacy review before setting credentials. Both integrations fail closed if unavailable; no applicant record payload is returned to the browser.
 3. Board invitation, acceptance, manual activation, suspension, and reinstatement now have persistent API/UI workflows; see `docs/07-BOARD-ACCESS.md`. Invitation delivery is manual. Identity and MFA verification are explicitly attested by the President; Access must enforce MFA independently. Automated delivery, recovery, and step-up authentication are still outstanding. Do not insert members directly into production D1.
-4. The Recovery Grant Registry repository/API schema was unavailable for inspection. The adapter expects a reviewed, read-only endpoint returning `{"summary":{"statusCounts":{"pending":0,"verified":0,"closed":0}}}`. Confirm endpoint, authorization scope, response meaning, and privacy review before setting Registry credentials. No applicant record payload is returned to this app.
+4. The Control Center summary adapter expects a reviewed, read-only endpoint returning `{"summary":{"statusCounts":{"pending":0,"verified":0,"closed":0}}}`. The Recovery Grant Registry repository/API schema was unavailable for inspection, so its API contract and authorization scope have not been independently verified; leave its credentials unset until Registry owners approve them. The intake code targets the supplied `GET /integration/participants/{RCGI-ID}/exists` path and expects `{"exists":true|false}`, but this integration is also explicitly unverified and must remain unconfigured until its endpoint, response semantics, and token scope are confirmed. Both integrations fail closed if unavailable; no applicant record payload is returned to the browser.
 5. D1 sessions and audit rows are not encrypted by application code, externally anchored, or configured for backup/restore here. Confirm Cloudflare's at-rest controls and perform a restore drill before any production use.
 6. Perform an independent security review and test the deployed Access/DNS policy in staging. No live finance transactions, applicant records, or Registry writes are supported.
 
@@ -33,9 +31,9 @@ This is a separate Cloudflare Worker application for `admin.recoveryforwardfound
    - `ACCESS_AUD`: the Access application audience tag for the admin application.
    - `PRESIDENT_EMAIL`: the one approved bootstrap identity.
    - `REGISTRY_API_URL` and `REGISTRY_API_TOKEN`: for the Control Center aggregate summary only; optional and **leave unset** until that upstream read-only contract is reviewed. The URL must use HTTPS and the exact official Registry API hostname.
-   - For the separate intake Worker only, set `REGISTRY_RCGI_VERIFY_URL` to `https://api.recoveryforwardfoundation.org/integration/participants` and `REGISTRY_INTEGRATION_TOKEN` to the dedicated Registry integration secret, after Registry owners approve its least-privilege scope.
+   - For the separate intake Worker only, the proposed `REGISTRY_RCGI_VERIFY_URL` base is `https://api.recoveryforwardfoundation.org/integration/participants`, and the code expects `REGISTRY_INTEGRATION_TOKEN`. **Keep both unset** until Registry owners confirm the `/exists` contract, response semantics, and least-privilege token scope.
    - For the separate intake Worker only, set `INTAKE_RATE_LIMIT_SECRET` as a random secret of at least 32 characters. The rate limiter fails closed when this secret or its D1 storage is unavailable.
-4. Apply `migrations/` to the intended D1 environment only after backup and President approval. The intake migration `0003_intake_abuse_controls.sql` is not applied automatically. Test authentication, MFA enforcement, bootstrap, account suspension, session revocation, role-denied audit access, Registry verification/failure behavior, rate limits, and atomic intake writes with synthetic data.
+4. Apply `migrations/` to the intended D1 environment only after backup and President approval. The application inbox and intake rate-limit migrations are not applied automatically. Test authentication, MFA enforcement, bootstrap, account suspension, session revocation, role-denied audit access, Registry verification/failure behavior, rate limits, and atomic intake writes with synthetic data.
 5. Only after written approval, deploy manually with the reviewed Wrangler version and environment. No CI workflow deploys this Worker.
 
 ### Required secrets and safe handling
@@ -59,7 +57,7 @@ The test suite uses synthetic identity keys/data and never contacts production s
 
 ## Implementation status
 
-- Working Worker/UI workflows: verified Access identity, D1 sessions, President bootstrap, board access administration, audit activity, optional read-only Registry summary.
-- Application inbox: separate open PR #12; not included in this board-access branch.
+- Worker/UI workflows: verified Access identity, D1 sessions, President bootstrap, board access administration, audit activity, and optional read-only Registry summary.
+- Application inbox: backend/API and write-only intake are included; Registry `/exists` verification is unverified and disabled without configuration. The public form's intake integration remains dormant until separately approved.
 - Domain logic only: governance, grant approvals, payment authorization, document classification, and mailbox permissions. These are not persistent operational modules yet.
 - Remaining integration work: meetings/agendas/votes/minutes and official records, document storage and version history, grants/reviewer UI, finance/reconciliation, provider-backed communications, notifications and recovery operations. Each needs its own persisted API, UI, authorization checks, and end-to-end validation.

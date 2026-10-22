@@ -29,7 +29,7 @@ async function signedIdentity(email) {
 
 function makeDb() {
   const database = new DatabaseSync(":memory:");
-  for (const file of ["0001_initial.sql", "0002_applications.sql", "0003_intake_abuse_controls.sql"]) {
+  for (const file of ["0001_initial.sql", "0002_applications.sql", "0004_intake_abuse_controls.sql"]) {
     database.exec(readFileSync(new URL(`../migrations/${file}`, import.meta.url), "utf8"));
   }
   return {
