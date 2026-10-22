@@ -24,12 +24,12 @@
 - [ ] Bootstrap works only for the configured President when the member table is empty; policy acknowledgement is recorded; uninvited identities cannot register.
 - [ ] Every API route has a role-authorization test; session expiry, logout revocation, suspended-account denial, and CSRF checks are verified.
 - [ ] Registry owners approve the exact read-only endpoint/schema and least-privilege token; an integration test confirms no applicant data or token reaches the browser or logs.
-- [ ] Registry owners approve least-privilege access for `REGISTRY_INTEGRATION_TOKEN`; staging proves invalid, nonexistent, valid, duplicate, unauthorized, and unavailable cases fail safely against `GET /integration/participants/{RCGI-ID}/exists`.
-- [ ] Set `REGISTRY_RCGI_VERIFY_URL`, `REGISTRY_INTEGRATION_TOKEN`, and a random `INTAKE_RATE_LIMIT_SECRET` only in the intake Worker environment; verify secrets never appear in browser responses, logs, or URLs.
+- [ ] Registry owners verify the proposed `GET /integration/participants/{RCGI-ID}/exists` endpoint and `{"exists":true|false}` response, then approve least-privilege access for `REGISTRY_INTEGRATION_TOKEN`; staging proves valid, nonexistent, malformed, unauthorized, and unavailable cases fail safely.
+- [ ] Only after that verification, set `REGISTRY_RCGI_VERIFY_URL`, `REGISTRY_INTEGRATION_TOKEN`, and a random `INTAKE_RATE_LIMIT_SECRET` in the intake Worker environment; verify secrets never appear in browser responses, logs, or URLs.
 - [ ] Configure and test Cloudflare Bot Management, WAF managed challenge, and network-level rate limits for the public intake hostname; verify the Worker receives the expected bot score.
-- [ ] Apply migrations `0002_applications.sql` and `0003_intake_abuse_controls.sql` only to the approved environment after backup and President authorization.
+- [ ] Apply migrations `0002_applications.sql` and `0004_intake_abuse_controls.sql` only to the approved environment after backup and President authorization. `0003_board_access.sql` is the main-branch board-access migration and must not be overwritten.
 - [ ] D1 backups, retention, restore drill, audit export/retention, monitoring, and incident response are approved.
 - [ ] External security review, penetration test, dependency/secret scanning, and legal/privacy review are complete.
-- [ ] Confirm public GitHub Pages and the Registry API are unchanged; confirm no deployment automation is enabled.
+- [ ] Confirm any public GitHub Pages changes are explicitly approved, the Registry API is unchanged, and no deployment automation is enabled.
 
 Officer invitations and lifecycle administration, distributed-abuse mitigation, durable audit anchoring, alerting, external review, and production MFA verification remain incomplete. Registry token scope still requires owner approval, and the public form is not wired to the intake Worker. Keep the Worker undeployed until all applicable checks are approved.

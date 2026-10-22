@@ -13,7 +13,7 @@ Before storing, the Worker checks the RCGI using the server-side bearer secret `
 
 Every POST is limited to five attempts per Cloudflare client IP per fixed ten-minute window. The key is HMAC-SHA-256 hashed with `INTAKE_RATE_LIMIT_SECRET`; raw IP addresses are not stored. If the IP, secret, or D1 limiter is unavailable, intake fails closed. When Cloudflare Bot Management supplies a score below 30, the request receives the same generic `202` without Registry lookup or storage. These are application controls, not a substitute for Cloudflare WAF/managed challenge and network-level rate limits; enable and validate those before launch to address distributed abuse.
 
-The application row and its minimal `application_received` audit event are written in one D1 `batch()` transaction. The audit records only the RCGI and action, never answers. Rate-limit counters are stored in `intake_rate_limits` (migration `0003_intake_abuse_controls.sql`); stale windows are removed during requests.
+The application row and its minimal `application_received` audit event are written in one D1 `batch()` transaction. The audit records only the RCGI and action, never answers. Rate-limit counters are stored in `intake_rate_limits` (migration `0004_intake_abuse_controls.sql`); stale windows are removed during requests.
 
 Only the Access-protected Control Center Worker has application read paths. The Registry and public website never receive answers; no applicant contact data is collected.
 
@@ -39,7 +39,7 @@ Reviewer authorization: only active, non-President members, stored in `applicati
 - Configure Cloudflare Bot Management for the intake hostname so the Worker receives bot scores, and add WAF managed challenge/network rate limits for distributed abuse. The application-level limit is per client IP and is not sufficient on its own.
 - Before applicant use, make a separately approved change that sets `INTAKE_URL` in `docs/apply.html` (dormant, `null` today) and adds any required bot challenge.
 - Choose the intake hostname (the proposed form target is `intake.recoveryforwardfoundation.org`), configure the route only after security review, and test CORS from the public site. CORS is not an access control.
-- Apply migrations `0002_applications.sql` and `0003_intake_abuse_controls.sql` to the intended D1 environment only after President approval, a verified backup, and a staging test. Do not apply migrations as part of this PR.
+- Apply migrations `0002_applications.sql` and `0004_intake_abuse_controls.sql` to the intended D1 environment only after President approval, a verified backup, and a staging test. Migration `0003_board_access.sql` belongs to the board-access feature from main; do not overwrite it. Do not apply migrations as part of this PR.
 - Both Workers share one D1 database; intake code only inserts, but D1 has no per-Worker permissions. Consider a separate intake database/queue.
 - Free-text answers may contain sensitive information; no field-level encryption yet. Define retention and deletion policy.
 - The admin UI (`admin-prototype/`) has no inbox screen yet; Phase 1 is API-level.

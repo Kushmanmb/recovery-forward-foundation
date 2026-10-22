@@ -210,11 +210,18 @@ overflow-x: auto;
 .hero-actions {
   display: flex;
   gap: 14px;
+  flex-wrap: wrap;
+  max-width: 100%;
   margin-top: 32px;
 }
 
 .button {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  box-sizing: border-box;
   border-radius: 5px;
   padding: 14px 24px;
   text-decoration: none;
@@ -743,8 +750,17 @@ footer > div:last-child {
   }
 
   .hero-actions {
-    flex-direction: column;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .hero-actions .button {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 10px;
+    text-align: center;
   }
 
   .process-steps {
@@ -1169,4 +1185,386 @@ body.programs-page .program-journey-image {
 
 .daily-prayer-card #daily-prayer-date {
   margin-bottom: 25px;
+}
+/* Facebook links */
+
+.button-facebook {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  background: #1877f2;
+  border: 2px solid #1877f2;
+}
+
+.hero-actions .button-facebook {
+  padding: 16px 28px;
+  min-height: 52px;
+  font-size: .85rem;
+  box-shadow: 0 0 18px rgba(24,119,242,.55);
+}
+
+.button-facebook:hover,
+.button-facebook:focus-visible {
+  background: #0f5fd0;
+  border-color: #ffffff;
+  box-shadow: 0 0 24px rgba(24,119,242,.8);
+}
+
+.hero-actions .button-learn {
+  color: #ffffff;
+  background: rgba(5,5,5,.78);
+  border: 2px solid #ffffff;
+}
+
+.hero-actions .button-learn:hover,
+.hero-actions .button-learn:focus-visible {
+  background: #ffffff;
+  color: #050505;
+  border-color: #ffffff;
+}
+
+.hero-actions .button-share {
+  color: #ffc247;
+  background: rgba(15,10,0,.78);
+  border: 2px solid #ffc247;
+  box-shadow: 0 0 14px rgba(255,194,71,.3);
+}
+
+.hero-actions .button-share:hover,
+.hero-actions .button-share:focus-visible {
+  background: #ffc247;
+  color: #1a1100;
+  border-color: #ffc247;
+  box-shadow: 0 0 22px rgba(255,194,71,.6);
+}
+
+.hero-actions .button:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.btn-icon {
+  flex: none;
+}
+
+.fb-icon {
+  flex: none;
+}
+
+.footer-social {
+  margin-top: 10px;
+}
+
+.footer-facebook {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--green-bright);
+  text-decoration: none;
+}
+
+.footer-facebook:hover,
+.footer-facebook:focus-visible {
+  text-decoration: underline;
+}
+
+
+/* MOBILE HERO: the hero artwork has headline/body copy baked into its left
+   side, so on narrow screens crop to the text-free right side of the image
+   and darken it for legibility of the real HTML text. */
+@media (max-width: 700px) {
+
+  .hero {
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(5,12,9,.78) 0%,
+        rgba(5,12,9,.62) 55%,
+        rgba(5,12,9,.85) 100%
+      ),
+      url("../assets/images/recovery-forward-hero.png");
+    background-size: cover;
+    background-position: 100% center;
+    padding: 48px 0;
+  }
+
+  .hero-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero-actions .button,
+  .hero-actions .button-facebook {
+    min-height: 48px;
+    padding: 12px 8px;
+    font-size: .74rem;
+    line-height: 1.25;
+    letter-spacing: .4px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+}
+
+@media (max-width: 340px) {
+  .hero-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Crypto donations */
+.crypto-section {
+  padding: 40px 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.crypto-card {
+  width: 100%;
+  max-width: 640px;
+  box-sizing: border-box;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.crypto-heart {
+  font-size: 2.5rem;
+  margin: 0 0 8px;
+}
+
+.crypto-card h2 {
+  margin: 0 0 12px;
+}
+
+.crypto-network {
+  display: inline-block;
+  margin: 8px 0;
+  padding: 4px 12px;
+  border: 1px solid var(--green-dark);
+  border-radius: 999px;
+  color: var(--green-bright);
+  font-weight: 700;
+  font-size: .9rem;
+}
+
+.crypto-label {
+  margin: 12px 0 6px;
+  color: var(--muted);
+  font-size: .85rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.crypto-address {
+  margin: 0 0 16px;
+  padding: 12px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .95rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  -webkit-user-select: all;
+  user-select: all;
+  text-align: left;
+}
+
+.crypto-copy {
+  width: 100%;
+  max-width: 320px;
+  min-height: 48px;
+  cursor: pointer;
+}
+
+.crypto-copy:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.crypto-status {
+  min-height: 1.5em;
+  margin: 10px 0;
+  color: var(--green-bright);
+  font-weight: 600;
+}
+
+.crypto-status.is-error {
+  color: var(--gold);
+}
+
+.crypto-warning,
+.crypto-note {
+  margin: 12px 0 0;
+  font-size: .9rem;
+  line-height: 1.5;
+}
+
+.crypto-warning {
+  padding: 10px 12px;
+  border-left: 4px solid var(--gold);
+  background: rgba(244,166,42,.08);
+  text-align: left;
+}
+
+.crypto-note {
+  color: var(--muted);
+}
+
+@media (min-width: 600px) {
+  .crypto-card { padding: 36px 40px; }
+  .crypto-address { font-size: 1.05rem; }
+}
+
+/* Glowing cards and contained list numbers */
+body :is(.mission-card, .mission-details, .portal-card,
+         .crypto-card, .daily-prayer-card, .mission-grid article) {
+  --card-glow: 168, 85, 247;
+  border: 1px solid rgba(var(--card-glow), .75);
+  border-radius: 12px;
+  box-shadow:
+    0 0 12px rgba(var(--card-glow), .20),
+    0 0 24px rgba(var(--card-glow), .10);
+}
+body :is(.mission-card, .mission-details, .portal-card,
+         .mission-grid article):nth-of-type(4n + 2) {
+  --card-glow: 164, 214, 94;
+}
+body :is(.mission-card, .mission-details, .portal-card,
+         .mission-grid article):nth-of-type(4n + 3) {
+  --card-glow: 56, 189, 248;
+}
+body :is(.mission-card, .mission-details, .portal-card,
+         .mission-grid article):nth-of-type(4n + 4) {
+  --card-glow: 244, 166, 42;
+}
+body .mission-details {
+  padding: clamp(16px, 4vw, 28px);
+}
+body .mission-details .content {
+  padding: 0;
+}
+body :is(.mission-details, .mission-card, .portal-card) :is(ol, ul) {
+  list-style-position: outside;
+  padding-inline-start: 1.75em;
+  margin: 16px 0;
+}
+body :is(.mission-details, .mission-card, .portal-card) li {
+  padding-inline-start: .25em;
+  margin-bottom: 10px;
+  overflow-wrap: anywhere;
+}
+body :is(.mission-details, .mission-card, .portal-card) li::marker {
+  color: #d8b4fe;
+  font-weight: 700;
+}
+
+/* Keep all four card borders glowing. */
+body .portal-card:not(:last-child) {
+  border: 1px solid rgba(var(--card-glow, 168, 85, 247), .75);
+}
+
+/* Professional homepage action cards */
+.hero .hero-actions.hero-links {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 760px;
+  margin-top: 30px;
+}
+.hero .hero-links .hero-link {
+  grid-column: span 2;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 88px;
+  padding: 18px 16px;
+  border: 1px solid #435149;
+  border-top: 3px solid var(--action-accent, #c9d4cd);
+  border-radius: 12px;
+  background: #101b17;
+  color: #f5f8f6;
+  text-align: left;
+  text-decoration: none;
+  text-transform: none;
+  white-space: normal;
+  letter-spacing: 0;
+  box-shadow: 0 8px 22px rgba(0,0,0,.25);
+  transition: transform .18s ease, border-color .18s ease;
+}
+.hero .hero-links .action-apply,
+.hero .hero-links .action-learn {
+  grid-column: span 3;
+  min-height: 104px;
+}
+.hero .hero-links .action-apply {
+  --action-accent: #c2ed88;
+  background: linear-gradient(135deg, #b5e377, #8bc34a);
+  color: #0b180c;
+  border-color: #b5e377;
+}
+.hero .hero-links .action-learn { --action-accent: #c4a1ed; }
+.hero .hero-links .action-facebook { --action-accent: #69aaff; }
+.hero .hero-links .action-x { --action-accent: #e0e7e2; }
+.hero .hero-links .action-share { --action-accent: #ffc247; }
+.hero .hero-links .action-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: rgba(255,255,255,.08);
+  color: var(--action-accent);
+  font-size: 24px;
+  font-weight: 800;
+}
+.hero .hero-links .action-apply .action-icon {
+  background: rgba(0,0,0,.08);
+  color: #173615;
+}
+.hero .hero-links strong {
+  display: block;
+  font-size: .92rem;
+  line-height: 1.3;
+}
+.hero .hero-links small {
+  display: block;
+  margin-top: 5px;
+  font-size: .73rem;
+  font-weight: 400;
+  line-height: 1.4;
+  opacity: .85;
+}
+.hero .hero-links .hero-link:hover {
+  transform: translateY(-2px);
+  border-color: var(--action-accent);
+}
+.hero .hero-links .hero-link:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 4px;
+}
+@media (max-width: 520px) {
+  .hero .hero-actions.hero-links { gap: 10px; }
+  .hero .hero-links .hero-link {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 10px;
+    gap: 9px;
+  }
+  .hero .hero-links strong { font-size: .8rem; }
+  .hero .hero-links small { font-size: .68rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero .hero-links .hero-link { transition: none; }
+  .hero .hero-links .hero-link:hover { transform: none; }
 }

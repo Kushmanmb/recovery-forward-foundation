@@ -11,7 +11,8 @@
     content="Recovery Forward Foundation helps people move forward during and after recovery through opportunity, support, resources and responsible assistance."
   >
 
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=action-cards-1">
+  <link rel="stylesheet" href="css/lifeline.css">
 </head>
 
 <body>
@@ -80,22 +81,57 @@
       independence and opportunity.
     </p>
 
-    <div class="hero-actions">
 
-      <a href="#apply" class="button button-primary">
-        START APPLICATION
-      </a>
+<div class="hero-actions hero-links">
+  <a href="apply.html" class="button hero-link action-apply">
+    <span class="action-icon" aria-hidden="true">↗</span>
+    <span><strong>Start Application</strong><small>Take your next step forward</small></span>
+  </a>
+  <a href="about.html" class="button hero-link action-learn">
+    <span class="action-icon" aria-hidden="true">ⓘ</span>
+    <span><strong>Learn More</strong><small>Discover our purpose</small></span>
+  </a>
+  <a href="https://www.facebook.com/share/1d7xE8Nzpt/?mibextid=wwXIfr"
+     class="button hero-link action-facebook" target="_blank"
+     rel="noopener noreferrer" aria-label="Follow us on Facebook (opens in a new tab)">
+    <span class="action-icon" aria-hidden="true">f</span>
+    <span><strong>Facebook</strong><small>Join our community</small></span>
+  </a>
+  <a href="https://x.com/recoveryfwdfdn"
+     class="button hero-link action-x" target="_blank"
+     rel="noopener noreferrer" aria-label="Follow us on X (opens in a new tab)">
+    <span class="action-icon" aria-hidden="true">𝕏</span>
+    <span><strong>Follow on X</strong><small>Stay connected</small></span>
+  </a>
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Frecoveryforwardfoundation.org%2F"
+     class="button hero-link action-share" target="_blank"
+     rel="noopener noreferrer" aria-label="Share our mission on Facebook (opens in a new tab)">
+    <span class="action-icon" aria-hidden="true">↗</span>
+    <span><strong>Share Our Mission</strong><small>Help hope reach further</small></span>
+  </a>
+</div>
 
-      <a href="about.html" class="button button-outline">
-        LEARN MORE
-      </a>
-
-    </div>
 
   </div>
 
 </section>
 
+
+
+<section class="lifeline" aria-labelledby="lifeline-heading">
+  <p class="lifeline-kicker">LIFE. HOPE. RECOVERY.</p>
+  <h2 id="lifeline-heading">Every heartbeat is a chance to move forward.</h2>
+  <p>You matter. Your story is still being written.</p>
+  <div class="lifeline-monitor">
+    <input id="lifeline-pause" type="checkbox">
+    <label for="lifeline-pause">Pause animation</label>
+    <svg viewBox="0 0 800 140" aria-hidden="true" focusable="false">
+      <path class="lifeline-trace" d="M0 70 H100 L120 62 L140 70 H170 L185 85 L205 20 L225 115 L245 55 L265 70 H380 L400 60 L420 70 H500 L520 62 L540 70 H570 L585 85 L605 20 L625 115 L645 55 L665 70 H800"/>
+      <path class="lifeline-pulse" pathLength="100" d="M0 70 H100 L120 62 L140 70 H170 L185 85 L205 20 L225 115 L245 55 L265 70 H380 L400 60 L420 70 H500 L520 62 L540 70 H570 L585 85 L605 20 L625 115 L645 55 L665 70 H800"/>
+    </svg>
+  </div>
+  <p>One life. One day. One step forward.</p>
+</section>
 
 <section class="process">
 
@@ -408,7 +444,7 @@
       </p>
 
       <a
-        href="mailto:recoveryforwardfoundation@gmail.com?subject=Applicant%20Help"
+        href="mailto:contact@recoveryforwardfoundation.org?subject=Applicant%20Help"
         class="button button-secondary"
       >
         GET HELP
@@ -429,7 +465,7 @@
       </p>
 
       <a
-        href="mailto:recoveryforwardfoundation@gmail.com?subject=Recovery%20Forward%20Partnership%20Inquiry"
+        href="mailto:contact@recoveryforwardfoundation.org?subject=Recovery%20Forward%20Partnership%20Inquiry"
         class="button button-secondary"
       >
         BECOME A PARTNER →
@@ -461,8 +497,8 @@
 
   <p>
     Email:
-    <a href="mailto:recoveryforwardfoundation@gmail.com">
-      recoveryforwardfoundation@gmail.com
+    <a href="mailto:contact@recoveryforwardfoundation.org">
+      contact@recoveryforwardfoundation.org
     </a>
   </p>
 
@@ -492,7 +528,7 @@
       </p>
 
       <a
-        href="mailto:recoveryforwardfoundation@gmail.com?subject=Donation%20Inquiry"
+        href="mailto:contact@recoveryforwardfoundation.org?subject=Donation%20Inquiry"
         class="button button-primary"
       >
         DONATION INFORMATION →
@@ -503,6 +539,25 @@
   </div>
 
 </section>
+
+<section id="crypto-donations" class="crypto-section" aria-labelledby="crypto-heading">
+  <article class="crypto-card">
+    <p class="crypto-heart" aria-hidden="true">💜</p>
+    <h2 id="crypto-heading">Support Recovery Forward Foundation</h2>
+    <p>
+      Cryptocurrency donations help support the foundation's
+      recovery-focused mission. Thank you for helping people move forward.
+    </p>
+    <p class="crypto-network">Ethereum network (ERC-20)</p>
+    <p class="crypto-label" id="crypto-address-label">Ethereum wallet address</p>
+    <p class="crypto-address" id="crypto-address" aria-labelledby="crypto-address-label">0xFFb9CB3011C63d09b5a4901d54f8bfAAB2C02abe</p>
+    <button type="button" class="button button-primary crypto-copy" data-copy-target="crypto-address" data-address="0xFFb9CB3011C63d09b5a4901d54f8bfAAB2C02abe">Copy Wallet Address</button>
+    <p class="crypto-status" role="status" aria-live="polite"></p>
+    <p class="crypto-warning"><strong>Warning:</strong> Send only ETH or supported Ethereum-network tokens to this address. Do not send native BTC or assets from other networks. Verify the address before sending; blockchain transactions cannot be reversed.</p>
+    <p class="crypto-note">Donations may not be tax-deductible unless the foundation's applicable IRS status has been confirmed. Please consult a tax professional.</p>
+  </article>
+</section>
+<script src="js/crypto-donate.js" defer></script>
 
 </main>
 
@@ -517,6 +572,9 @@
   <div>
     <p>recoveryforwardfoundation.org</p>
     <p>© 2026 Recovery Forward Foundation</p>
+    <p class="footer-social">
+      <a class="footer-facebook" href="https://www.facebook.com/share/1d7xE8Nzpt/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" aria-label="Recovery Forward Foundation on Facebook (opens in a new tab)"><svg class="fb-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M24 12a12 12 0 1 0-13.9 11.9v-8.4H7.1V12h3V9.4c0-3 1.8-4.7 4.5-4.7 1.3 0 2.7.2 2.7.2v3h-1.5c-1.5 0-2 .9-2 1.9V12h3.4l-.5 3.5h-2.9v8.4A12 12 0 0 0 24 12z"/></svg> Facebook</a>
+    </p>
     <a href="https://websitelaunches.com/site/recoveryforwardfoundation.org" target="_blank" rel="noopener">
       <img
         src="https://websitelaunches.com/badge/recoveryforwardfoundation.org.svg?theme=dark"
@@ -527,6 +585,7 @@
     </a>
   </div>
 
+<p class="footer-social"><a href="https://x.com/recoveryfwdfdn" target="_blank" rel="noopener noreferrer" aria-label="Recovery Forward Foundation on X (opens in a new tab)">Follow us on X →</a></p>
 </footer>
 
 

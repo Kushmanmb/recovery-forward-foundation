@@ -24,7 +24,7 @@ Status: **NOT approved for deployment.** Nothing here has been run. Intake stays
 - [ ] Record the backup identifier and time in the approval record.
 
 ## 3. Migrations
-- [ ] Apply `0002_applications.sql` then `0003_intake_abuse_controls.sql` to staging first.
+- [ ] Apply `0002_applications.sql`, `0003_board_access.sql`, and `0004_intake_abuse_controls.sql` to staging first, after verifying the target database's migration history.
 - [ ] Apply to production only after President approval, a verified backup, and a passing staging test.
 - [ ] Confirm the audit table append-only triggers exist afterward.
 - [ ] Do not apply migrations from CI or as part of a PR merge.
