@@ -34,3 +34,15 @@ button:disabled{opacity:.6;cursor:wait}
 pre{white-space:pre-wrap;overflow-wrap:anywhere}
 h3{overflow-wrap:anywhere}
 :focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+
+/* Phone layout */
+.card{min-width:0;overflow-wrap:anywhere}
+.grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+input,select,textarea{min-width:0;max-width:100%}
+@media(max-width:600px){
+  .banner{font-size:.8rem}
+  nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}
+  nav button{min-width:0;white-space:normal;padding:.6rem .5rem}
+  #logout{margin-top:.5rem}
+  .btn{max-width:100%;white-space:normal}
+}
