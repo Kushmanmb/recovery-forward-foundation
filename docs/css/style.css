@@ -1464,3 +1464,8 @@ body :is(.mission-details, .mission-card, .portal-card) li::marker {
   color: #d8b4fe;
   font-weight: 700;
 }
+
+/* Keep all four card borders glowing. */
+body .portal-card:not(:last-child) {
+  border: 1px solid rgba(var(--card-glow, 168, 85, 247), .75);
+}
