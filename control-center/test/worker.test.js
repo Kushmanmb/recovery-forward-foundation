@@ -64,8 +64,14 @@ function mockDb(role, status = "active") {
 function databaseDb() {
   const database = new DatabaseSync(":memory:");
   database.exec(readFileSync(new URL("../migrations/0001_initial.sql", import.meta.url), "utf8"));
+  database.exec(readFileSync(new URL("../migrations/0003_board_access.sql", import.meta.url), "utf8"));
   return {
     database,
+    async batch(statements) {
+      database.exec("BEGIN");
+      try { const result = statements.map(statement => statement.run()); database.exec("COMMIT"); return result; }
+      catch (error) { database.exec("ROLLBACK"); throw error; }
+    },
     prepare(sql) {
       const statement = database.prepare(sql);
       let values = [];
@@ -480,4 +486,40 @@ test("authentication_unavailable emits safe distinct diagnostics", async () => {
     globalThis.fetch = realFetch;
     console.error = realError;
   }
+});
+
+
+test("verified invitees remain restricted until President activation and suspension invalidates their sessions", async () => {
+  const owner = await signedIdentity("president@example.org");
+  const invitee = await signedIdentity("officer@example.org");
+  const DB = databaseDb();
+  const ownerEnv = requestEnv(owner, { DB });
+  const inviteeEnv = requestEnv(invitee, { DB });
+  try {
+    DB.database.prepare("INSERT INTO members (email, role, status, created_at) VALUES (?, 'President', 'active', ?)").run("president@example.org", Date.now());
+    const ownerLogin = await sessionRequest(owner, ownerEnv, "/api/session", { method: "POST" });
+    const ownerCookie = ownerLogin.headers.get("set-cookie").split(";")[0];
+    const invitationResponse = await sessionRequest(owner, ownerEnv, "/api/board/invite", { method: "POST", cookie: ownerCookie, body: { email: "officer@example.org", role: "Secretary" } });
+    assert.equal(invitationResponse.status, 201);
+    assert.equal(invitationResponse.headers.get("cache-control"), "no-store");
+    const invitation = await invitationResponse.json();
+    const crossOrigin = await withIdentity(invitee, () => handleRequest(new Request("https://admin.example.org/api/board/accept", { method: "POST", headers: { origin: "https://evil.example.org", "cf-access-jwt-assertion": invitee.token, "content-type": "application/json" }, body: JSON.stringify({ token: invitation.token, policyAck: true }) }), inviteeEnv));
+    assert.equal(crossOrigin.status, 403);
+    assert.equal((await sessionRequest(invitee, inviteeEnv, "/api/board/accept", { method: "POST", body: { token: invitation.token, policyAck: true } })).status, 200);
+    const login = await sessionRequest(invitee, inviteeEnv, "/api/session", { method: "POST" });
+    assert.equal(login.status, 200);
+    const profile = await login.json();
+    assert.equal(profile.activationPending, true);
+    assert.deepEqual(profile.permissions, []);
+    const cookie = login.headers.get("set-cookie").split(";")[0];
+    assert.equal((await sessionRequest(invitee, inviteeEnv, "/api/board", { cookie })).status, 403);
+    assert.equal((await sessionRequest(invitee, inviteeEnv, "/api/registry/summary", { cookie })).status, 403);
+    assert.equal((await sessionRequest(owner, ownerEnv, "/api/board/activate", { method: "POST", cookie: ownerCookie, body: { email: invitation.email, identityVerified: true, mfaVerified: true } })).status, 200);
+    assert.equal((await (await sessionRequest(invitee, inviteeEnv, "/api/me", { cookie })).json()).status, "active");
+    assert.equal((await sessionRequest(invitee, inviteeEnv, "/api/board", { cookie })).status, 403);
+    assert.equal((await sessionRequest(owner, ownerEnv, "/api/board/suspend", { method: "POST", cookie: ownerCookie, body: { email: invitation.email, reason: "Officer requested suspension" } })).status, 200);
+    assert.equal((await sessionRequest(invitee, inviteeEnv, "/api/me", { cookie })).status, 401);
+    assert.equal((await sessionRequest(owner, ownerEnv, "/api/board/reinstate", { method: "POST", cookie: ownerCookie, body: { email: invitation.email } })).status, 200);
+    assert.equal((await sessionRequest(invitee, inviteeEnv, "/api/me", { cookie })).status, 401);
+  } finally { DB.database.close(); }
 });
