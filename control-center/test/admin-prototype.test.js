@@ -15,7 +15,7 @@ function deferred() {
   return { promise, resolve, reject };
 }
 
-async function createApp() {
+async function createApp(role = "Treasurer", extraFetch) {
   const registryRequests = [];
   const requests = [];
   const handlers = {};
@@ -24,7 +24,7 @@ async function createApp() {
     innerHTML: "",
     addEventListener(type, handler) { handlers[`main:${type}`] = handler; },
   };
-  const sections = ["overview", "registry", "security"];
+  const sections = ["overview", "registry", "security", "board", "audit"];
   const buttons = sections.map((section) => ({
     getAttribute(name) { return name === "data-s" ? section : null; },
     classList: { toggle() {} },
@@ -54,7 +54,7 @@ async function createApp() {
     if (path === "/api/me") {
       return Promise.resolve({
         ok: true,
-        json: async () => ({ email: "member@example.org", role: "Treasurer", status: "active", permissions: [] }),
+        json: async () => ({ email: "member@example.org", role, status: "active", permissions: [] }),
       });
     }
     if (path === "/api/registry/summary") {
@@ -65,6 +65,7 @@ async function createApp() {
     if (path === "/api/session" && options.method === "DELETE") {
       return Promise.resolve({ ok: true, json: async () => ({ ok: true }) });
     }
+    if (extraFetch) return extraFetch(path, options);
     throw new Error(`Unexpected request: ${path}`);
   };
 
@@ -119,4 +120,35 @@ test("sign-out revokes the application session and navigates to Cloudflare Acces
   });
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(app.main.innerHTML, "");
+});
+
+
+test("President can navigate to the board roster and audit activity", async () => {
+  const app = await createApp("President", async path => ({ ok: true, json: async () => path === "/api/board"
+    ? { members: [{ email: "officer@example.org", role: "Secretary", status: "pending" }], roles: ["Secretary"] }
+    : { entries: [{ actorEmail: "president@example.org", action: "board_invitation_created", detail: {}, createdAt: 1 }] } }));
+  assert.equal(app.buttons[3].hidden, false);
+  app.handlers["nav:click"]({ target: app.buttons[3] });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.match(app.main.innerHTML, /officer@example.org/);
+  assert.match(app.main.innerHTML, /Activate member/);
+  app.handlers["nav:click"]({ target: app.buttons[4] });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.match(app.main.innerHTML, /board_invitation_created/);
+});
+
+test("non-Presidents do not see board administration or audit navigation", async () => {
+  const app = await createApp();
+  assert.equal(app.buttons[3].hidden, true);
+  assert.equal(app.buttons[4].hidden, true);
+});
+
+test("a stale board roster cannot replace the selected Security screen", async () => {
+  const board = deferred();
+  const app = await createApp("President", () => board.promise);
+  app.handlers["nav:click"]({ target: app.buttons[3] });
+  app.handlers["nav:click"]({ target: app.buttons[2] });
+  board.resolve({ ok: true, json: async () => ({ members: [], roles: [] }) });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.match(app.main.innerHTML, /<h2>Security<\/h2>/);
 });

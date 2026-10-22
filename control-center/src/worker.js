@@ -1,4 +1,5 @@
 import { ROLE_PERMISSIONS, ROLES, can } from "./rbac.js";
+import { acceptBoardInvitation, boardAccess } from "./board-access.js";
 
 const COOKIE_NAME = "__Host-rff_session";
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
@@ -26,6 +27,7 @@ const json = (body, status = 200, headers = {}) => new Response(JSON.stringify(b
 
 function secureHeaders(response) {
   const headers = new Headers(response.headers);
+  headers.set("cache-control", "no-store");
   headers.set("content-security-policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'");
   headers.set("referrer-policy", "no-referrer");
   headers.set("x-content-type-options", "nosniff");
@@ -216,6 +218,7 @@ async function profile(member) {
     role: member.role,
     status: member.status,
     setupRequired: member.status === "pending" && member.role === "President",
+    ...(member.status === "pending" && member.role !== "President" ? { activationPending: true } : {}),
     permissions: member.status === "active" ? ROLE_PERMISSIONS[member.role] || [] : [],
   };
 }
@@ -239,9 +242,12 @@ async function createSession(request, env, identity) {
       }
       member = await env.DB.prepare("SELECT email, role, status FROM members WHERE email = ?").bind(identity.email).first();
     }
-  } else if (!member || member.status !== "active" || !ROLES.includes(member.role)) {
+  } else if (!member || !["active", "pending"].includes(member.status) || !ROLES.includes(member.role)) {
     await audit(env.DB, identity.email, "login_denied");
-    return json({ error: "authentication_required" }, 403);
+    return json({ error: "invitation_required" }, 403);
+  } else if (member.status === "pending") {
+    const invitation = await env.DB.prepare("SELECT accepted_at FROM board_access_invitations WHERE email = ? AND accepted_at IS NOT NULL AND revoked_at IS NULL").bind(identity.email).first();
+    if (!invitation) return json({ error: "authentication_required" }, 403);
   }
 
   if (!member || !ROLES.includes(member.role) || !["active", "pending"].includes(member.status)) {
@@ -301,6 +307,10 @@ async function registrySummary(env, member) {
 }
 
 async function handleApi(request, env, identity, url) {
+  if (url.pathname === "/api/board/accept" && request.method === "POST") {
+    if (!sameOrigin(request)) return json({ error: "forbidden" }, 403);
+    return acceptBoardInvitation(request, env, identity);
+  }
   if (url.pathname === "/api/session" && request.method === "POST") {
     if (!sameOrigin(request)) return json({ error: "forbidden" }, 403);
     return createSession(request, env, identity);
@@ -326,6 +336,10 @@ async function handleApi(request, env, identity, url) {
     && !(url.pathname === "/api/bootstrap/complete" && request.method === "POST")) {
     await audit(env.DB, member.email, "authorization_denied", { status: "pending" });
     return json({ error: "forbidden" }, 403);
+  }
+
+  if (url.pathname === "/api/board" || url.pathname.startsWith("/api/board/")) {
+    return boardAccess(request, env, member);
   }
 
   if (url.pathname === "/api/audit" && request.method === "GET") {
