@@ -1,6 +1,6 @@
 # Public write-only application intake. NOT approved for deployment; no route is
 # configured on purpose. Registry endpoint confirmation, Worker secrets, Bot
-# Management, WAF protections, and migration 0003 are manual rollout prerequisites.
+# Management, WAF protections, and migrations 0004 and 0005 are manual rollout prerequisites.
 # See docs/06-APPLICATION-INBOX.md. Shares the Control Center D1 database.
 name = "recovery-forward-application-intake"
 main = "src/intake.js"
