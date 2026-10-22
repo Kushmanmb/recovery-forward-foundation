@@ -27,7 +27,7 @@
 - [ ] Registry owners verify the proposed `GET /integration/participants/{RCGI-ID}/exists` endpoint and `{"exists":true|false}` response, then approve least-privilege access for `REGISTRY_INTEGRATION_TOKEN`; staging proves valid, nonexistent, malformed, unauthorized, and unavailable cases fail safely.
 - [ ] Only after that verification, set `REGISTRY_RCGI_VERIFY_URL`, `REGISTRY_INTEGRATION_TOKEN`, and a random `INTAKE_RATE_LIMIT_SECRET` in the intake Worker environment; verify secrets never appear in browser responses, logs, or URLs.
 - [ ] Configure and test Cloudflare Bot Management, WAF managed challenge, and network-level rate limits for the public intake hostname; verify the Worker receives the expected bot score.
-- [ ] Apply migrations `0002_applications.sql` and `0004_intake_abuse_controls.sql` only to the approved environment after backup and President authorization. `0003_board_access.sql` is the main-branch board-access migration and must not be overwritten.
+- [ ] Apply migrations `0004_applications.sql` and `0005_intake_abuse_controls.sql` only to the approved environment after backup and President authorization. `0003_board_access.sql` is the main-branch board-access migration and must not be overwritten.
 - [ ] D1 backups, retention, restore drill, audit export/retention, monitoring, and incident response are approved.
 - [ ] External security review, penetration test, dependency/secret scanning, and legal/privacy review are complete.
 - [ ] Confirm any public GitHub Pages changes are explicitly approved, the Registry API is unchanged, and no deployment automation is enabled.
