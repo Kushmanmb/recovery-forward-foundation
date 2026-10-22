@@ -1421,3 +1421,46 @@ body.programs-page .program-journey-image {
   .crypto-card { padding: 36px 40px; }
   .crypto-address { font-size: 1.05rem; }
 }
+
+/* Glowing cards and contained list numbers */
+body :is(.mission-card, .mission-details, .portal-card,
+         .crypto-card, .daily-prayer-card, .mission-grid article) {
+  --card-glow: 168, 85, 247;
+  border: 1px solid rgba(var(--card-glow), .75);
+  border-radius: 12px;
+  box-shadow:
+    0 0 12px rgba(var(--card-glow), .20),
+    0 0 24px rgba(var(--card-glow), .10);
+}
+body :is(.mission-card, .mission-details, .portal-card,
+         .mission-grid article):nth-of-type(4n + 2) {
+  --card-glow: 164, 214, 94;
+}
+body :is(.mission-card, .mission-details, .portal-card,
+         .mission-grid article):nth-of-type(4n + 3) {
+  --card-glow: 56, 189, 248;
+}
+body :is(.mission-card, .mission-details, .portal-card,
+         .mission-grid article):nth-of-type(4n + 4) {
+  --card-glow: 244, 166, 42;
+}
+body .mission-details {
+  padding: clamp(16px, 4vw, 28px);
+}
+body .mission-details .content {
+  padding: 0;
+}
+body :is(.mission-details, .mission-card, .portal-card) :is(ol, ul) {
+  list-style-position: outside;
+  padding-inline-start: 1.75em;
+  margin: 16px 0;
+}
+body :is(.mission-details, .mission-card, .portal-card) li {
+  padding-inline-start: .25em;
+  margin-bottom: 10px;
+  overflow-wrap: anywhere;
+}
+body :is(.mission-details, .mission-card, .portal-card) li::marker {
+  color: #d8b4fe;
+  font-weight: 700;
+}
