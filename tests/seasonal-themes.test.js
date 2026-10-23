@@ -29,7 +29,7 @@ test("December: blinking bulbs on page edges and cards, ornaments, garlands, sno
   const w = load("programs.html", { search: "?season=december" });
   const d = w.document;
   assert.ok(d.querySelectorAll(".sx-front .sx-bulb").length >= 8);
-  assert.ok(d.querySelectorAll(".sx-card-deco .sx-bulb").length >= 8);
+  assert.ok(d.querySelectorAll(".sx-perim .sx-pb").length >= 8);
   assert.ok(d.querySelectorAll(".sx-garland").length > 2);
   assert.ok(d.querySelectorAll(".sx-card-deco .sx-orn").length >= 2);
   assert.ok(d.querySelector(".sx-p.sx-fall"));

@@ -182,7 +182,7 @@
     return x - Math.floor(x);
   }
 
-  var XMAS = ["#ff3b3b", "#2ecc71", "#ffd54f", "#4fc3ff", "#ffffff", "#ff7ac6"];
+  var XMAS = ["#ff3b3b", "#2ecc71", "#4aa8ff", "#ffd54f", "#ff7ac6", "#fff1c9"];
 
   function bulbs(n, offset) {
     var out = "";
@@ -200,6 +200,98 @@
   /* ---------- Card decoration per season ----------
    * Every motif is anchored to a corner or a side border and is small enough
    * to sit mostly on the border line, so it stays in the card's padding. */
+
+
+  /* ---------- Christmas perimeter lights ----------
+   * One SVG per card traces the card's real size and border radius: a wire plus evenly
+   * spaced bulbs on all four sides. Rebuilt whenever the card is resized. */
+  var LIGHT_GAP = 22, LIGHT_OUT = 4, LIGHT_PAD = 13;
+
+  function perimeterPoint(s, W, H, R, x0, y0) {
+    var top = W - 2 * R, side = H - 2 * R, arc = Math.PI * R / 2;
+    var segs = [top, arc, side, arc, top, arc, side, arc], k = 0, t, a;
+    while (k < 7 && s > segs[k]) { s -= segs[k]; k++; }
+    t = segs[k] ? s / segs[k] : 0;
+    switch (k) {
+      case 0: return [x0 + R + t * top, y0, 0, -1];
+      case 2: return [x0 + W, y0 + R + t * side, 1, 0];
+      case 4: return [x0 + W - R - t * top, y0 + H, 0, 1];
+      case 6: return [x0, y0 + H - R - t * side, -1, 0];
+      default:
+        a = t * Math.PI / 2;
+        var cx = [x0 + W - R, x0 + W - R, x0 + R, x0 + R][(k - 1) / 2];
+        var cy = [y0 + R, y0 + H - R, y0 + H - R, y0 + R][(k - 1) / 2];
+        var base = [-Math.PI / 2, 0, Math.PI / 2, Math.PI][(k - 1) / 2] + a;
+        return [cx + R * Math.cos(base), cy + R * Math.sin(base), Math.cos(base), Math.sin(base)];
+    }
+  }
+
+  function lightsSvg(w, h, radius, seed) {
+    var e = LIGHT_OUT, P = LIGHT_PAD;
+    var R = Math.max(2, Math.min(radius + e, (w + 2 * e) / 2, (h + 2 * e) / 2));
+    var W = w + 2 * e, H = h + 2 * e, x0 = P - e, y0 = P - e;
+    var len = 2 * (W - 2 * R) + 2 * (H - 2 * R) + 2 * Math.PI * R;
+    var n = Math.max(8, Math.round(len / LIGHT_GAP)), step = len / n, i;
+    var wire = "M" + (x0 + R) + " " + y0 + "H" + (x0 + W - R) + "A" + R + " " + R + " 0 0 1 " + (x0 + W) + " " + (y0 + R) +
+      "V" + (y0 + H - R) + "A" + R + " " + R + " 0 0 1 " + (x0 + W - R) + " " + (y0 + H) + "H" + (x0 + R) +
+      "A" + R + " " + R + " 0 0 1 " + x0 + " " + (y0 + H - R) + "V" + (y0 + R) + "A" + R + " " + R + " 0 0 1 " + (x0 + R) + " " + y0 + "Z";
+    var out = '<svg class="sx-perim-svg" width="' + (w + 2 * P) + '" height="' + (h + 2 * P) + '" viewBox="0 0 ' + (w + 2 * P) + " " + (h + 2 * P) +
+      '" focusable="false"><path class="sx-wire" d="' + wire + '"/>';
+    for (i = 0; i < n; i++) {
+      var q = perimeterPoint(step * (i + 0.5), W, H, R, x0, y0);
+      var c = XMAS[(i + seed) % XMAS.length], kind = ["sx-k0", "sx-k1", "sx-k2"][(i + seed) % 3];
+      var bx = q[0] + q[2] * 3, by = q[1] + q[3] * 3;
+      var d = (rnd(i + seed, 1) * 2.6).toFixed(2), t = (1.3 + rnd(i + seed, 2) * 2).toFixed(2);
+      out += '<g class="sx-pb ' + kind + '" style="--c:' + c + ";--d:-" + d + "s;--t:" + t + 's">' +
+        '<line class="sx-cap" x1="' + q[0].toFixed(1) + '" y1="' + q[1].toFixed(1) + '" x2="' + bx.toFixed(1) + '" y2="' + by.toFixed(1) + '"/>' +
+        '<circle class="sx-halo" cx="' + bx.toFixed(1) + '" cy="' + by.toFixed(1) + '" r="6"/>' +
+        '<circle class="sx-core" cx="' + bx.toFixed(1) + '" cy="' + by.toFixed(1) + '" r="3"/></g>';
+    }
+    return out + "</svg>";
+  }
+
+  function buildCardLights(host, win) {
+    var card = host.parentNode;
+    if (!card) return;
+    var w = card.offsetWidth || 320, h = card.offsetHeight || 160;
+    if (host.__sxw === w && host.__sxh === h) return;
+    var radius = 12;
+    if (win.getComputedStyle) {
+      var r = parseFloat(win.getComputedStyle(card).borderTopLeftRadius);
+      if (r >= 0) radius = r;
+    }
+    host.__sxw = w; host.__sxh = h;
+    host.innerHTML = lightsSvg(w, h, radius, host.__sxseed || 0);
+  }
+
+  function lightCards(doc, win, state) {
+    var list = doc.querySelectorAll('[data-sx="card"]');
+    for (var i = 0; i < list.length; i++) {
+      var card = list[i];
+      if (card.__sxLit) continue;
+      var up = card.parentElement && card.parentElement.closest(CARD_SELECTOR);
+      if (up) continue; // nested cards share the outer card's strand
+      card.__sxLit = true;
+      var host = doc.createElement("span");
+      host.className = "sx-deco sx-perim";
+      host.setAttribute("aria-hidden", "true");
+      host.__sxseed = i;
+      card.appendChild(host);
+      buildCardLights(host, win);
+      if (win.ResizeObserver) {
+        if (!state.ro) {
+          state.ro = new win.ResizeObserver(function (entries) {
+            for (var k = 0; k < entries.length; k++) {
+              var hst = entries[k].target.__sxHost;
+              if (hst && hst.parentNode) buildCardLights(hst, win);
+            }
+          });
+        }
+        card.__sxHost = host;
+        state.ro.observe(card);
+      }
+    }
+  }
 
   function spiderMarkup(side, i) {
     return '<span class="sx-spiderbox sx-' + side + " sx-s" + (i % 3) + '"><span class="sx-spiderin"><span class="sx-thread"></span>' + SVG.spider + "</span></span>";
@@ -222,7 +314,7 @@
     }
 
     if (season.mood === "christmas") {
-      var segs = '<span class="sx-lights sx-card-lights"><span class="sx-seg">' + bulbs(4, i) + '</span><span class="sx-seg">' + bulbs(4, i + 4) + "</span></span>";
+      var segs = "";
       var c = [
         segs + m("br", "", g[3]),
         '<span class="sx-garland">' + SVG.garland + "</span>" + m("tl", "sx-bow", SVG.bow),
@@ -334,10 +426,10 @@
     var nodes = doc.querySelectorAll(".sx-deco, .sx-layer");
     for (var i = 0; i < nodes.length; i++) nodes[i].parentNode.removeChild(nodes[i]);
     var marked = doc.querySelectorAll("[data-sx]");
-    for (var j = 0; j < marked.length; j++) marked[j].removeAttribute("data-sx");
+    for (var j = 0; j < marked.length; j++) { marked[j].removeAttribute("data-sx"); marked[j].__sxLit = false; marked[j].__sxHost = null; }
   }
 
-  function decorate(doc, season, state) {
+  function decorate(doc, season, state, win) {
     var i, list, el;
     state = state || createState();
 
@@ -348,6 +440,8 @@
       el.setAttribute("data-sx", "card");
       add(doc, el, "sx-deco sx-card-deco", cardMarkup(season, state.cardIndex++));
     }
+
+    if (season.mood === "christmas" && win) lightCards(doc, win, state);
 
     list = doc.querySelectorAll(SECTION_SELECTOR);
     for (i = 0; i < list.length; i++) {
@@ -407,6 +501,7 @@
 
   function applySeason(doc, win, season, state) {
     var html = doc.documentElement;
+    if (state.ro) { state.ro.disconnect(); state.ro = null; }
     clearDecorations(doc);
     state.season = season;
     state.cardIndex = 0;
@@ -416,7 +511,7 @@
     html.style.setProperty("--sx-b", season.colors[1]);
     html.style.setProperty("--sx-c3", season.colors[2]);
     buildLayer(doc, win, season);
-    decorate(doc, season, state);
+    decorate(doc, season, state, win);
   }
 
   function init(doc, win) {
@@ -455,7 +550,7 @@
         pending = true;
         win.setTimeout(function () {
           pending = false;
-          decorate(doc, state.season, state);
+          decorate(doc, state.season, state, win);
         }, 0);
       });
       state.observer.observe(doc.body, { childList: true, subtree: true });
@@ -470,6 +565,8 @@
     win.addEventListener("resize", function () {
       win.clearTimeout(state.resizeTimer);
       state.resizeTimer = win.setTimeout(function () {
+        var lit = doc.querySelectorAll(".sx-perim");
+        for (var q = 0; q < lit.length; q++) buildCardLights(lit[q], win);
         var w = win.innerWidth || 0;
         if (Math.abs(w - state.width) > 80) {
           state.width = w;

@@ -124,12 +124,27 @@ html[data-sx-mood="christmas"] { --sx-a: #ff3b3b; --sx-b: #2ecc71; --sx-c3: #ffd
 .sx-edge-left { left: 0; } .sx-edge-right { right: 0; }
 .sx-edge-left .sx-bulb, .sx-edge-right .sx-bulb { transform: rotate(90deg); }
 .sx-edge-left .sx-bulb.sx-on, .sx-edge-right .sx-bulb.sx-on { transform: rotate(90deg) scale(1.35); }
-.sx-card-lights { position: absolute; top: -7px; left: 12px; right: 12px; display: flex; justify-content: space-between; }
+.sx-strip.sx-lights { position: absolute; left: 6px; right: 6px; top: -7px; height: auto; background: none; opacity: 1; animation: none; }
+.sx-header-deco .sx-strip.sx-lights { top: auto; bottom: -7px; }
 .sx-seg { position: relative; display: flex; justify-content: space-between; flex: 1; padding: 0 6px; margin: 0 4px; }
 .sx-seg::before { content: ""; position: absolute; left: 0; right: 0; top: -4px; height: 10px; border-bottom: 1.5px solid #1f6b3a; border-radius: 0 0 50% 50% / 0 0 100% 100%; }
 .sx-seg .sx-bulb { margin-top: 2px; }
-.sx-strip.sx-lights { position: absolute; left: 6px; right: 6px; top: -7px; height: auto; background: none; opacity: 1; animation: none; }
-.sx-header-deco .sx-strip.sx-lights { top: auto; bottom: -7px; }
+
+/* Christmas perimeter strand: wire and bulbs follow the card's size and radius. */
+.sx-perim { left: 0; top: 0; width: 0; height: 0; z-index: 2; }
+.sx-perim-svg { position: absolute; left: -13px; top: -13px; max-width: none; overflow: visible; }
+.sx-wire { fill: none; stroke: #1b5a33; stroke-width: 1.6; stroke-linejoin: round; }
+.sx-cap { stroke: #20301f; stroke-width: 3; stroke-linecap: round; }
+.sx-halo { fill: var(--c); opacity: .28; }
+.sx-core { fill: var(--c); }
+.sx-pb.sx-k0 .sx-core, .sx-pb.sx-k0 .sx-halo { animation: sx-blink var(--t) ease-in-out var(--d) infinite; }
+.sx-pb.sx-k1 .sx-core { animation: sx-twinkle calc(var(--t) * .55) steps(1, end) var(--d) infinite; }
+.sx-pb.sx-k1 .sx-halo { animation: sx-twinkle calc(var(--t) * .55) steps(1, end) var(--d) infinite; }
+.sx-pb.sx-k2 .sx-halo { transform-box: fill-box; transform-origin: center; animation: sx-pulse var(--t) ease-in-out var(--d) infinite; }
+@keyframes sx-twinkle { 0%, 100% { opacity: 1; } 40% { opacity: .45; } 55% { opacity: 1; } 70% { opacity: .6; } }
+@keyframes sx-pulse { 0%, 100% { transform: scale(.7); opacity: .2; } 50% { transform: scale(1.25); opacity: .55; } }
+html[data-sx-mood="christmas"] .sx-glow { border-color: rgba(255,255,255,.35); box-shadow: -3px -2px 14px -3px #ff3b3b, 3px -2px 14px -3px #2ecc71, -3px 3px 14px -3px #4aa8ff, 3px 3px 14px -3px #ffd54f, inset 0 0 10px -6px #ff7ac6; }
+
 .sx-garland { position: absolute; top: -7px; left: 4px; right: 4px; height: 14px; }
 .sx-garland svg { display: block; width: 100%; height: 100%; }
 .sx-garland.sx-low { top: auto; bottom: -7px; }

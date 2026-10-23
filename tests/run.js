@@ -3,7 +3,7 @@
 const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const path = require("node:path");
-const HEAVY = ["seasonal-content", "seasonal-placement", "seasonal-switch-hero"].map((n) => n + ".test.js");
+const HEAVY = ["seasonal-lights", "seasonal-content", "seasonal-placement", "seasonal-switch-hero"].map((n) => n + ".test.js");
 const dir = __dirname;
 const docs = path.join(dir, "..", "docs");
 const pages = fs.readdirSync(docs).filter((f) => f.endsWith(".html"));
