@@ -148,8 +148,8 @@ overflow-x: auto;
     linear-gradient(
       90deg,
       rgba(5,12,9,.98) 0%,
-      rgba(5,12,9,.88) 30%,
-      rgba(5,12,9,.45) 60%,
+      rgba(5,12,9,.96) 46%,
+      rgba(5,12,9,.7) 58%,
       rgba(5,12,9,.15) 100%
     ),
     url("../assets/images/recovery-forward-hero.png");
@@ -655,6 +655,53 @@ footer strong {
 
 footer > div:last-child {
   text-align: right;
+}
+
+
+/* FOUNDER SIGNATURE: last element on every page, below the footer */
+
+.founder-signature {
+  padding: 22px 5% 30px;
+  text-align: center;
+  background: #050b08;
+  border-top: 1px solid rgba(100, 160, 120, .18);
+  overflow: hidden;
+}
+
+.signature-text {
+  margin: 0 auto;
+  max-width: 100%;
+  font-family: "Snell Roundhand", "Apple Chancery", "Segoe Script", "Lucida Handwriting", "Brush Script MT", "URW Chancery L", cursive;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.15rem, 5.4vw, 2.1rem);
+  line-height: 1.35;
+  letter-spacing: .02em;
+  overflow-wrap: anywhere;
+  color: #c8f5d4;
+  text-shadow: 0 0 8px rgba(102, 255, 153, .45), 0 0 18px rgba(212, 175, 55, .3);
+  animation: signature-glow 6s ease-in-out infinite;
+}
+
+.signature-flourish {
+  display: block;
+  width: min(280px, 70%);
+  height: 10px;
+  margin: 6px auto 0;
+  background:
+    radial-gradient(circle, #d4af37 0 2px, transparent 3px) center / 10px 10px no-repeat,
+    linear-gradient(90deg, transparent, #4cd987 30%, #d4af37 50%, #4cd987 70%, transparent) center / 100% 2px no-repeat;
+  filter: drop-shadow(0 0 4px rgba(102, 255, 153, .5));
+  border-radius: 2px;
+}
+
+@keyframes signature-glow {
+  0%, 100% { text-shadow: 0 0 6px rgba(102, 255, 153, .35), 0 0 14px rgba(212, 175, 55, .2); }
+  50% { text-shadow: 0 0 10px rgba(102, 255, 153, .6), 0 0 22px rgba(212, 175, 55, .4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signature-text { animation: none; }
 }
 
 
@@ -1284,7 +1331,9 @@ body.programs-page .program-journey-image {
         rgba(5,12,9,.85) 100%
       ),
       url("../assets/images/recovery-forward-hero.png");
-    background-size: cover;
+    /* Zoom just enough that the poster copy baked into the left of the artwork
+       is always cropped out; the real HTML heading is the only headline. */
+    background-size: auto max(100%, 119vw);
     background-position: 100% center;
     padding: 48px 0;
   }
