@@ -1,0 +1,46 @@
+/* Scoped to the homepage hero; the verse never widens the page. */
+.hero .daily-verse {
+  width: 100%;
+  min-width: 0;
+  margin: 24px 0;
+  padding: 12px 0;
+  overflow: hidden;
+  border-block: 1px solid rgba(164, 214, 94, .35);
+  background: linear-gradient(90deg, rgba(7,16,13,.88), rgba(7,16,13,.55));
+}
+.daily-verse-label {
+  margin: 0 14px 8px;
+  color: #a4d65e;
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .15em;
+}
+.daily-verse-label span { color: #f4a62a; margin-inline: 8px; }
+.daily-verse-window { overflow: hidden; }
+.daily-verse-window:focus-visible { outline: 2px solid #a4d65e; outline-offset: -2px; }
+.daily-verse-track { display: flex; width: max-content; }
+.daily-verse-item {
+  flex: 0 0 auto;
+  margin: 0;
+  padding-inline: 16px 64px;
+  color: #f5f8f6;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.65;
+  white-space: nowrap;
+}
+.daily-verse-item[hidden] { display: none; }
+.daily-verse.is-ready .daily-verse-track {
+  animation: daily-verse-scroll var(--verse-duration, 35s) linear infinite;
+}
+.daily-verse-window:hover .daily-verse-track,
+.daily-verse-window:focus-within .daily-verse-track { animation-play-state: paused; }
+@keyframes daily-verse-scroll { to { transform: translateX(-50%); } }
+/* Full readable fallback without JavaScript or when motion is reduced. */
+.daily-verse:not(.is-ready) .daily-verse-track { width: 100%; }
+.daily-verse:not(.is-ready) .daily-verse-item { white-space: normal; padding: 0 16px; }
+@media (prefers-reduced-motion: reduce) {
+  .daily-verse.is-ready .daily-verse-track { animation: none; width: 100%; transform: none; }
+  .daily-verse .daily-verse-item { white-space: normal; padding: 0 16px; flex: 1; }
+  .daily-verse [data-verse-copy] { display: none; }
+}
