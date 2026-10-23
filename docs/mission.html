@@ -82,23 +82,27 @@
     }
     .site-header {
       height: auto;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 10px;
-      padding: 12px 5%;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+      padding: 22px 4% 12px;
     }
     .site-title {
+      flex: 1 1 auto;
+      min-width: 0;
+      white-space: nowrap;
       text-align: center;
+      padding-right: clamp(0px, 4vw, 60px);
       text-decoration: none;
       color: #c8f5d4;
       font-family: "Snell Roundhand", "Apple Chancery", "Segoe Script", "Lucida Handwriting", "Brush Script MT", "URW Chancery L", cursive;
       font-style: italic;
       font-weight: 400;
-      font-size: clamp(1.6rem, 6vw, 2.6rem);
+      font-size: clamp(.95rem, 4.6vw, 2.4rem);
       line-height: 1.2;
-      letter-spacing: .02em;
+      letter-spacing: .01em;
     }
-    .site-header .nav-dropdown { align-self: flex-end; margin-left: 0; }
+    .site-header .nav-dropdown { margin-left: 0; align-self: center; }
   </style>
   <link rel="stylesheet" href="css/seasonal.css?v=4">
   <script src="js/seasonal-theme.js?v=4" defer></script>
