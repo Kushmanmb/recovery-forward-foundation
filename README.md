@@ -62,3 +62,7 @@ Programs, eligibility requirements, governance procedures, and funding mechanism
 ---
 
 © 2026 Recovery Forward Foundation
+
+## Seasonal Themes
+
+Every public page loads `docs/css/seasonal.css` and `docs/js/seasonal-theme.js`. The engine picks one of twelve themes from the current month in `America/Indiana/Indianapolis`, so it switches on the 1st of each month with no redeploy (open tabs re-check every minute). Visitors can turn effects off with the on-page toggle, and `prefers-reduced-motion` disables animation automatically. Preview any theme with `?season=october` (or `1`–`12`). Run the tests with `npm install && npm test`.

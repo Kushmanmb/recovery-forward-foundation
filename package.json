@@ -1,0 +1,7 @@
+{
+  "name": "recovery-forward-foundation-site",
+  "private": true,
+  "description": "Static public website (docs/) with seasonal theme tests.",
+  "scripts": { "test": "node --test tests/*.test.js" },
+  "devDependencies": { "jsdom": "^24.1.0" }
+}
