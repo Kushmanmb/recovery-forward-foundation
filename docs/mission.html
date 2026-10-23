@@ -80,6 +80,25 @@
       font-size: .9rem;
       margin-top: 30px;
     }
+    .site-header {
+      height: auto;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      padding: 12px 5%;
+    }
+    .site-title {
+      text-align: center;
+      text-decoration: none;
+      color: #c8f5d4;
+      font-family: "Snell Roundhand", "Apple Chancery", "Segoe Script", "Lucida Handwriting", "Brush Script MT", "URW Chancery L", cursive;
+      font-style: italic;
+      font-weight: 400;
+      font-size: clamp(1.6rem, 6vw, 2.6rem);
+      line-height: 1.2;
+      letter-spacing: .02em;
+    }
+    .site-header .nav-dropdown { align-self: flex-end; margin-left: 0; }
   </style>
   <link rel="stylesheet" href="css/seasonal.css?v=4">
   <script src="js/seasonal-theme.js?v=4" defer></script>
@@ -87,18 +106,10 @@
 <body class="mission-page">
 
 <header class="site-header">
-  <a class="brand" href="index.html">
-    <img class="brand-logo"
-         src="assets/logo/recovery-forward-foundation-logo.jpg"
-         alt="Recovery Forward Foundation">
-    <span class="brand-name">
-      <strong>RECOVERY FORWARD</strong>
-      <small>FOUNDATION</small>
-    </span>
-  </a>
+  <a class="site-title" href="index.html">Recovery Forward Foundation</a>
 
 <details class="nav-dropdown">
-  <h2>☰ Menu</h2>
+  <summary>☰ Menu</summary>
   <nav class="dropdown-links" aria-label="Main navigation">
     <a href="index.html">Home</a>
     <a href="about.html">About</a>
@@ -110,7 +121,7 @@
     <a href="support.html">Donate</a>
     <a href="index.html#contact">Contact</a>
   </nav>
-</section>
+</details>
 
 </header>
 
