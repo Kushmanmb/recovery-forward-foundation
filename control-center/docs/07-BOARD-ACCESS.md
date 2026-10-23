@@ -27,7 +27,7 @@ Only the active President can administer or read the roster. President accounts 
 
 ## Rollout
 
-Before any production deployment, compare the actual D1 schema and migration history with this branch. Apply `0003_board_access.sql` to an approved staging database and test with synthetic identities. The filename reserves 0002 for the separate application-inbox branch; it does not imply that migration is present or required. An older `board_invitations` table is not automatically migrated into this new, distinctly named table.
+Before any production deployment, compare the actual D1 schema and migration history with this branch. Apply `0004_applications.sql`, `0003_board_access.sql`, and `0005_intake_abuse_controls.sql` to an approved staging database and test with synthetic identities, after confirming which migrations the target database already has. An older `board_invitations` table is not automatically migrated into this new, distinctly named table.
 
 The Worker and UI must be deployed together after the migration. Do not deploy the UI alone or change the public Pages directory. Verify the President identity and Access MFA enforcement, invite expiry, email mismatch, single use, manual activation, role denial, suspension, and fresh sign-in after reinstatement. Automated invitation delivery, recovery, independent operational security review, and step-up authentication remain work to complete before general board rollout.
 

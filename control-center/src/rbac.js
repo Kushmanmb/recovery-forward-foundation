@@ -4,7 +4,8 @@ export const ROLES = ["President", "VicePresident", "Secretary", "Treasurer", "B
 export const ROLE_PERMISSIONS = {
   President: ["members:invite", "members:activate", "members:suspend", "members:permissions", "security:read", "audit:read",
     "documents:board:read", "meetings:request", "agenda:propose", "inbox:contact:read", "payments:authorize:president",
-    "finance:read", "grants:summary:read"],
+    "finance:read", "grants:summary:read", "applications:read:all", "applications:assign", "applications:status:write",
+    "applications:reviewers:manage"],
   VicePresident: ["documents:board:read", "meetings:request", "agenda:propose", "finance:read", "grants:summary:read"],
   Secretary: ["documents:board:read", "documents:records:write", "minutes:draft", "meetings:request", "agenda:propose",
     "inbox:contact:read", "finance:read", "grants:summary:read"],
@@ -12,6 +13,9 @@ export const ROLE_PERMISSIONS = {
     "agenda:propose", "payments:prepare", "payments:authorize:treasurer", "grants:summary:read"],
   BoardMember: ["documents:board:read", "meetings:request", "agenda:propose", "finance:read", "grants:summary:read"],
 };
+
+// "applications:review:assigned" is deliberately in no base role: it is granted only to board members
+// the President has authorized as application reviewers, and covers only applications assigned to them.
 
 // Never grantable via individual adjustment.
 const NON_GRANTABLE = new Set(["mailbox:others:read", "votes:extra", "audit:write"]);

@@ -1,4 +1,5 @@
 import { ROLE_PERMISSIONS, ROLES, can } from "./rbac.js";
+import { RCGI_PATTERN, REVIEWER_STATUSES, STATUSES, applicationDetail, applicationSummary } from "./applications.js";
 import { acceptBoardInvitation, boardAccess } from "./board-access.js";
 
 const COOKIE_NAME = "__Host-rff_session";
@@ -175,6 +176,29 @@ async function audit(db, actor, action, detail = {}) {
     .bind(actor || "system", action, JSON.stringify(detail), Date.now()).run();
 }
 
+const PRESIDENT_ACTIVE_SQL = "EXISTS (SELECT 1 FROM members WHERE email = ? AND role = 'President' AND status = 'active')";
+const REVIEWER_ACTIVE_SQL = "EXISTS (SELECT 1 FROM application_reviewers ar JOIN members m ON m.email = ar.member_email WHERE ar.member_email = ? AND ar.revoked_at IS NULL AND m.status = 'active' AND m.role != 'President')";
+
+// Audit insert for a D1 batch. With onChange, it is written only if the preceding statement changed a row.
+function auditStatement(db, actor, action, detail, { onChange = false, requirePresident = false } = {}) {
+  const conditions = [];
+  const values = [actor || "system", action, JSON.stringify(detail), Date.now()];
+  if (onChange) conditions.push("changes() > 0");
+  if (requirePresident) {
+    conditions.push(PRESIDENT_ACTIVE_SQL);
+    values.push(actor);
+  }
+  return db.prepare(
+    `INSERT INTO audit_log (actor_email, action, detail_json, created_at) SELECT ?, ?, ?, ? WHERE ${conditions.join(" AND ") || "1"}`,
+  ).bind(...values);
+}
+
+// Runs a state change plus its audit entry in one D1 batch; returns true if the state change applied.
+async function changeWithAudit(db, change, auditEntry) {
+  const results = await db.batch([change, auditEntry]);
+  return (results?.[0]?.meta?.changes ?? 0) > 0;
+}
+
 async function readRegistryJson(response) {
   const contentLength = Number(response.headers.get("content-length"));
   if (Number.isFinite(contentLength) && contentLength > MAX_REGISTRY_RESPONSE_BYTES) throw new Error("registry response too large");
@@ -306,6 +330,192 @@ async function registrySummary(env, member) {
 
 }
 
+async function readJsonBody(request) {
+  if (!sameOrigin(request)) return { error: json({ error: "forbidden" }, 403) };
+  if (request.headers.get("content-type")?.split(";")[0] !== "application/json"
+    || Number(request.headers.get("content-length") || 0) > 1024) return { error: json({ error: "invalid_request" }, 400) };
+  try {
+    const body = await request.json();
+    if (body && typeof body === "object" && !Array.isArray(body)) return { body };
+  } catch {
+    // fall through
+  }
+  return { error: json({ error: "invalid_request" }, 400) };
+}
+
+async function deny(env, member, permission) {
+  await audit(env.DB, member.email, "authorization_denied", { permission });
+  return json({ error: "forbidden" }, 403);
+}
+
+async function isAuthorizedReviewer(db, email) {
+  const row = await db.prepare(
+    "SELECT members.email FROM application_reviewers JOIN members ON members.email = application_reviewers.member_email WHERE application_reviewers.member_email = ? AND application_reviewers.revoked_at IS NULL AND members.status = 'active' AND members.role != 'President'",
+  ).bind(email).first();
+  return Boolean(row);
+}
+
+// Authorized reviewers receive one extra permission via the individual-grant mechanism.
+async function withReviewerGrant(db, member) {
+  if (member.role === "President" || !(await isAuthorizedReviewer(db, member.email))) return member;
+  return { ...member, grants: ["applications:review:assigned"] };
+}
+
+async function handleApplications(request, env, rawMember, url) {
+  const member = await withReviewerGrant(env.DB, rawMember);
+  const isPresident = can(member, "applications:read:all");
+  const isReviewer = can(member, "applications:review:assigned");
+  const { pathname } = url;
+
+  if (pathname === "/api/applications/reviewers") {
+    if (!can(member, "applications:reviewers:manage")) return deny(env, member, "applications:reviewers:manage");
+    if (request.method === "GET") {
+      const { results = [] } = await env.DB.prepare(
+        `SELECT member_email, authorized_at FROM application_reviewers WHERE revoked_at IS NULL AND ${PRESIDENT_ACTIVE_SQL} ORDER BY member_email`,
+      ).bind(member.email).all();
+      return json({ reviewers: results.map((row) => ({ email: row.member_email, authorizedAt: row.authorized_at })) });
+    }
+    if (request.method !== "POST") return json({ error: "not_found" }, 404);
+    const { body, error } = await readJsonBody(request);
+    if (error) return error;
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    if (!email || typeof body.authorized !== "boolean") return json({ error: "invalid_request" }, 400);
+    const target = await env.DB.prepare("SELECT email, role, status FROM members WHERE email = ?").bind(email).first();
+    if (!target || target.status !== "active" || target.role === "President" || !ROLES.includes(target.role)) {
+      return json({ error: "invalid_request" }, 400);
+    }
+    const now = Date.now();
+    let changed;
+    if (body.authorized) {
+      changed = await changeWithAudit(env.DB, env.DB.prepare(
+        `INSERT INTO application_reviewers (member_email, authorized_by, authorized_at)
+         SELECT ?, ?, ? WHERE ${PRESIDENT_ACTIVE_SQL}
+           AND EXISTS (SELECT 1 FROM members WHERE email = ? AND status = 'active' AND role != 'President')
+         ON CONFLICT(member_email) DO UPDATE SET authorized_by = excluded.authorized_by, authorized_at = excluded.authorized_at, revoked_at = NULL WHERE application_reviewers.revoked_at IS NOT NULL`,
+      ).bind(email, member.email, now, member.email, email),
+      auditStatement(env.DB, member.email, "application_reviewer_authorized", { reviewer: email }, { onChange: true, requirePresident: true }));
+    } else {
+      // The audit row must follow the revocation directly: later statements would overwrite changes().
+      const results = await env.DB.batch([
+        env.DB.prepare(
+          `UPDATE application_reviewers SET revoked_at = ? WHERE member_email = ? AND revoked_at IS NULL AND ${PRESIDENT_ACTIVE_SQL}`,
+        ).bind(now, email, member.email),
+        auditStatement(env.DB, member.email, "application_reviewer_revoked", { reviewer: email }, { onChange: true, requirePresident: true }),
+        env.DB.prepare(
+          `UPDATE applications SET assigned_to = NULL, assigned_by = NULL, assigned_at = NULL, status = 'new', updated_at = ?
+           WHERE assigned_to = ? AND status != 'closed' AND ${PRESIDENT_ACTIVE_SQL}
+             AND NOT EXISTS (SELECT 1 FROM application_reviewers WHERE member_email = ? AND revoked_at IS NULL)`,
+        ).bind(now, email, member.email, email),
+      ]);
+      changed = (results?.[1]?.meta?.changes ?? 0) > 0;
+    }
+    if (!changed) {
+      // Repeating a request that already holds is idempotent and unaudited; anything else lost a race.
+      const authorizedNow = await isAuthorizedReviewer(env.DB, email);
+      if (authorizedNow !== body.authorized || !(await env.DB.prepare(`SELECT 1 AS ok WHERE ${PRESIDENT_ACTIVE_SQL}`).bind(member.email).first())) {
+        return json({ error: "conflict" }, 409);
+      }
+    }
+    return json({ ok: true });
+  }
+
+  if (pathname === "/api/applications" && request.method === "GET") {
+    if (!isPresident && !isReviewer) return deny(env, member, "applications:read:all");
+    const query = isPresident
+      ? env.DB.prepare(`SELECT rcgi, status, assigned_to, created_at, updated_at FROM applications WHERE ${PRESIDENT_ACTIVE_SQL} ORDER BY created_at DESC LIMIT 200`).bind(member.email)
+      : env.DB.prepare(`SELECT rcgi, status, assigned_to, created_at, updated_at FROM applications WHERE assigned_to = ? AND ${REVIEWER_ACTIVE_SQL} ORDER BY created_at DESC LIMIT 200`).bind(member.email, member.email);
+    const { results = [] } = await query.all();
+    await audit(env.DB, member.email, "application_list_read", { scope: isPresident ? "all" : "assigned" });
+    return json({ applications: results.map(applicationSummary) });
+  }
+
+  const match = pathname.match(/^\/api\/applications\/([^/]+)(?:\/(assign|status))?$/);
+  if (!match || !RCGI_PATTERN.test(match[1])) return json({ error: "not_found" }, 404);
+  const [, rcgi, action] = match;
+  const row = await env.DB.prepare("SELECT * FROM applications WHERE rcgi = ?").bind(rcgi).first();
+
+  if (!action && request.method === "GET") {
+    // Authorization is enforced in the query itself; reviewers get the same response for missing and unassigned records.
+    const visible = await env.DB.prepare(
+      `SELECT * FROM applications WHERE rcgi = ? AND (${PRESIDENT_ACTIVE_SQL} OR (assigned_to = ? AND ${REVIEWER_ACTIVE_SQL}))`,
+    ).bind(rcgi, member.email, member.email, member.email).first();
+    if (!visible) {
+      if (!isPresident && !isReviewer) return deny(env, member, "applications:review:assigned");
+      if (!isPresident) await audit(env.DB, member.email, "authorization_denied", { permission: "applications:review:assigned", rcgi });
+      return json({ error: "not_found" }, 404);
+    }
+    await audit(env.DB, member.email, "application_viewed", { rcgi });
+    return json({ application: applicationDetail(visible) });
+  }
+  if (action === "assign" && request.method === "POST") {
+    if (!can(member, "applications:assign")) return deny(env, member, "applications:assign");
+    const { body, error } = await readJsonBody(request);
+    if (error) return error;
+    if (!row) return json({ error: "not_found" }, 404);
+    if (row.status === "closed") return json({ error: "conflict" }, 409);
+    const now = Date.now();
+    if (body.assignee === null) {
+      const updated = await changeWithAudit(env.DB, env.DB.prepare(
+        `UPDATE applications SET assigned_to = NULL, assigned_by = NULL, assigned_at = NULL, status = 'new', updated_at = ?
+         WHERE rcgi = ? AND status = ? AND assigned_to IS ? AND status != 'closed'
+           AND ${PRESIDENT_ACTIVE_SQL}`,
+      ).bind(now, rcgi, row.status, row.assigned_to, member.email),
+      auditStatement(env.DB, member.email, "application_unassigned", { rcgi }, { onChange: true }));
+      if (!updated) return json({ error: "conflict" }, 409);
+      return json({ ok: true });
+    }
+    const assignee = typeof body.assignee === "string" ? body.assignee.trim().toLowerCase() : "";
+    if (!assignee || !(await isAuthorizedReviewer(env.DB, assignee))) return json({ error: "invalid_request" }, 400);
+    const updated = await changeWithAudit(env.DB, env.DB.prepare(
+      `UPDATE applications SET assigned_to = ?, assigned_by = ?, assigned_at = ?, status = 'assigned', updated_at = ?
+       WHERE rcgi = ? AND status = ? AND assigned_to IS ? AND status != 'closed'
+         AND ${REVIEWER_ACTIVE_SQL}
+         AND ${PRESIDENT_ACTIVE_SQL}`,
+    ).bind(assignee, member.email, now, now, rcgi, row.status, row.assigned_to, assignee, member.email),
+    auditStatement(env.DB, member.email, "application_assigned", { rcgi, assignee }, { onChange: true }));
+    if (!updated) return json({ error: "conflict" }, 409);
+    return json({ ok: true });
+  }
+
+  if (action === "status" && request.method === "POST") {
+    const asPresident = can(member, "applications:status:write");
+    if (!asPresident && !isReviewer) return deny(env, member, "applications:status:write");
+    const { body, error } = await readJsonBody(request);
+    if (error) return error;
+    // "new"/"assigned" change only through assignment, so status and assignee cannot disagree.
+    const allowed = asPresident ? STATUSES.filter((status) => !["new", "assigned"].includes(status)) : REVIEWER_STATUSES;
+    if (!allowed.includes(body.status)) return json({ error: "invalid_request" }, 400);
+    if (!row || (!asPresident && row.assigned_to !== member.email)) {
+      if (row) await audit(env.DB, member.email, "authorization_denied", { permission: "applications:review:assigned", rcgi });
+      return json({ error: "not_found" }, 404);
+    }
+    if (row.status === "closed" && !asPresident) return json({ error: "conflict" }, 409);
+    if (body.status !== "closed" && !row.assigned_to) {
+      return json({ error: "conflict" }, 409);
+    }
+    const statusAudit = auditStatement(env.DB, member.email, "application_status_changed", { rcgi, from: row.status, to: body.status }, { onChange: true });
+    const updated = asPresident
+      ? await changeWithAudit(env.DB, env.DB.prepare(
+        `UPDATE applications SET status = ?, updated_at = ?
+         WHERE rcgi = ? AND status = ? AND assigned_to IS ?
+           AND (? = 'closed' OR assigned_to IS NOT NULL)
+           AND ${PRESIDENT_ACTIVE_SQL}`,
+      ).bind(body.status, Date.now(), rcgi, row.status, row.assigned_to, body.status, member.email), statusAudit)
+      : await changeWithAudit(env.DB, env.DB.prepare(
+        `UPDATE applications SET status = ?, updated_at = ?
+         WHERE rcgi = ? AND status = ? AND assigned_to = ? AND status != 'closed'
+           AND ${REVIEWER_ACTIVE_SQL}`,
+      ).bind(body.status, Date.now(), rcgi, row.status, member.email, member.email), statusAudit);
+    if (!updated) {
+      if (!asPresident) await audit(env.DB, member.email, "authorization_denied", { permission: "applications:review:assigned", rcgi });
+      return json({ error: asPresident ? "conflict" : "not_found" }, asPresident ? 409 : 404);
+    }
+    return json({ ok: true });
+  }
+
+  return json({ error: "not_found" }, 404);
+}
+
 async function handleApi(request, env, identity, url) {
   if (url.pathname === "/api/board/accept" && request.method === "POST") {
     if (!sameOrigin(request)) return json({ error: "forbidden" }, 403);
@@ -336,6 +546,10 @@ async function handleApi(request, env, identity, url) {
     && !(url.pathname === "/api/bootstrap/complete" && request.method === "POST")) {
     await audit(env.DB, member.email, "authorization_denied", { status: "pending" });
     return json({ error: "forbidden" }, 403);
+  }
+
+  if (url.pathname === "/api/applications" || url.pathname.startsWith("/api/applications/")) {
+    return handleApplications(request, env, member, url);
   }
 
   if (url.pathname === "/api/board" || url.pathname.startsWith("/api/board/")) {
