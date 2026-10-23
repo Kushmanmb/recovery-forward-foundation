@@ -29,13 +29,12 @@
   var CARD_SELECTOR = [
     ".portal-card", ".mission-card", ".crypto-card", ".daily-prayer-card",
     ".warning-box", ".privacy-banner", ".generated-id", ".result",
-    ".form-section", ".lifeline-monitor", ".demo-notice", ".mission-note",
-    ".trust-strip", ".process"
+    ".form-section", ".lifeline-monitor", ".demo-notice", ".mission-note", ".mission-details"
   ].join(",");
   var SECTION_SELECTOR = [
     ".hero", ".section", ".intro", ".portal", ".mission-section",
-    ".mission-details", ".mission-hero", ".contact-section", ".crypto-section",
-    ".daily-prayer-section", ".lifeline"
+    ".mission-hero", ".contact-section", ".crypto-section",
+    ".daily-prayer-section", ".lifeline", ".trust-strip", ".process"
   ].join(",");
   var HEADING_SELECTOR = ".section-heading, .application-heading, .contact-section > h2, .mission-hero h1";
   var HEADER_SELECTOR = ".site-header";
@@ -46,6 +45,28 @@
     "july", "august", "september", "october", "november", "december"];
 
   /* ---------- SVG motifs ---------- */
+
+  /* Corner cobweb: radial threads plus sagging concentric strands and dew drops. */
+  function buildWeb() {
+    var radials = 6, radii = [9, 17, 26, 37, 50], R = 62, d = "", i, k;
+    function pt(r, a) { return (r * Math.cos(a)).toFixed(1) + " " + (r * Math.sin(a)).toFixed(1); }
+    for (i = 0; i < radials; i++) {
+      var a = (Math.PI / 2) * i / (radials - 1);
+      d += "M0 0L" + pt(R, a);
+    }
+    var arcs = "", dew = "";
+    for (k = 0; k < radii.length; k++) {
+      for (i = 0; i < radials - 1; i++) {
+        var a0 = (Math.PI / 2) * i / (radials - 1), a1 = (Math.PI / 2) * (i + 1) / (radials - 1);
+        var mid = (a0 + a1) / 2, sag = radii[k] * (0.8 + 0.03 * ((i + k) % 3));
+        arcs += (i === 0 ? "M" + pt(radii[k], a0) : "") + "Q" + pt(sag, mid) + " " + pt(radii[k], a1);
+      }
+      dew += '<circle cx="' + (radii[k] * 0.78).toFixed(1) + '" cy="' + (radii[k] * 0.42 + 2).toFixed(1) + '" r="1.1"/>';
+    }
+    return '<svg viewBox="0 0 64 64" focusable="false" fill="none" stroke="currentColor" stroke-linecap="round">' +
+      '<path stroke-width=".9" d="' + d + '"/><path stroke-width=".6" d="' + arcs + '"/>' +
+      '<g fill="#fff" stroke="none" opacity=".8">' + dew + "</g></svg>";
+  }
 
   var SVG = {
     pumpkin:
@@ -68,15 +89,16 @@
       '<path d="M55 12L66-8l8 20z" fill="#150b20" stroke="#b266ff" stroke-width="1"/>' +
       '<path d="M50 12h28" stroke="#b266ff" stroke-width="2.5" stroke-linecap="round"/>' +
       '<path d="M52 36q-14 6-22 2" stroke="#150b20" stroke-width="4" fill="none"/></svg>',
-    web:
-      '<svg viewBox="0 0 64 64" focusable="false" fill="none" stroke="currentColor" stroke-width="1">' +
-      '<path d="M0 0H64M0 0L58 26M0 0L44 44M0 0L26 58M0 0V64"/>' +
-      '<path d="M18 0Q16 16 0 18M34 0Q30 30 0 34M50 0Q44 44 0 50"/></svg>',
+    web: buildWeb(),
     spider:
-      '<svg viewBox="0 0 22 20" focusable="false"><g stroke="#0c0710" stroke-width="1.3" fill="none">' +
-      '<path d="M7 9L1 4M7 11L1 12M8 13L3 19M15 9L21 4M15 11L21 12M14 13L19 19"/></g>' +
-      '<ellipse cx="11" cy="12" rx="5" ry="6" fill="#0c0710"/><circle cx="11" cy="6" r="3" fill="#0c0710"/>' +
-      '<circle cx="10" cy="5.5" r=".8" fill="#ff5252"/><circle cx="12" cy="5.5" r=".8" fill="#ff5252"/></svg>',
+      '<svg viewBox="0 0 24 22" focusable="false"><g stroke="#cdb6ff" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".55">' +
+      '<path d="M8 10L2 4M8 12L1 12M9 14L3 20M16 10L22 4M16 12L23 12M15 14L21 20"/></g>' +
+      '<g stroke="#120818" stroke-width="1.4" fill="none" stroke-linecap="round">' +
+      '<path d="M8 10L2 4M8 12L1 12M9 14L3 20M16 10L22 4M16 12L23 12M15 14L21 20"/></g>' +
+      '<ellipse cx="12" cy="14" rx="5.5" ry="6.5" fill="#120818" stroke="#cdb6ff" stroke-width=".9"/>' +
+      '<circle cx="12" cy="7" r="3.4" fill="#120818" stroke="#cdb6ff" stroke-width=".9"/>' +
+      '<circle cx="10.8" cy="6.6" r="1" fill="#ff4d4d"/><circle cx="13.2" cy="6.6" r="1" fill="#ff4d4d"/>' +
+      '<path d="M12 11v6" stroke="#ff8c1a" stroke-width="1.4"/></svg>',
     ornament: function (c) {
       return '<svg viewBox="0 0 28 46" focusable="false"><path d="M14 0V12" stroke="#d8b64a" stroke-width="1.2"/>' +
         '<rect x="10.5" y="11" width="7" height="5" rx="1" fill="#d8b64a"/>' +
@@ -176,9 +198,13 @@
     return '<b class="sx-m sx-' + slot + (cls ? " " + cls : "") + '">' + html + "</b>";
   }
 
-  /* ---------- Card decoration per season ---------- */
+  /* ---------- Card decoration per season ----------
+   * Every motif is anchored to a corner or a side border and is small enough
+   * to sit mostly on the border line, so it stays in the card's padding. */
 
-  var SLOTS = ["tr", "bl", "br", "tl"];
+  function spiderMarkup(side, i) {
+    return '<span class="sx-spiderbox sx-' + side + " sx-s" + (i % 3) + '"><span class="sx-spiderin"><span class="sx-thread"></span>' + SVG.spider + "</span></span>";
+  }
 
   function cardMarkup(season, i) {
     var v = i % 4;
@@ -187,34 +213,34 @@
     var g = season.glyphs;
 
     if (season.mood === "halloween") {
-      var layouts = [
-        m("tr", "sx-pumpkin", SVG.pumpkin) + m("tl", "sx-web", SVG.web),
-        m("br", "sx-pumpkin sx-lg", SVG.pumpkin) + m("tr", "sx-web sx-flip", SVG.web),
-        m("tr", "sx-ghost", SVG.ghost) + '<span class="sx-spiderbox sx-s' + (i % 3) + '"><span class="sx-spiderin"><span class="sx-thread"></span>' + SVG.spider + "</span></span>" + m("bl", "sx-web sx-flipy", SVG.web),
-        m("tl", "sx-pumpkin", SVG.pumpkin) + m("br", "sx-web sx-flipxy", SVG.web) + '<span class="sx-spiderbox sx-s' + ((i + 1) % 3) + ' sx-left"><span class="sx-spiderin"><span class="sx-thread"></span>' + SVG.spider + "</span></span>"
+      var h = [
+        m("tl", "sx-web", SVG.web) + m("tr", "sx-pumpkin", SVG.pumpkin) + m("bl", "sx-pumpkin", SVG.pumpkin) + spiderMarkup("left", i),
+        m("tr", "sx-web", SVG.web) + m("tl", "sx-pumpkin", SVG.pumpkin) + m("br", "sx-pumpkin", SVG.pumpkin) + m("bl", "sx-ghost", SVG.ghost) + spiderMarkup("right", i),
+        m("tl", "sx-web", SVG.web) + m("tr", "sx-pumpkin", SVG.pumpkin) + m("br", "sx-pumpkin", SVG.pumpkin) + spiderMarkup("left", i),
+        m("tr", "sx-web", SVG.web) + m("tl", "sx-pumpkin", SVG.pumpkin) + m("bl", "sx-pumpkin", SVG.pumpkin) + m("br", "sx-ghost", SVG.ghost) + spiderMarkup("right", i)
       ];
-      return html + layouts[v];
+      return html + h[v];
     }
 
     if (season.mood === "christmas") {
       var segs = '<span class="sx-lights sx-card-lights"><span class="sx-seg">' + bulbs(4, i) + '</span><span class="sx-seg">' + bulbs(4, i + 4) + "</span></span>";
-      var layouts2 = [
+      var c = [
         segs + m("br", "", g[3]),
         '<span class="sx-garland">' + SVG.garland + "</span>" + m("tl", "sx-bow", SVG.bow),
         segs + '<span class="sx-orn sx-o' + (i % 3) + '">' + SVG.ornament(XMAS[i % 3]) + "</span>",
         '<span class="sx-garland sx-low">' + SVG.garland + "</span>" + m("tr", "sx-bow", SVG.bow) + m("bl", "", g[1])
       ];
-      return html + layouts2[v];
+      return html + c[v];
     }
 
     if (season.mood === "thanksgiving") {
-      var set = [
+      var t = [
         m("tr", "sx-leaf", g[0]) + m("bl", "sx-leaf sx-sm", g[1]),
         m("tl", "sx-leaf", g[1]) + m("br", "sx-acorn", g[2]),
         m("tr", "sx-acorn", g[2]) + m("bl", "sx-leaf", g[0]) + m("br", "sx-sm", g[3]),
         m("tl", "sx-sm", g[3]) + m("br", "sx-leaf", g[1])
       ];
-      return html + set[v];
+      return html + t[v];
     }
 
     var a = g[i % g.length], b = g[(i + 1) % g.length];
@@ -227,89 +253,66 @@
     return html + pair[v];
   }
 
+  /* Sections only get an edge accent (plus a slim garland); never corner art over copy. */
   function sectionMarkup(season, i) {
     var edge = i % 2 ? "sx-edge-r" : "sx-edge-l";
-    var g = season.glyphs[i % season.glyphs.length];
-    var extra = "";
-    if (season.mood === "halloween") {
-      extra = i % 3 === 0 ? m("tl", "sx-web sx-big", SVG.web) : i % 3 === 1 ? m("tr", "sx-web sx-big sx-flip", SVG.web) : m("br", "sx-pumpkin", SVG.pumpkin);
-    } else if (season.mood === "christmas") {
-      extra = '<span class="sx-garland sx-wide">' + SVG.garland + "</span>";
-    } else {
-      extra = m(i % 2 ? "tr" : "tl", "sx-big", g);
-    }
-    return '<span class="sx-edge ' + edge + '"></span>' + extra;
+    var out = '<span class="sx-edge ' + edge + '"></span>';
+    if (season.mood === "christmas") out += '<span class="sx-garland sx-wide">' + SVG.garland + "</span>";
+    return out;
   }
 
+  /* Header and footer motifs sit on the border line between bar and page. */
   function stripMarkup(season, kind) {
+    var i, out = "";
     if (season.mood === "christmas") {
       var n = kind === "header" ? 5 : 4;
-      var segs = "";
-      for (var s = 0; s < n; s++) segs += '<span class="sx-seg">' + bulbs(5, s * 2) + "</span>";
-      return '<span class="sx-lights sx-strip">' + segs + "</span>";
+      for (i = 0; i < n; i++) out += '<span class="sx-seg">' + bulbs(5, i * 2) + "</span>";
+      return '<span class="sx-lights sx-strip">' + out + "</span>";
     }
     if (season.mood === "halloween") {
-      return '<span class="sx-strip sx-glow-strip"></span>' +
-        '<span class="sx-m sx-pumpkin sx-sm sx-strip-pumpkin">' + SVG.pumpkin + "</span>" +
-        '<span class="sx-m sx-web sx-flip sx-big sx-strip-web">' + SVG.web + "</span>";
+      var spots = kind === "header" ? [34, 62, 88] : [8, 26, 44, 62, 80, 94];
+      for (i = 0; i < spots.length; i++) {
+        out += '<b class="sx-m sx-pumpkin sx-edge-pumpkin" style="--px:' + spots[i] + '%;--pd:' + (i * 0.4).toFixed(1) + 's">' + SVG.pumpkin + "</b>";
+      }
+      return '<span class="sx-strip sx-glow-strip"></span>' + out;
     }
     var gl = "";
-    for (var i = 0; i < 7; i++) gl += "<em>" + season.glyphs[i % season.glyphs.length] + "</em>";
+    for (i = 0; i < 7; i++) gl += "<em>" + season.glyphs[i % season.glyphs.length] + "</em>";
     return '<span class="sx-strip sx-glyph-strip">' + gl + "</span>";
   }
 
-  /* ---------- Page-level layer ---------- */
+  /* ---------- Page-level layers ----------
+   * back: drifting ghosts, witch, fog, particles - painted behind all content.
+   * front: thin frame glow and (Christmas) edge light strings in the gutters. */
 
-  function layerMarkup(season, w, h) {
-    var small = w < 700;
-    var out = '<div class="sx-frame"></div>';
-    var i;
-
+  function backMarkup(season, w) {
+    var small = w < 700, out = "", i;
     if (season.mood === "halloween") {
       out += '<div class="sx-fog"></div><div class="sx-moon"></div>';
-      var count = Math.max(3, Math.min(14, Math.ceil(w / 130)));
-      out += '<div class="sx-row">';
-      for (i = 0; i < count; i++) {
-        var size = 34 + Math.round(rnd(i, 3) * 26);
-        out += '<span class="sx-pumpkin sx-jack" style="--s:' + size + "px;--d:" + (rnd(i, 4) * 3).toFixed(2) + "s;--t:" + (1.4 + rnd(i, 5) * 1.6).toFixed(2) + 's">' + SVG.pumpkin + "</span>";
-      }
-      out += "</div>";
-      out += '<span class="sx-m sx-web sx-page-web sx-tl">' + SVG.web + '</span><span class="sx-m sx-web sx-page-web sx-tr sx-flip">' + SVG.web + "</span>";
       var ghosts = small ? 2 : 4;
       for (i = 0; i < ghosts; i++) {
         out += '<span class="sx-pghost" style="--x:' + (8 + i * (small ? 40 : 24) + rnd(i, 6) * 8).toFixed(0) + "%;--d:" + (i * 4.5) + "s;--t:" + (14 + i * 3) + 's">' + SVG.ghost + "</span>";
       }
       out += '<span class="sx-witch">' + SVG.witch + "</span>";
-      out += '<span class="sx-spiderbox sx-page-spider sx-s0" style="left:6%"><span class="sx-spiderin"><span class="sx-thread"></span>' + SVG.spider + "</span></span>";
-      out += '<span class="sx-spiderbox sx-page-spider sx-s2" style="right:7%"><span class="sx-spiderin"><span class="sx-thread"></span>' + SVG.spider + "</span></span>";
     }
+    var n = small ? 8 : 16, p = "";
+    for (i = 0; i < n; i++) {
+      p += '<i class="sx-p sx-' + season.motion + '" style="--x:' + (rnd(i, 7) * 100).toFixed(1) + "%;--s:" + (0.7 + rnd(i, 8) * 0.9).toFixed(2) + "rem;--dur:" + (10 + rnd(i, 9) * 14).toFixed(1) + "s;--dl:" + (-rnd(i, 10) * 20).toFixed(1) + "s;--sw:" + (10 + rnd(i, 11) * 40).toFixed(0) + 'px">' + esc(season.particle) + "</i>";
+    }
+    return out + '<div class="sx-particles">' + p + "</div>";
+  }
 
+  function frontMarkup(season, w, h) {
+    var out = '<div class="sx-frame"></div>';
     if (season.mood === "christmas") {
       var perRow = Math.max(8, Math.min(34, Math.floor(w / 40)));
-      var perCol = Math.max(5, Math.min(18, Math.floor(h / 48)));
       out += '<div class="sx-lights sx-edge-top">' + bulbs(perRow, 0) + "</div>";
-      out += '<div class="sx-lights sx-edge-bottom">' + bulbs(perRow, 3) + "</div>";
-      if (!small) {
+      if (w >= 1100) {
+        var perCol = Math.max(5, Math.min(18, Math.floor(h / 48)));
         out += '<div class="sx-lights sx-edge-left">' + bulbs(perCol, 1) + "</div>";
         out += '<div class="sx-lights sx-edge-right">' + bulbs(perCol, 5) + "</div>";
       }
-      var orn = small ? 2 : 4;
-      for (i = 0; i < orn; i++) {
-        out += '<span class="sx-orn sx-page-orn sx-o' + (i % 3) + '" style="left:' + (i % 2 ? 100 - 4 - i * 4 : 4 + i * 4) + "%;--len:" + (30 + i * 14) + 'px">' + SVG.ornament(XMAS[(i + 1) % 6]) + "</span>";
-      }
-      out += '<span class="sx-garland sx-page-garland">' + SVG.garland + "</span>";
     }
-
-    var n = small ? 8 : 16;
-    var p = "";
-    for (i = 0; i < n; i++) {
-      var x = (rnd(i, 7) * 100).toFixed(1);
-      var sz = (0.7 + rnd(i, 8) * 0.9).toFixed(2);
-      var dur = (10 + rnd(i, 9) * 14).toFixed(1);
-      var delay = (-rnd(i, 10) * 20).toFixed(1);
-      p += '<i class="sx-p sx-' + season.motion + '" style="--x:' + x + "%;--s:" + sz + "rem;--dur:" + dur + "s;--dl:" + delay + "s;--sw:" + (10 + rnd(i, 11) * 40).toFixed(0) + 'px">' + esc(season.particle) + "</i>";
-    }
-    out += '<div class="sx-particles">' + p + "</div>";
     return out;
   }
 
@@ -405,13 +408,19 @@
   }
 
   function buildLayer(doc, win, season) {
-    var old = doc.querySelector(".sx-layer");
-    if (old) old.parentNode.removeChild(old);
-    var layer = doc.createElement("div");
-    layer.className = "sx-layer";
-    layer.setAttribute("aria-hidden", "true");
-    layer.innerHTML = layerMarkup(season, win.innerWidth || 1024, win.innerHeight || 768);
-    doc.body.appendChild(layer);
+    var old = doc.querySelectorAll(".sx-layer");
+    for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
+    var w = win.innerWidth || 1024, h = win.innerHeight || 768;
+    var back = doc.createElement("div");
+    back.className = "sx-layer sx-back";
+    back.setAttribute("aria-hidden", "true");
+    back.innerHTML = backMarkup(season, w);
+    var front = doc.createElement("div");
+    front.className = "sx-layer sx-front";
+    front.setAttribute("aria-hidden", "true");
+    front.innerHTML = frontMarkup(season, w, h);
+    doc.body.appendChild(back);
+    doc.body.appendChild(front);
   }
 
   function applySeason(doc, win, season, state) {
@@ -433,10 +442,11 @@
     var btn = doc.querySelector(".sx-toggle");
     if (!btn) return;
     var forced = prefersReducedMotion(win);
-    btn.setAttribute("aria-pressed", motion === "on" ? "true" : "false");
+    var on = motion === "on";
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
     btn.disabled = forced;
-    btn.textContent = forced ? "Seasonal animations off (system setting)" :
-      motion === "on" ? "Seasonal animations: On" : "Seasonal animations: Off";
+    var state = btn.querySelector(".sx-state");
+    state.textContent = forced ? "Off (device reduced-motion setting)" : on ? "On" : "Off";
   }
 
   function setMotion(doc, win, motion, persist) {
@@ -453,14 +463,19 @@
     doc.documentElement.setAttribute("data-sx-ready", "true");
 
     doc.documentElement.setAttribute("data-sx-motion", computeMotion(win));
+    // In-flow control at the end of the page so it never covers content.
+    var bar = doc.createElement("div");
+    bar.className = "sx-toggle-bar";
     var btn = doc.createElement("button");
     btn.type = "button";
     btn.className = "sx-toggle";
+    btn.innerHTML = 'Seasonal animations: <span class="sx-state"></span>';
     btn.addEventListener("click", function () {
       var next = doc.documentElement.getAttribute("data-sx-motion") === "on" ? "off" : "on";
       setMotion(doc, win, next, true);
     });
-    doc.body.appendChild(btn);
+    bar.appendChild(btn);
+    doc.body.appendChild(bar);
 
     applySeason(doc, win, getSeason(new Date(), win.location && win.location.search), state);
     state.width = win.innerWidth || 0;
@@ -481,7 +496,7 @@
         for (var i = 0; i < records.length && !relevant; i++) {
           for (var j = 0; j < records[i].addedNodes.length; j++) {
             var n = records[i].addedNodes[j];
-            if (n.nodeType === 1 && !(n.classList && (n.classList.contains("sx-deco") || n.classList.contains("sx-layer") || n.classList.contains("sx-toggle")))) {
+            if (n.nodeType === 1 && !(n.classList && (n.classList.contains("sx-deco") || n.classList.contains("sx-layer") || n.classList.contains("sx-toggle-bar")))) {
               relevant = true;
               break;
             }

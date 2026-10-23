@@ -14,11 +14,12 @@ const PAGES = fs.readdirSync(DOCS).filter((f) => f.endsWith(".html"));
 const windows = [];
 after(() => windows.forEach((w) => w.close()));
 
-function load(page, { search = "", reduced = false, stored = null } = {}) {
+function load(page, { search = "", reduced = false, stored = null, width = 1024 } = {}) {
   const html = fs.readFileSync(path.join(DOCS, page), "utf8").replace(/<script[^>]*src=[^>]*><\/script>/g, "");
   const dom = new JSDOM(html, { url: "https://example.org/" + page + search, runScripts: "outside-only", pretendToBeVisual: true });
   const w = dom.window;
   windows.push(w);
+  Object.defineProperty(w, "innerWidth", { value: width, configurable: true });
   w.matchMedia = (q) => ({ matches: reduced && /reduce/.test(q), addEventListener() {}, removeEventListener() {} });
   if (stored) w.localStorage.setItem(engine.STORAGE_KEY, stored);
   w.eval(SCRIPT);
@@ -64,8 +65,8 @@ test("initialization decorates every public page (cards, sections, headings, hea
     const w = load(p);
     const d = w.document;
     assert.ok(d.documentElement.getAttribute("data-season"), p + " season");
-    assert.strictEqual(d.querySelectorAll(".sx-layer").length, 1, p);
-    assert.ok(d.querySelector(".sx-toggle"), p + " toggle");
+    assert.strictEqual(d.querySelectorAll(".sx-layer").length, 2, p);
+    assert.ok(d.querySelector(".sx-toggle-bar > .sx-toggle"), p + " toggle");
     const cards = d.querySelectorAll(engine.CARD_SELECTOR);
     for (const c of cards) {
       assert.ok(c.querySelector(":scope > .sx-deco .sx-glow"), p + " card " + c.className);
@@ -88,7 +89,7 @@ test("decorations never alter existing content, links or forms", () => {
     const w = load(p);
     const d = w.document;
     const clean = d.documentElement.cloneNode(true);
-    clean.querySelectorAll(".sx-deco, .sx-layer, .sx-toggle").forEach((n) => n.remove());
+    clean.querySelectorAll(".sx-deco, .sx-layer, .sx-toggle-bar").forEach((n) => n.remove());
     assert.strictEqual(clean.querySelectorAll("a").length, raw.querySelectorAll("a").length, p);
     assert.strictEqual(clean.querySelectorAll("form, input, textarea, select, button").length,
       raw.querySelectorAll("form, input, textarea, select, button").length, p);
@@ -100,13 +101,14 @@ test("decorations never alter existing content, links or forms", () => {
 test("October: jack-o'-lanterns, cobwebs, spiders, ghosts, witch, varied card layouts", () => {
   const d = load("programs.html", { search: "?season=october" }).document;
   assert.strictEqual(d.documentElement.getAttribute("data-sx-mood"), "halloween");
-  assert.ok(d.querySelectorAll(".sx-jack").length >= 3);
+  assert.ok(d.querySelectorAll(".sx-footer-deco .sx-pumpkin, .sx-header-deco .sx-pumpkin").length >= 3);
   assert.ok(d.querySelector(".sx-witch"));
   assert.ok(d.querySelectorAll(".sx-pghost").length >= 2);
-  assert.ok(d.querySelectorAll(".sx-spiderbox").length >= 2);
+  assert.ok(d.querySelectorAll(".sx-card-deco .sx-spiderbox .sx-thread").length >= 5);
+  assert.ok(d.querySelectorAll(".sx-spiderbox svg").length >= 5);
   assert.ok(d.querySelectorAll(".sx-card-deco .sx-web").length > 3);
   assert.ok(d.querySelectorAll(".sx-card-deco .sx-pumpkin").length > 3);
-  const layouts = new Set([...d.querySelectorAll(".sx-card-deco")].map((e) => e.innerHTML.replace(/--sx-[ci]:[^"]*/g, "").length));
+  const layouts = new Set([...d.querySelectorAll(".sx-card-deco")].map((e) => [...e.querySelectorAll(".sx-m")].map((n) => n.className).join("|")));
   assert.ok(layouts.size >= 3, "card decorations vary");
   const colors = new Set([...d.querySelectorAll(".sx-glow")].map((e) => e.style.getPropertyValue("--sx-c")));
   assert.deepStrictEqual([...colors].sort(), ["#6bff3d", "#a64dff", "#ff8c1a"].sort());
@@ -120,12 +122,12 @@ test("November: leaves, acorns and amber glow", () => {
 });
 
 test("December: blinking bulbs on page edges and cards, ornaments, garlands, snow, tappable bulbs", () => {
-  const w = load("support.html", { search: "?season=december" });
+  const w = load("programs.html", { search: "?season=december" });
   const d = w.document;
-  assert.ok(d.querySelectorAll(".sx-layer .sx-bulb").length >= 20);
+  assert.ok(d.querySelectorAll(".sx-front .sx-bulb").length >= 8);
   assert.ok(d.querySelectorAll(".sx-card-deco .sx-bulb").length >= 8);
   assert.ok(d.querySelectorAll(".sx-garland").length > 2);
-  assert.ok(d.querySelectorAll(".sx-orn").length >= 2);
+  assert.ok(d.querySelectorAll(".sx-card-deco .sx-orn").length >= 2);
   assert.ok(d.querySelector(".sx-p.sx-fall"));
   assert.ok(d.querySelectorAll(".sx-header-deco .sx-bulb").length > 0);
   const delays = new Set([...d.querySelectorAll(".sx-bulb")].map((b) => b.style.getPropertyValue("--d")));
@@ -162,7 +164,7 @@ test("re-applying a season is idempotent and swaps decorations", () => {
   const st = d.__rffSeasonalState;
   w.RFFSeasonal.applySeason(d, w, w.RFFSeasonal.SEASONS[11], st);
   assert.strictEqual(d.querySelectorAll(".sx-card-deco").length, before);
-  assert.strictEqual(d.querySelectorAll(".sx-layer").length, 1);
+  assert.strictEqual(d.querySelectorAll(".sx-layer").length, 2);
   assert.strictEqual(d.documentElement.getAttribute("data-season"), "december");
   assert.strictEqual(d.querySelectorAll(".sx-witch").length, 0);
 });
@@ -172,10 +174,12 @@ test("motion: on by default, toggle persists, reduced-motion forces off", () => 
   let d = w.document;
   const btn = d.querySelector(".sx-toggle");
   assert.strictEqual(d.documentElement.getAttribute("data-sx-motion"), "on");
+  assert.strictEqual(btn.querySelector(".sx-state").textContent, "On");
   assert.strictEqual(btn.getAttribute("aria-pressed"), "true");
   btn.click();
   assert.strictEqual(d.documentElement.getAttribute("data-sx-motion"), "off");
   assert.strictEqual(btn.getAttribute("aria-pressed"), "false");
+  assert.strictEqual(btn.querySelector(".sx-state").textContent, "Off");
   assert.strictEqual(w.localStorage.getItem(engine.STORAGE_KEY), "off");
   btn.click();
   assert.strictEqual(d.documentElement.getAttribute("data-sx-motion"), "on");
@@ -187,6 +191,7 @@ test("motion: on by default, toggle persists, reduced-motion forces off", () => 
   d = w.document;
   assert.strictEqual(d.documentElement.getAttribute("data-sx-motion"), "off");
   assert.ok(d.querySelector(".sx-toggle").disabled);
+  assert.match(d.querySelector(".sx-state").textContent, /reduced-motion/);
   assert.ok(d.querySelectorAll(".sx-deco").length > 0, "static decorations remain");
 });
 
@@ -201,4 +206,76 @@ test("stylesheet keeps overlays nonblocking and honors reduced motion", () => {
 
 test("engine does not touch private or backend areas", () => {
   assert.doesNotMatch(SCRIPT, /fetch\(|XMLHttpRequest|api\.recoveryforward|control-center/);
+});
+
+const MOBILE = 375;
+
+test("placement: card motifs are corner/border anchored, floaters are behind content", () => {
+  for (const p of PAGES) {
+    for (const season of ["october", "december", "november"]) {
+      const d = load(p, { search: "?season=" + season, width: MOBILE }).document;
+      for (const m of d.querySelectorAll(".sx-card-deco .sx-m")) {
+        assert.match(m.className, /\bsx-(tl|tr|bl|br)\b/, p + " " + m.className);
+        assert.strictEqual(m.getAttribute("style"), null, "no free positioning");
+      }
+      for (const s of d.querySelectorAll(".sx-spiderbox")) assert.match(s.className, /\bsx-(left|right)\b/);
+      const front = d.querySelector(".sx-front");
+      assert.strictEqual(front.querySelectorAll(".sx-pumpkin, .sx-ghost, .sx-pghost, .sx-witch, .sx-p, .sx-spiderbox, .sx-orn").length, 0, p);
+      assert.ok(d.querySelector(".sx-back"));
+      assert.strictEqual(d.querySelectorAll(".sx-section-deco .sx-m").length, 0, "sections hold no corner art");
+    }
+  }
+  const o = load("index.html", { search: "?season=october", width: MOBILE }).document;
+  assert.ok(o.querySelector(".sx-back .sx-pghost") && o.querySelector(".sx-back .sx-witch"));
+});
+
+test("every Halloween card keeps its glowing border plus lantern, web and spider", () => {
+  for (const p of PAGES) {
+    const d = load(p, { search: "?season=october", width: MOBILE }).document;
+    for (const c of d.querySelectorAll(engine.CARD_SELECTOR)) {
+      const deco = c.querySelector(":scope > .sx-card-deco");
+      assert.ok(deco.querySelector(".sx-glow"), p);
+      assert.ok(deco.querySelectorAll(".sx-pumpkin").length >= 2, p + " lanterns");
+      assert.ok(deco.querySelector(".sx-web svg path"), p + " web");
+      assert.ok(deco.querySelector(".sx-spiderbox .sx-thread"), p + " spider");
+    }
+  }
+});
+
+test("mobile: no side/bottom light rails, toggle is in-flow after content", () => {
+  const d = load("support.html", { search: "?season=december", width: MOBILE }).document;
+  assert.strictEqual(d.querySelectorAll(".sx-edge-left, .sx-edge-right, .sx-edge-bottom").length, 0);
+  assert.strictEqual(d.querySelectorAll(".sx-edge-top").length, 1);
+  const wide = load("support.html", { search: "?season=december", width: 1280 }).document;
+  assert.strictEqual(wide.querySelectorAll(".sx-edge-left, .sx-edge-right").length, 2);
+  const bar = d.querySelector(".sx-toggle-bar");
+  assert.strictEqual(bar.parentNode, d.body);
+  const kids = [...d.body.children].filter((e) => !e.classList.contains("sx-layer") && e.tagName !== "SCRIPT");
+  assert.strictEqual(kids[kids.length - 1], bar);
+});
+
+test("CSS: toggle never fixed, floaters behind content, spider and reduced-motion rules", () => {
+  const css = fs.readFileSync(path.join(DOCS, "css", "seasonal.css"), "utf8");
+  const block = (sel) => { const m = css.match(new RegExp("(?:^|\\n)" + sel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + " \\{([^}]*)\\}")); return m ? m[1] : ""; };
+  assert.doesNotMatch(block(".sx-toggle"), /position:\s*fixed/);
+  assert.doesNotMatch(block(".sx-toggle-bar"), /position:\s*(fixed|absolute|sticky)/);
+  assert.match(block(".sx-back"), /z-index:\s*-1/);
+  assert.match(css, /@keyframes sx-drop[^\n]*translateY\(-28px\)[^\n]*translateY\(52px\)/);
+  const rm = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
+  assert.match(rm, /animation:\s*none !important/);
+  assert.match(rm, /\.sx-spiderin \{ transform/);
+  assert.match(css, /@media \(max-width: 700px\)/);
+});
+
+test("animation behavior: toggling off marks motion off; all animated parts are CSS-driven", () => {
+  const w = load("index.html", { search: "?season=october", width: MOBILE });
+  const d = w.document;
+  const css = fs.readFileSync(path.join(DOCS, "css", "seasonal.css"), "utf8");
+  for (const kf of ["sx-drop", "sx-flicker", "sx-ghost", "sx-witch", "sx-glow", "sx-fall", "sx-swing", "sx-blink"]) {
+    assert.match(css, new RegExp("@keyframes " + kf + "\\b"), kf);
+  }
+  assert.match(css, /html\[data-sx-motion="off"\] \.sx-layer \*[^{]*\{ animation: none !important/);
+  d.querySelector(".sx-toggle").click();
+  assert.strictEqual(d.documentElement.getAttribute("data-sx-motion"), "off");
+  assert.ok(d.querySelectorAll(".sx-spiderbox").length > 0, "static spiders remain visible");
 });
