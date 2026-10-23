@@ -148,8 +148,8 @@ overflow-x: auto;
     linear-gradient(
       90deg,
       rgba(5,12,9,.98) 0%,
-      rgba(5,12,9,.88) 30%,
-      rgba(5,12,9,.45) 60%,
+      rgba(5,12,9,.96) 46%,
+      rgba(5,12,9,.7) 58%,
       rgba(5,12,9,.15) 100%
     ),
     url("../assets/images/recovery-forward-hero.png");
@@ -1284,7 +1284,9 @@ body.programs-page .program-journey-image {
         rgba(5,12,9,.85) 100%
       ),
       url("../assets/images/recovery-forward-hero.png");
-    background-size: cover;
+    /* Zoom just enough that the poster copy baked into the left of the artwork
+       is always cropped out; the real HTML heading is the only headline. */
+    background-size: auto max(100%, 119vw);
     background-position: 100% center;
     padding: 48px 0;
   }

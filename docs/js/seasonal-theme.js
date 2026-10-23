@@ -25,7 +25,6 @@
   "use strict";
 
   var TIMEZONE = "America/Indiana/Indianapolis";
-  var STORAGE_KEY = "rff-seasonal-motion";
   var CARD_SELECTOR = [
     ".portal-card", ".mission-card", ".crypto-card", ".daily-prayer-card",
     ".warning-box", ".privacy-banner", ".generated-id", ".result",
@@ -322,23 +321,6 @@
     return { season: null, cardIndex: 0, observer: null, timer: null, resizeTimer: null, width: 0 };
   }
 
-  function readMotionPref(win) {
-    try { return win.localStorage.getItem(STORAGE_KEY); } catch (e) { return null; }
-  }
-
-  function writeMotionPref(win, value) {
-    try { win.localStorage.setItem(STORAGE_KEY, value); } catch (e) { /* storage unavailable */ }
-  }
-
-  function prefersReducedMotion(win) {
-    return !!(win.matchMedia && win.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }
-
-  function computeMotion(win) {
-    if (prefersReducedMotion(win)) return "off";
-    return readMotionPref(win) === "off" ? "off" : "on";
-  }
-
   function add(doc, parent, className, html, tag) {
     var el = doc.createElement(tag || "span");
     el.className = className;
@@ -435,24 +417,6 @@
     html.style.setProperty("--sx-c3", season.colors[2]);
     buildLayer(doc, win, season);
     decorate(doc, season, state);
-    updateToggle(doc, html.getAttribute("data-sx-motion"), win);
-  }
-
-  function updateToggle(doc, motion, win) {
-    var btn = doc.querySelector(".sx-toggle");
-    if (!btn) return;
-    var forced = prefersReducedMotion(win);
-    var on = motion === "on";
-    btn.setAttribute("aria-pressed", on ? "true" : "false");
-    btn.disabled = forced;
-    var state = btn.querySelector(".sx-state");
-    state.textContent = forced ? "Off (device reduced-motion setting)" : on ? "On" : "Off";
-  }
-
-  function setMotion(doc, win, motion, persist) {
-    doc.documentElement.setAttribute("data-sx-motion", motion);
-    if (persist) writeMotionPref(win, motion);
-    updateToggle(doc, motion, win);
   }
 
   function init(doc, win) {
@@ -461,21 +425,6 @@
     var state = createState();
     doc.__rffSeasonalState = state;
     doc.documentElement.setAttribute("data-sx-ready", "true");
-
-    doc.documentElement.setAttribute("data-sx-motion", computeMotion(win));
-    // In-flow control at the end of the page so it never covers content.
-    var bar = doc.createElement("div");
-    bar.className = "sx-toggle-bar";
-    var btn = doc.createElement("button");
-    btn.type = "button";
-    btn.className = "sx-toggle";
-    btn.innerHTML = 'Seasonal animations: <span class="sx-state"></span>';
-    btn.addEventListener("click", function () {
-      var next = doc.documentElement.getAttribute("data-sx-motion") === "on" ? "off" : "on";
-      setMotion(doc, win, next, true);
-    });
-    bar.appendChild(btn);
-    doc.body.appendChild(bar);
 
     applySeason(doc, win, getSeason(new Date(), win.location && win.location.search), state);
     state.width = win.innerWidth || 0;
@@ -496,7 +445,7 @@
         for (var i = 0; i < records.length && !relevant; i++) {
           for (var j = 0; j < records[i].addedNodes.length; j++) {
             var n = records[i].addedNodes[j];
-            if (n.nodeType === 1 && !(n.classList && (n.classList.contains("sx-deco") || n.classList.contains("sx-layer") || n.classList.contains("sx-toggle-bar")))) {
+            if (n.nodeType === 1 && !(n.classList && (n.classList.contains("sx-deco") || n.classList.contains("sx-layer")))) {
               relevant = true;
               break;
             }
@@ -529,18 +478,11 @@
       }, 250);
     });
 
-    var mq = win.matchMedia && win.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq && mq.addEventListener) {
-      mq.addEventListener("change", function () {
-        setMotion(doc, win, computeMotion(win), false);
-      });
-    }
     return state;
   }
 
   return {
     TIMEZONE: TIMEZONE,
-    STORAGE_KEY: STORAGE_KEY,
     SEASONS: SEASONS,
     MONTH_NAMES: MONTH_NAMES,
     CARD_SELECTOR: CARD_SELECTOR,
@@ -548,7 +490,6 @@
     HEADING_SELECTOR: HEADING_SELECTOR,
     getIndianapolisMonth: getIndianapolisMonth,
     getSeason: getSeason,
-    computeMotion: computeMotion,
     applySeason: applySeason,
     decorate: decorate,
     createState: createState,

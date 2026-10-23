@@ -76,18 +76,6 @@ html[data-season] .dropdown-links { border-color: var(--sx-a); box-shadow: 0 8px
 .sx-p.sx-rise { top: auto; bottom: -8vh; animation: sx-rise var(--dur) linear var(--dl) infinite; }
 .sx-p.sx-float { animation: sx-float var(--dur) ease-in-out var(--dl) infinite alternate; top: 10vh; }
 
-/* Visitor toggle: ordinary in-flow bar after the footer. */
-.sx-toggle-bar { display: flex; justify-content: center; padding: 14px 5%; background: #050b08; border-top: 1px solid var(--border); }
-.sx-toggle {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 10px 18px; border-radius: 999px;
-  border: 1px solid var(--sx-a); background: #0d1713; color: #f5f8f6; font: 600 .85rem/1.2 inherit; font-family: inherit;
-  cursor: pointer; max-width: 100%; text-align: center; box-shadow: 0 0 12px -2px var(--sx-a);
-}
-.sx-toggle:hover { background: #15231d; }
-.sx-toggle:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-.sx-toggle:disabled { cursor: default; opacity: .85; }
-.sx-state { color: var(--sx-a); }
-
 /* ---------- Halloween ---------- */
 html[data-sx-mood="halloween"] { --sx-a: #ff8c1a; --sx-b: #a64dff; --sx-c3: #6bff3d; }
 .sx-fog { position: absolute; left: 0; right: 0; bottom: 0; height: 22vh; background: radial-gradient(ellipse at 30% 100%, rgba(166,77,255,.22), transparent 60%), radial-gradient(ellipse at 75% 100%, rgba(107,255,61,.14), transparent 60%); animation: sx-fog 14s ease-in-out infinite alternate; }
@@ -180,21 +168,13 @@ html[data-sx-mood="christmas"] .sx-p { color: #fff; }
   .sx-m.sx-pumpkin.sx-tl, .sx-m.sx-pumpkin.sx-tr { top: -11px; }
   .sx-m.sx-pumpkin.sx-bl, .sx-m.sx-pumpkin.sx-br { bottom: -11px; }
   .sx-divider { letter-spacing: .25em; }
-  .sx-toggle { width: 100%; justify-content: center; }
 }
 
-/* ---------- Motion off: visitor toggle or prefers-reduced-motion ---------- */
-html[data-sx-motion="off"] .sx-layer *, html[data-sx-motion="off"] .sx-deco *, html[data-sx-motion="off"] .sx-deco,
-html[data-sx-motion="off"] .sx-layer { animation: none !important; transition: none !important; }
-html[data-sx-motion="off"] .sx-particles, html[data-sx-motion="off"] .sx-witch, html[data-sx-motion="off"] .sx-pghost { display: none; }
-html[data-sx-motion="off"] .sx-spiderin { transform: translateY(24px); }
-html[data-sx-motion="off"] .sx-bulb { opacity: .9; }
-html[data-sx-motion="off"] .sx-glow, html[data-sx-motion="off"] .sx-frame { opacity: .6; }
-
+/* ---------- Reduced motion: honored automatically from the device setting ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .sx-layer *, .sx-deco, .sx-deco *, .sx-layer, .sx-toggle { animation: none !important; transition: none !important; }
+  .sx-layer *, .sx-deco, .sx-deco *, .sx-layer { animation: none !important; transition: none !important; }
   .sx-particles, .sx-witch, .sx-pghost { display: none; }
   .sx-spiderin { transform: translateY(24px); }
 }
 
-@media print { .sx-layer, .sx-deco, .sx-toggle-bar { display: none !important; } }
+@media print { .sx-layer, .sx-deco { display: none !important; } }

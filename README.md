@@ -65,4 +65,4 @@ Programs, eligibility requirements, governance procedures, and funding mechanism
 
 ## Seasonal Themes
 
-Every public page loads `docs/css/seasonal.css` and `docs/js/seasonal-theme.js`. The engine picks one of twelve themes from the current month in `America/Indiana/Indianapolis`, so it switches on the 1st of each month with no redeploy (open tabs re-check every minute). Visitors can turn effects off with the toggle at the bottom of each page, and `prefers-reduced-motion` disables animation automatically. Preview any theme with `?season=october` (or `1`–`12`). Run the tests with `npm install && npm test`.
+Every public page loads `docs/css/seasonal.css` and `docs/js/seasonal-theme.js`. The engine picks one of twelve themes from the current month in `America/Indiana/Indianapolis`, so it switches on the 1st of each month with no redeploy (open tabs re-check every minute). Animation is disabled automatically for visitors who enable `prefers-reduced-motion` (decorations stay visible but static); there is no on-page switch. Preview any theme with `?season=october` (or `1`–`12`). Run the tests with `npm install && npm test`.
