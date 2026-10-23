@@ -2,7 +2,8 @@
 const test = require("node:test");
 const { assert, fs, path, DOCS, PAGES, load, MOBILE } = require("./helpers");
 
-const TEXT = "Matthewbrace@RecoveryForwardFoundation";
+const TEXT = "Matthewbrace@RecoveryForwardFoundation.org";
+const HREF = "mailto:matthewbrace@recoveryforwardfoundation.org";
 
 for (const page of PAGES) {
   test(page + ": founder signature is last, exact, and survives every season", () => {
@@ -12,6 +13,7 @@ for (const page of PAGES) {
       assert.strictEqual(sigs.length, 1);
       const sig = sigs[0];
       assert.strictEqual(sig.querySelector(".signature-text").textContent, TEXT);
+      assert.strictEqual(sig.querySelector(".signature-text a").getAttribute("href"), HREF);
       assert.strictEqual(sig.parentNode, d.body);
       const footer = d.querySelector("footer");
       if (footer) assert.ok(footer.compareDocumentPosition(sig) & 4, "after the footer");
