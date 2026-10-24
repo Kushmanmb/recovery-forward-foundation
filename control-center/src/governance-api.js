@@ -88,7 +88,7 @@ function integrations(env) {
     { id: "applications", name: "Applications inbox", operational: false, note: "Not operational in this build; no applicant data is stored or shown." },
     { id: "finance", name: "Finance and payments", operational: false, note: "Not operational: no accounting or bank integration exists." },
     { id: "communications", name: "Communications and notices", operational: false, note: "Not operational: this system sends no email or notices. Meeting notice is recorded by attestation only." },
-    { id: "documents", name: "Document storage", operational: false, note: "Not operational: no file storage. Only resolutions and minutes stored in the database are available." },
+    { id: "documents", name: "Document storage (private R2)", operational: Boolean(env.DOCUMENTS), note: env.DOCUMENTS ? "Private bucket bound; access is checked per request." : "Not configured: the DOCUMENTS R2 binding is missing." },
   ];
 }
 

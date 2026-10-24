@@ -7,6 +7,7 @@ const MAX_REGISTRY_RESPONSE_BYTES = 64 * 1024;
 const ACCESS_KEY_CACHE_MS = 5 * 60 * 1000;
 let accessKeyCache;
 import { governanceApi } from "./governance-api.js";
+import { documentsApi } from "./documents-api.js";
 
 class AccessUnavailable extends Error {
   constructor(reason = "unknown", details = {}) {
@@ -344,6 +345,8 @@ async function handleApi(request, env, identity, url) {
   }
 
   if (url.pathname.startsWith("/api/governance/")) return governanceApi(request, env, member);
+
+  if (url.pathname === "/api/documents" || url.pathname.startsWith("/api/documents/")) return documentsApi(request, env, member, url);
 
   if (url.pathname === "/api/audit" && request.method === "GET") {
     if (!can(member, "audit:read")) {

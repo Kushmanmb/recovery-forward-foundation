@@ -25,6 +25,9 @@ export function validateStagingConfig(staging, production, { forDeploy = false }
   if (!/^preview_urls\s*=\s*false/m.test(staging)) problems.push("preview_urls must be false");
   if (value(staging, "APP_ENV") !== "staging") problems.push("APP_ENV must be 'staging'");
   if (!/^binding\s*=\s*"DB"/m.test(staging)) problems.push("D1 binding must be DB");
+  if (value(staging, "bucket_name") && !/staging/i.test(value(staging, "bucket_name"))) problems.push("R2 bucket_name must contain 'staging'");
+  if (value(staging, "bucket_name") && value(staging, "bucket_name") === value(production, "bucket_name")) problems.push("R2 bucket_name is identical to production");
+  if (/^\s*(preview_bucket_name|public_access|r2_dev)\b/m.test(staging)) problems.push("R2 must not enable public or preview access");
   if (/\b(ACCESS_AUD|ACCESS_TEAM_DOMAIN|PRESIDENT_EMAIL|REGISTRY_API_TOKEN|REGISTRY_API_URL)\s*=/.test(staging)) problems.push("identity and integration settings must be secrets, not file values");
   if (forDeploy && PLACEHOLDER.test(staging)) problems.push("placeholders remain: " + PLACEHOLDER.exec(staging)[0]);
   return problems;

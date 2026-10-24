@@ -35,6 +35,12 @@ database_name = "recovery-forward-control-center-staging-db"
 database_id = "REPLACE_WITH_STAGING_D1_DATABASE_ID"
 migrations_dir = "migrations"
 
+# Private staging-only R2 bucket. Create it with approval (wrangler r2 bucket create) and never enable
+# public access (r2.dev or custom domain): files are served only through authorized Worker routes.
+[[r2_buckets]]
+binding = "DOCUMENTS"
+bucket_name = "recovery-forward-documents-staging"
+
 [assets]
 directory = "../admin-prototype"
 binding = "ASSETS"
