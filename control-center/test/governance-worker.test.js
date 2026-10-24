@@ -20,7 +20,7 @@ async function identity(email) {
 
 function createDb() {
   const database = new DatabaseSync(":memory:");
-  for (const file of ["0001_initial.sql", "0003_board_access.sql", "0010_governance_core.sql"]) database.exec(readFileSync(new URL(`../migrations/${file}`, import.meta.url), "utf8"));
+  for (const file of ["0001_initial.sql", "0003_board_access.sql", "0010_governance_core.sql", "0011_governance_rules_lock.sql"]) database.exec(readFileSync(new URL(`../migrations/${file}`, import.meta.url), "utf8"));
   return {
     database,
     async batch(statements) { database.exec("BEGIN"); try { const r = statements.map((s) => s.run()); database.exec("COMMIT"); return r; } catch (e) { database.exec("ROLLBACK"); throw e; } },

@@ -11,7 +11,7 @@ const DAY = 86_400_000;
 
 function createDb() {
   const database = new DatabaseSync(":memory:");
-  for (const file of ["0001_initial.sql", "0003_board_access.sql", "0010_governance_core.sql"]) {
+  for (const file of ["0001_initial.sql", "0003_board_access.sql", "0010_governance_core.sql", "0011_governance_rules_lock.sql"]) {
     database.exec(readFileSync(new URL(`../migrations/${file}`, import.meta.url), "utf8"));
   }
   return {
@@ -231,7 +231,7 @@ test("official resolutions are blocked until bylaws rules are verified", async (
   assert.equal(refused.body.error, "governance_check_failed");
   assert.equal(refused.body.checks.find((c) => c.id === "rules_verified").ok, false);
   assert.equal(w.sql.prepare("SELECT COUNT(*) AS n FROM resolutions").get().n, 0);
-  assert.throws(() => w.sql.prepare("INSERT INTO resolutions (number, proposal_id, meeting_id, title, body, tally_json, checks_json, rules_id, content_hash, finalized_by, finalized_at) VALUES ('X',1,1,'t','b','{}','[]',1,'h','x',1)").run(), /FOREIGN KEY|passed/);
+  assert.throws(() => w.sql.prepare("INSERT INTO resolutions (number, proposal_id, meeting_id, title, body, tally_json, checks_json, rules_id, content_hash, finalized_by, finalized_at) VALUES ('X',1,1,'t','b','{}','[]',1,'h','x',1)").run(), /FOREIGN KEY|passed|rule set recorded/);
   const scheduled = await w.call("secretary@example.org", "POST", "meetings", { title: "Next", type: "special", scheduledAt: Date.now() + 9 * DAY });
   const open = await w.call("secretary@example.org", "POST", `meetings/${scheduled.body.id}/start`, {});
   assert.equal(open.body.error, "governance_rules_unverified");
@@ -273,7 +273,7 @@ test("database triggers enforce vote rules even if the Worker is bypassed", asyn
   assert.throws(() => insert("president@example.org"), /eligible/);
 });
 
-test("quorum lost before close fails the motion; changed rules block finalization", async () => {
+test("quorum lost before close fails the motion", async () => {
   const w = world();
   await w.ready;
   const { id } = await readyProposal(w);
@@ -283,18 +283,118 @@ test("quorum lost before close fails the motion; changed rules block finalizatio
   const closed = await w.call("secretary@example.org", "POST", `proposals/${id}/close-voting`, {});
   assert.equal(closed.body.outcome, "failed");
   assert.equal(closed.body.result.reason, "quorum_lost");
+});
 
+async function openAndVote(w, id, choices) {
+  assert.equal((await w.call("secretary@example.org", "POST", `proposals/${id}/open-voting`, {})).status, 200);
+  for (const [email, choice] of Object.entries(choices)) assert.equal((await w.call(email, "POST", `proposals/${id}/vote`, { choice })).status, 201);
+}
+
+test("rule changes during voting do not affect the motion: the rule set recorded at opening governs", async () => {
+  const w = world();
+  await w.ready;
+  const { id } = await readyProposal(w);
+  await openAndVote(w, id, { "vp@example.org": "yes", "treasurer@example.org": "abstain", "president@example.org": "abstain" });
+  const recorded = w.sql.prepare("SELECT rules_id FROM proposals WHERE id = ?").get(id).rules_id;
+  // Loosening to majority_votes_cast would carry this motion (1 yes, 0 no); the recorded majority_present rule must not.
+  assert.equal((await w.call("president@example.org", "POST", "rules", { ...RULES, approvalRule: "majority_votes_cast", quorum: 1 })).status, 201);
+  const detail = await w.call("bm1@example.org", "GET", `proposals/${id}`);
+  assert.equal(detail.body.quorum.required, 3, "quorum display uses the recorded rules");
+  const closed = await w.call("secretary@example.org", "POST", `proposals/${id}/close-voting`, {});
+  assert.equal(closed.body.outcome, "failed");
+  assert.equal(closed.body.result.rule, "majority_present");
+  assert.equal(w.sql.prepare("SELECT rules_id FROM proposals WHERE id = ?").get(id).rules_id, recorded);
+
+  // Tightening mid-vote must not defeat a motion that satisfied the recorded rules.
   const w2 = world();
   await w2.ready;
   const p = await readyProposal(w2);
-  await w2.call("secretary@example.org", "POST", `proposals/${p.id}/open-voting`, {});
-  for (const email of ["vp@example.org", "treasurer@example.org", "president@example.org"]) await w2.call(email, "POST", `proposals/${p.id}/vote`, { choice: "yes" });
+  await openAndVote(w2, p.id, { "vp@example.org": "yes", "treasurer@example.org": "yes", "president@example.org": "abstain" });
+  await w2.call("president@example.org", "POST", "rules", { ...RULES, quorum: 5, approvalRule: "two_thirds_present" });
   assert.equal((await w2.call("secretary@example.org", "POST", `proposals/${p.id}/close-voting`, {})).body.outcome, "passed");
-  await w2.call("president@example.org", "POST", "rules", { ...RULES, quorum: 5 });
-  const blocked = await w2.call("secretary@example.org", "POST", `proposals/${p.id}/finalize`, { bylawsReviewed: true });
-  assert.equal(blocked.body.error, "governance_check_failed");
-  assert.equal(blocked.body.checks.find((c) => c.id === "quorum_at_close").ok, false);
-  assert.ok(w2.sql.prepare("SELECT 1 FROM audit_log WHERE action = 'finalization_blocked'").get());
+});
+
+test("rule changes after voting do not alter finalization, which records the original rule set", async () => {
+  const w = world();
+  await w.ready;
+  const { id } = await readyProposal(w);
+  await openAndVote(w, id, { "vp@example.org": "yes", "treasurer@example.org": "yes", "president@example.org": "yes" });
+  const recorded = w.sql.prepare("SELECT rules_id FROM proposals WHERE id = ?").get(id).rules_id;
+  assert.equal((await w.call("secretary@example.org", "POST", `proposals/${id}/close-voting`, {})).body.outcome, "passed");
+  await w.call("president@example.org", "POST", "rules", { ...RULES, quorum: 5, noticeDays: 30, approvalRule: "majority_all_directors" });
+  assert.ok(w.sql.prepare("SELECT MAX(id) AS m FROM governance_rules").get().m > recorded);
+  const detail = await w.call("secretary@example.org", "GET", `proposals/${id}`);
+  assert.equal(detail.body.finalization.ok, true);
+  assert.equal(detail.body.quorum.required, 3);
+  const final = await w.call("secretary@example.org", "POST", `proposals/${id}/finalize`, { bylawsReviewed: true });
+  assert.equal(final.status, 201);
+  assert.equal(w.sql.prepare("SELECT rules_id FROM resolutions").get().rules_id, recorded);
+});
+
+test("database refuses to change a motion's recorded rule set or finalize against a different one", async () => {
+  const w = world();
+  await w.ready;
+  const { id } = await readyProposal(w);
+  assert.throws(() => w.sql.prepare("UPDATE proposals SET status = 'voting' WHERE id = ?").run(id), /recorded rule set/);
+  await openAndVote(w, id, { "vp@example.org": "yes", "treasurer@example.org": "yes", "president@example.org": "yes" });
+  await w.call("president@example.org", "POST", "rules", RULES);
+  const newer = w.sql.prepare("SELECT MAX(id) AS m FROM governance_rules").get().m;
+  assert.throws(() => w.sql.prepare("UPDATE proposals SET rules_id = ? WHERE id = ?").run(newer, id), /rule set is fixed/);
+  await w.call("secretary@example.org", "POST", `proposals/${id}/close-voting`, {});
+  const insert = (rules) => w.sql.prepare(`INSERT INTO resolutions (number, proposal_id, meeting_id, title, body, tally_json, checks_json, rules_id, content_hash, finalized_by, finalized_at)
+    VALUES ('X', ?, 1, 't', 'b', '{}', '[]', ?, 'h', 'x', 1)`).run(id, rules);
+  assert.throws(() => insert(newer), /rule set recorded at voting/);
+});
+
+test("finalization is refused when the stored result no longer matches the recorded votes", async () => {
+  const w = world();
+  await w.ready;
+  const { id } = await readyProposal(w);
+  await openAndVote(w, id, { "vp@example.org": "yes", "treasurer@example.org": "yes", "president@example.org": "yes" });
+  await w.call("secretary@example.org", "POST", `proposals/${id}/close-voting`, {});
+  const tampered = JSON.parse(w.sql.prepare("SELECT result_json FROM proposals WHERE id = ?").get(id).result_json);
+  w.sql.prepare("UPDATE proposals SET result_json = ? WHERE id = ?").run(JSON.stringify({ ...tampered, yes: 2, abstain: 1 }), id);
+  const refused = await w.call("secretary@example.org", "POST", `proposals/${id}/finalize`, { bylawsReviewed: true });
+  assert.equal(refused.body.error, "governance_check_failed");
+  assert.equal(refused.body.checks.find((c) => c.id === "tally_matches_votes").ok, false);
+  assert.equal(w.sql.prepare("SELECT COUNT(*) AS n FROM resolutions").get().n, 0);
+});
+
+test("unauthorized users cannot vote or finalize", async () => {
+  const w = world();
+  await w.ready;
+  const { id } = await readyProposal(w);
+  await openAndVote(w, id, { "vp@example.org": "yes", "treasurer@example.org": "yes", "president@example.org": "yes" });
+  const votesBefore = w.sql.prepare("SELECT COUNT(*) AS n FROM votes").get().n;
+  // Non-directors (administrative roles) and unknown identities cannot vote.
+  assert.equal((await w.call("secretary@example.org", "POST", `proposals/${id}/vote`, { choice: "yes" })).status, 403);
+  w.sql.prepare("UPDATE board_directors SET ended_at = 1 WHERE email = 'bm2@example.org'").run();
+  assert.equal((await w.call("bm2@example.org", "POST", `proposals/${id}/vote`, { choice: "yes" })).status, 403, "ended seat");
+  const ghost = await governanceApi(new Request(`${ORIGIN}/api/governance/proposals/${id}/vote`, { method: "POST", headers: { origin: ORIGIN, "content-type": "application/json" }, body: "{\"choice\":\"yes\"}" }), w.env, { email: "ghost@example.org", role: "BoardMember", status: "active" });
+  assert.equal(ghost.status, 403);
+  const suspended = await governanceApi(new Request(`${ORIGIN}/api/governance/proposals/${id}/vote`, { method: "POST", headers: { origin: ORIGIN, "content-type": "application/json" }, body: "{\"choice\":\"yes\"}" }), w.env, { email: "bm1@example.org", role: "BoardMember", status: "suspended" });
+  assert.equal(suspended.status, 403);
+  assert.equal(w.sql.prepare("SELECT COUNT(*) AS n FROM votes").get().n, votesBefore);
+
+  await w.call("secretary@example.org", "POST", `proposals/${id}/close-voting`, {});
+  for (const email of ["treasurer@example.org", "vp@example.org", "bm1@example.org"]) {
+    assert.equal((await w.call(email, "POST", `proposals/${id}/finalize`, { bylawsReviewed: true })).status, 403, email);
+    assert.equal((await w.call(email, "POST", `proposals/${id}/close-voting`, {})).status, 403, email);
+  }
+  assert.equal(w.sql.prepare("SELECT COUNT(*) AS n FROM resolutions").get().n, 0);
+  assert.equal((await w.call("secretary@example.org", "POST", `proposals/${id}/finalize`, { bylawsReviewed: true })).status, 201);
+});
+
+test("a motion opened under rules is blocked from finalizing if no rule set was recorded", async () => {
+  const w = world();
+  await w.ready;
+  const now = Date.now();
+  w.sql.prepare("INSERT INTO meetings (title, meeting_type, scheduled_at, status, notice_sent_at, created_by, created_at) VALUES ('m','regular',?, 'adjourned', 1, 'x', ?)").run(now + DAY * 7, now);
+  w.sql.prepare("INSERT INTO proposals (title, body, category, status, author_email, meeting_id, created_at, updated_at, result_json) VALUES ('t','b','policy','passed','bm1@example.org',1,?,?,?)")
+    .run(now, now, JSON.stringify({ yes: 3, no: 0, abstain: 0, present: 3, quorum: { present: 3, met: true } }));
+  const refused = await w.call("secretary@example.org", "POST", "proposals/1/finalize", { bylawsReviewed: true });
+  assert.equal(refused.body.error, "governance_check_failed");
+  assert.equal(refused.body.checks.find((c) => c.id === "rules_recorded").ok, false);
 });
 
 test("approval thresholds follow the verified rule", () => {

@@ -8,6 +8,10 @@ export async function currentRules(db) {
   return await db.prepare("SELECT * FROM governance_rules ORDER BY id DESC LIMIT 1").first();
 }
 
+export async function rulesById(db, id) {
+  return await db.prepare("SELECT * FROM governance_rules WHERE id = ?").bind(id).first();
+}
+
 export async function presentDirectors(db, meetingId) {
   if (!meetingId) return 0;
   const row = await db.prepare(`SELECT COUNT(*) AS n FROM meeting_attendance a JOIN board_directors d ON d.email = a.director_email
@@ -53,7 +57,7 @@ export async function proposalDetail(env, member, id, can) {
   const p = await load(env.DB, id);
   if (!visible(p, member)) return reply({ error: "not_found" }, 404);
   const db = env.DB;
-  const rules = await currentRules(db);
+  const rules = p.rules_id ? await rulesById(db, p.rules_id) : await currentRules(db);
   const { results: revisions = [] } = await db.prepare("SELECT version, title, edited_by, edited_at FROM proposal_revisions WHERE proposal_id = ? ORDER BY version").bind(id).all();
   const { results: recusals = [] } = await db.prepare("SELECT director_email, reason, declared_by, declared_at FROM proposal_recusals WHERE proposal_id = ? ORDER BY declared_at").bind(id).all();
   const { results: votes = [] } = await db.prepare("SELECT director_email, choice, cast_at FROM votes WHERE proposal_id = ?").bind(id).all();
@@ -255,7 +259,7 @@ export async function closeVoting(env, member, id) {
   const p = await load(env.DB, id);
   if (!visible(p, member)) return reply({ error: "not_found" }, 404);
   if (p.status !== "voting") return reply({ error: "invalid_state" }, 409);
-  const rules = await env.DB.prepare("SELECT * FROM governance_rules WHERE id = ?").bind(p.rules_id).first();
+  const rules = await rulesById(env.DB, p.rules_id);
   if (!rulesVerified(rules)) return reply({ error: "governance_rules_unverified" }, 409);
   const { results: votes = [] } = await env.DB.prepare("SELECT choice FROM votes WHERE proposal_id = ?").bind(id).all();
   const present = await presentDirectors(env.DB, p.meeting_id);
@@ -272,8 +276,10 @@ export async function closeVoting(env, member, id) {
 export async function evaluateFinalization(db, p) {
   const checks = [];
   const add = (id, ok, detail) => checks.push({ id, ok: Boolean(ok), detail });
-  const rules = await currentRules(db);
-  add("rules_verified", rulesVerified(rules), "Bylaws and Indiana-law rules transcribed and attested by the President");
+  // Only the rule set recorded when voting opened applies; later rule changes never affect this motion.
+  const rules = p.rules_id ? await rulesById(db, p.rules_id) : null;
+  add("rules_recorded", Boolean(p.rules_id && rules), "Rule set was recorded when voting opened");
+  add("rules_verified", rulesVerified(rules), "Recorded bylaws and Indiana-law rules were transcribed and attested by the President");
   add("status_passed", p.status === "passed", "Motion carried by recorded vote");
   const meeting = p.meeting_id ? await db.prepare("SELECT * FROM meetings WHERE id = ?").bind(p.meeting_id).first() : null;
   add("meeting_held", Boolean(meeting && ["in_session", "adjourned"].includes(meeting.status)), "Motion was decided at a held meeting");
@@ -283,8 +289,11 @@ export async function evaluateFinalization(db, p) {
     try { result = JSON.parse(p.result_json); } catch { /* treated as missing */ }
     add("quorum_at_close", Boolean(result?.quorum?.met && result.quorum.present >= rules.quorum), `Quorum of ${rules.quorum} director(s) present when voting closed`);
     if (result) {
-      const recomputed = tally(rules, { yes: result.yes, no: result.no, abstain: result.abstain, present: result.present });
-      add("threshold_met", recomputed.passed, `Approval rule ${rules.approval_rule} satisfied under the current verified rules`);
+      const { results: votes = [] } = await db.prepare("SELECT choice FROM votes WHERE proposal_id = ?").bind(p.id).all();
+      const counts = countVotes(votes);
+      add("tally_matches_votes", counts.yes === result.yes && counts.no === result.no && counts.abstain === result.abstain, "Stored result matches the recorded votes");
+      const recomputed = tally(rules, { yes: counts.yes, no: counts.no, abstain: counts.abstain, present: result.present });
+      add("threshold_met", recomputed.passed, `Approval rule ${rules.approval_rule} satisfied under the recorded rules`);
     } else add("threshold_met", false, "No recorded tally");
   }
   return { ok: checks.every((c) => c.ok), checks, rulesId: rules?.id ?? null };
