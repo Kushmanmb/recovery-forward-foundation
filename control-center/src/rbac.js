@@ -16,6 +16,19 @@ export const ROLE_PERMISSIONS = {
 // Never grantable via individual adjustment.
 const NON_GRANTABLE = new Set(["mailbox:others:read", "votes:extra", "audit:write"]);
 
+// Board governance permissions. "votes:cast" is only a ceiling: voting also requires a seated
+// director record, meeting attendance and no recusal, so the President role alone never confers a vote.
+const GOVERNANCE_PERMISSIONS = {
+  President: ["proposals:review", "proposals:archive", "meetings:manage", "governance:verify", "directors:manage",
+    "resolutions:finalize", "minutes:draft", "minutes:approve"],
+  Secretary: ["proposals:review", "proposals:archive", "meetings:manage", "resolutions:finalize"],
+  VicePresident: [], Treasurer: [], BoardMember: [],
+};
+for (const role of ROLES) {
+  ROLE_PERMISSIONS[role] = [...new Set([...ROLE_PERMISSIONS[role], "proposals:read", "proposals:write", "votes:cast",
+    "governance:read", ...GOVERNANCE_PERMISSIONS[role]])];
+}
+
 /** member: { id, role, status, grants?: string[], revokes?: string[] } */
 export function can(member, permission) {
   if (!member || member.status !== "active") return false;
