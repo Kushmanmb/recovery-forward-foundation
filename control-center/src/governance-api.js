@@ -115,6 +115,7 @@ async function dashboard(env, member) {
   if (member.role === "President") {
     out.security = {
       accessConfigured: Boolean(env.ACCESS_TEAM_DOMAIN && env.ACCESS_AUD),
+      environment: typeof env.APP_ENV === "string" && env.APP_ENV ? env.APP_ENV : "unset",
       presidentEmailConfigured: Boolean(env.PRESIDENT_EMAIL),
       mfa: "Enforced by the Cloudflare Access policy; the application cannot verify the policy itself. Confirm it in the Cloudflare dashboard.",
     };
@@ -156,6 +157,8 @@ const ROUTES = [
 ];
 
 /** Caller must already hold an authenticated, active session. Authorization is decided here, server-side. */
+export const GOVERNANCE_ROUTES = ROUTES.map(([method, pattern, permission]) => ({ method, pattern, permission }));
+
 export async function governanceApi(request, env, member) {
   const url = new URL(request.url);
   const path = url.pathname.slice("/api/governance/".length).replace(/\/$/, "");

@@ -469,7 +469,7 @@
   function securityExtras(dash) {
     var html = "";
     if (dash.security) {
-      html += "<div class='card'><h3>Deployment posture</h3><p>Cloudflare Access configured: <strong>" + (dash.security.accessConfigured ? "yes" : "NO") + "</strong></p>" +
+      html += "<div class='card'><h3>Deployment posture</h3><p>Environment: <strong>" + esc(dash.security.environment) + "</strong></p><p>Cloudflare Access configured: <strong>" + (dash.security.accessConfigured ? "yes" : "NO") + "</strong></p>" +
         "<p>President identity configured: <strong>" + (dash.security.presidentEmailConfigured ? "yes" : "NO") + "</strong></p><p class='muted'>" + esc(dash.security.mfa) + "</p></div>";
     }
     return html + integrationList(dash.integrations);
