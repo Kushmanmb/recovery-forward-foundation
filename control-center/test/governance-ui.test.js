@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 const source = readFileSync(new URL("../../admin-prototype/app.js", import.meta.url), "utf8");
+const approvalsSource = readFileSync(new URL("../../admin-prototype/approvals-center.js", import.meta.url), "utf8");
 const html = readFileSync(new URL("../../admin-prototype/index.html", import.meta.url), "utf8");
 const sections = [...html.matchAll(/data-s="([a-z]+)"/g)].map((m) => m[1]);
 const tick = () => new Promise((resolve) => setImmediate(resolve));
@@ -23,7 +24,7 @@ async function boot(role, permissions, routes) {
     return { ok: true, json: async () => body };
   };
   const escape = (text) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  vm.runInNewContext(source, {
+  vm.runInNewContext(approvalsSource + "\n" + source, {
     document: { getElementById: (id) => ({ main, nav, logout: { hidden: true, addEventListener() {} } })[id] ?? null, createElement() { let t = ""; return { set textContent(v) { t = v; }, get innerHTML() { return escape(t); } }; } },
     fetch, window: { location: { assign() {} }, confirm: () => true }, FormData: class { forEach() {} }, Number, Array, JSON, Date, encodeURIComponent,
   });
@@ -46,7 +47,7 @@ test("every navigation section renders content and unsupported sections say they
     "/api/governance/rules": { rules: null, verified: false, approvalRules: [] }, "/api/governance/resolutions": { resolutions: [] },
     "/api/board": { members: [], roles: [] }, "/api/audit": { entries: [] },
   });
-  assert.deepEqual(sections.slice(0, 3), ["overview", "proposals", "meetings"]);
+  assert.deepEqual(sections.slice(0, 4), ["overview", "approvals", "proposals", "meetings"]);
   for (const section of ["applications", "finance", "comms"]) {
     await app.go(section);
     assert.match(app.main.innerHTML, /Not operational/, section);

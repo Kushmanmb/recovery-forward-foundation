@@ -155,6 +155,7 @@
       "<section class='overview-section' aria-labelledby='overview-areas'><div class='section-heading'>" +
         "<h2 id='overview-areas'>Your command center</h2><p>Select a card to open its workspace</p></div>" +
         "<div class='feature-grid'>" +
+          dashboardTile("approvals", "✓", "Presidential approvals", "Review board proposals, eligible votes, and official resolutions.", "Open approval queue", false) +
           dashboardTile("members", "♧", "Board governance", "Directors, verified rules, decisions, and permissions.", "Open governance", false) +
           dashboardTile("meetings", "▦", "Meetings & voting", "Agendas, upcoming meetings, proposals, and votes.", "Open meetings", false) +
           dashboardTile("registry", "◇", "Recovery grants", "Read-only registry statistics when connected.", "View registry", false) +
@@ -566,6 +567,55 @@
     }
   }
 
+  function approvalStat(label, value) {
+    return "<div class='approvals-stat'><strong>" + esc(value) + "</strong><span>" + esc(label) + "</span></div>";
+  }
+
+  function approvalItem(item) {
+    return "<article class='approval-item'><div class='approval-item-body'>" +
+      "<span class='approval-state'>" + esc(item.state) + "</span>" +
+      "<h3>" + esc(item.title) + "</h3><p>Board proposal &middot; " + esc(item.category) + "</p>" +
+      "<p>" + esc(item.description) + "</p>" +
+      (item.updatedAt ? "<p class='muted'>Last changed: " + when(item.updatedAt) + "</p>" : "") +
+      "</div><button class='btn primary' type='button' data-open-proposal='" + Number(item.id) + "'>" + esc(item.action) + " &rarr;</button></article>";
+  }
+
+  async function renderApprovals(version) {
+    var results = await Promise.all([
+      api("/api/governance/proposals"),
+      api("/api/governance/dashboard")
+    ]);
+    if (version !== renderVersion || !member || current !== "approvals") return;
+    if (!window.RFFApprovals || !results[0] || !Array.isArray(results[0].proposals)) {
+      throw new Error("approval_queue_unavailable");
+    }
+    var queue = window.RFFApprovals.buildQueue(results[0].proposals, results[1], member);
+    var c = queue.counts;
+    main.innerHTML = "<section class='approvals-hero'><div>" +
+      "<p class='eyebrow'>PRESIDENTIAL COMMAND CENTER / GOVERNANCE</p>" +
+      "<h2>Approvals &amp; decisions</h2>" +
+      "<p>One place for the governance decisions you are authorized to handle. Each action opens an existing, independently checked workflow.</p>" +
+      "</div><button type='button' class='btn' data-jump='approvals'>Refresh queue</button></section>" +
+      "<div class='approvals-stats'>" +
+        approvalStat("Proposals to review", c.review) +
+        approvalStat("Your eligible votes", c.vote) +
+        approvalStat("Ready for agenda", c.agenda) +
+        approvalStat("Resolution finalization", c.finalize) +
+      "</div>" +
+      "<section aria-labelledby='approvals-queue-heading'>" +
+        "<div class='approvals-header'><h2 id='approvals-queue-heading'>Your action queue</h2>" +
+          "<span class='tag'>" + esc(c.total) + " item(s) loaded</span></div>" +
+        "<div class='approvals-list'>" +
+          (queue.items.length ? queue.items.map(approvalItem).join("") :
+            "<div class='approval-empty'><strong>Nothing requiring your governance action.</strong>No current proposal review, eligible vote, agenda assignment, or resolution finalization is waiting for this signed-in account.</div>") +
+        "</div></section>" +
+      "<div class='approvals-limitations'>" +
+        "<div class='approval-service'><span class='readiness'>Connected</span><strong>Board governance</strong><p>Uses the live protected proposals and governance endpoints. No direct approval bypasses.</p></div>" +
+        "<div class='approval-service'><span class='readiness'>Not operational</span><strong>Grant committee decisions</strong><p>No confidential grant-applicant review or grant-payment authorization is implemented here.</p></div>" +
+        "<div class='approval-service'><span class='readiness'>Not operational</span><strong>Finance &amp; notifications</strong><p>No bank transfers, payment approvals, email notices, or background alerts originate here.</p></div>" +
+      "</div><p class='approvals-smallprint'>Queue reflects proposals available through the current governance list (up to 200 latest records). Voting eligibility and every state change are checked again by the server. No money moves from this screen.</p>";
+  }
+
   async function render() {
     if (!member || member.setupRequired) return;
     if (member.activationPending) return pendingScreen();
@@ -580,6 +630,7 @@
         return;
       }
       if (NOT_OPERATIONAL[requestedSection]) return notOperational(requestedSection);
+      if (requestedSection === "approvals") return await renderApprovals(version);
       if (GOVERNANCE_SECTIONS.indexOf(requestedSection) >= 0) return await renderGovernance(requestedSection, version);
       if (requestedSection === "board" || requestedSection === "audit") {
         var result = await api(requestedSection === "board" ? "/api/board" : "/api/audit");
@@ -596,7 +647,7 @@
       if (dashboardRequest) await appendDashboard(dashboardRequest, version, requestedSection);
     } catch (error) {
       if (version !== renderVersion || !member || current !== requestedSection) return;
-      if (error.message === "authentication_required" || requestedSection === "board" || requestedSection === "audit" || GOVERNANCE_SECTIONS.indexOf(requestedSection) >= 0) return showError(error.message);
+      if (error.message === "authentication_required" || requestedSection === "board" || requestedSection === "audit" || requestedSection === "approvals" || GOVERNANCE_SECTIONS.indexOf(requestedSection) >= 0) return showError(error.message);
       if (requestedSection === "registry") return renderRegistry(null);
       renderOverview(null);
       if (requestedSection === "overview") await appendDashboard(api("/api/governance/dashboard").catch(function () { return null; }), version, requestedSection);
