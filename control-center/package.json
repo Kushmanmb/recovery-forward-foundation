@@ -8,5 +8,11 @@
     "test": "node --test test/*.test.js",
     "staging:check": "node scripts/check-staging-config.mjs",
     "staging:check:deploy": "node scripts/check-staging-config.mjs --deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.152.0"
+  },
+  "overrides": {
+    "undici": "7.30.1"
   }
 }
