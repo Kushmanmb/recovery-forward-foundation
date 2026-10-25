@@ -119,18 +119,49 @@
       "<button class='btn primary' type='submit'>Complete setup</button></form></section>";
   }
 
+  function dashboardTile(section, icon, title, description, state, notOperational) {
+    return "<button class='feature-tile' type='button' data-jump='" + escAttr(section) + "'>" +
+      "<span class='feature-icon' aria-hidden='true'>" + esc(icon) + "</span>" +
+      "<span class='feature-title'>" + esc(title) + "</span>" +
+      "<span class='feature-desc'>" + esc(description) + "</span>" +
+      "<span class='feature-foot'><span class='feature-state" + (notOperational ? " unavailable" : "") + "'>" +
+      esc(state) + "</span><span class='feature-arrow' aria-hidden='true'>&rarr;</span></span></button>";
+  }
+
+  function metricBox(section, label, value, note) {
+    return "<button class='metric-button' type='button' data-jump='" + escAttr(section) + "'>" +
+      "<span class='metric-label'>" + esc(label) + "</span>" +
+      "<span class='metric-value'>" + esc(value) + "</span>" +
+      "<span class='metric-cta'>" + esc(note) + " &rarr;</span></button>";
+  }
+
   function renderOverview(summary) {
-    var countMarkup = summary
-      ? "<div class='grid'>" +
-        "<div class='card'><div class='n'>" + esc(summary.pending) + "</div>Pending</div>" +
-        "<div class='card'><div class='n'>" + esc(summary.verified) + "</div>Verified</div>" +
-        "<div class='card'><div class='n'>" + esc(summary.closed) + "</div>Closed</div></div>"
-      : "<div class='card muted'>Registry summary is not available. Applicant records are never shown here.</div>";
-    main.innerHTML = "<h2>Organization Overview</h2>" +
-      "<div class='grid'><div class='card'><div class='n'>" + esc(member.role) + "</div>Signed-in role</div>" +
-      "<div class='card'><div class='n'>" + esc(member.status) + "</div>Account status</div></div>" +
-      "<div class='card'><strong>" + esc(member.email) + "</strong><p class='muted'>Access is authorized by the server for each request. No sample or applicant personal data is displayed.</p></div>" +
-      "<h2>Recovery Grant Registry summary</h2>" + countMarkup;
+    var unavailable = "Unavailable";
+    main.innerHTML =
+      "<section class='command-hero'>" +
+        "<div class='hero-copy'><p class='eyebrow'>EXECUTIVE WORKSPACE / FOUNDATION OPERATIONS</p>" +
+          "<h2>Lead with purpose.<br>Move recovery forward.</h2>" +
+          "<p>Navigate the foundation's protected governance, recovery-grant summaries, records, and operational tools. Figures appear only when their authorized services provide them.</p></div>" +
+        "<div class='hero-seal'><span class='seal-mark' aria-hidden='true'>RFF</span>" +
+          "<span class='seal-note'>Secure administrative<br>workspace</span></div></section>" +
+      "<section class='overview-section' aria-labelledby='overview-status'><div class='section-heading'>" +
+        "<h2 id='overview-status'>At a glance</h2><p>Verified session &amp; registry summary</p></div>" +
+        "<div class='stats-grid'>" +
+          metricBox("security", "Signed-in role", member.role, "View permissions") +
+          metricBox("security", "Account status", member.status, "View security") +
+          metricBox("registry", "Registry pending", summary ? summary.pending : unavailable, "View grant summary") +
+          metricBox("registry", "Registry verified", summary ? summary.verified : unavailable, "View grant summary") +
+        "</div><p class='overview-note'>Registry totals are aggregate-only. No applicant personal information is shown. An unavailable service is never shown as zero.</p></section>" +
+      "<section class='overview-section' aria-labelledby='overview-areas'><div class='section-heading'>" +
+        "<h2 id='overview-areas'>Your command center</h2><p>Select a card to open its workspace</p></div>" +
+        "<div class='feature-grid'>" +
+          dashboardTile("members", "♧", "Board governance", "Directors, verified rules, decisions, and permissions.", "Open governance", false) +
+          dashboardTile("meetings", "▦", "Meetings & voting", "Agendas, upcoming meetings, proposals, and votes.", "Open meetings", false) +
+          dashboardTile("registry", "◇", "Recovery grants", "Read-only registry statistics when connected.", "View registry", false) +
+          dashboardTile("documents", "▧", "Official documents", "Authorized board records and document versions.", "Open records", false) +
+          dashboardTile("finance", "$", "Finance center", "Budgeting and financial tools are not yet connected.", "Not operational", true) +
+          dashboardTile("comms", "✉", "Communications", "Foundation mailbox integration is not yet connected.", "Not operational", true) +
+        "</div></section>";
   }
 
   function renderRegistry(summary) {
@@ -217,23 +248,30 @@
     if (!dash || !dash.governance) return "<div class='card muted'>Governance data is unavailable.</div>";
     var g = dash.governance;
     var counts = dash.proposalCounts || {};
-    var html = "<h2>Board governance</h2>";
+    var pending = (counts.submitted || 0) + (counts.ready || 0);
+    var upcoming = Array.isArray(dash.upcomingMeetings) ? dash.upcomingMeetings : [];
+    var html = "<section class='executive-panel' aria-labelledby='board-status'><div class='section-heading'>" +
+      "<h2 id='board-status'>Board governance</h2><p>Secured records from the governance service</p></div>";
     if (!g.rulesVerified) html += "<div class='card warn-card' role='alert'><strong>Official action is blocked.</strong> Bylaws and Indiana-law rules have not been verified. " +
       (has("governance:verify") ? "Record and attest them under Board Members." : "The President must record and attest them.") + "</div>";
-    html += "<div class='grid'>" +
-      "<div class='card'><div class='n'>" + esc(g.seatedDirectors) + (g.directorCount ? " / " + esc(g.directorCount) : "") + "</div>Seated directors</div>" +
-      "<div class='card'><div class='n'>" + esc((counts.submitted || 0) + (counts.ready || 0)) + "</div>Awaiting review or vote scheduling</div>" +
-      "<div class='card'><div class='n'>" + esc(counts.voting || 0) + "</div>Open for voting</div>" +
-      "<div class='card'><div class='n'>" + esc(counts.finalized || 0) + "</div>Official resolutions</div></div>";
-    if (dash.awaitingReview) html += "<div class='card'>" + esc(dash.awaitingReview) + " proposal(s) are awaiting your review.</div>";
+    html += "<div class='stats-grid'>" +
+      metricBox("members", "Seated directors", String(g.seatedDirectors) + (g.directorCount ? " / " + g.directorCount : ""), "View board") +
+      metricBox("proposals", "Awaiting review", pending, "View proposals") +
+      metricBox("proposals", "Open for voting", counts.voting || 0, "View voting") +
+      metricBox("documents", "Official resolutions", counts.finalized || 0, "View records") +
+      "</div>";
+    if (dash.awaitingReview) html += "<div class='card'><strong>Needs attention</strong><p>" + esc(dash.awaitingReview) + " proposal(s) are awaiting your review.</p><button class='btn' type='button' data-jump='proposals'>Review proposals</button></div>";
     if (dash.votesNeeded && dash.votesNeeded.length) {
       html += "<h3>Your vote is needed</h3>" + dash.votesNeeded.map(function (p) {
         return "<div class='card'><button class='btn' type='button' data-open-proposal='" + Number(p.id) + "'>" + esc(p.title) + "</button></div>";
       }).join("");
     }
-    html += "<h3>Upcoming meetings</h3>" + (dash.upcomingMeetings && dash.upcomingMeetings.length ? dash.upcomingMeetings.map(function (m) {
-      return "<div class='card'><div class='row'><button class='btn' type='button' data-open-meeting='" + Number(m.id) + "'>" + esc(m.title) + "</button><span class='tag'>" + esc(m.status) + "</span></div><p class='muted'>" + when(m.scheduledAt) + "</p></div>";
-    }).join("") : "<div class='card muted'>No meetings scheduled.</div>");
+    html += "<div class='section-heading'><h2>Upcoming board meetings</h2>" +
+      "<button class='btn' type='button' data-jump='calendar'>Full calendar &rarr;</button></div>" +
+      "<div class='executive-meetings'>" + (upcoming.length ? upcoming.slice(0, 3).map(function (m) {
+        return "<div class='card'><div class='row'><button class='btn' type='button' data-open-meeting='" + Number(m.id) + "'>" + esc(m.title) +
+          "</button><span class='tag'>" + esc(m.status) + "</span></div><p class='muted'>" + when(m.scheduledAt) + "</p></div>";
+      }).join("") : "<div class='card muted'>No meetings scheduled.</div>") + "</div></section>";
     return html;
   }
 
@@ -645,6 +683,21 @@
 
   main.addEventListener("click", async function (event) {
     var target = event.target;
+    var jump = target.closest && target.closest("button[data-jump]");
+    if (jump) {
+      var section = jump.getAttribute("data-jump");
+      var matchingNav = Array.prototype.find.call(nav.querySelectorAll("button"), function (button) {
+        return button.getAttribute("data-s") === section && !button.hidden;
+      });
+      if (!matchingNav) return;
+      current = section;
+      proposalId = null;
+      meetingId = null;
+      docDetail = null;
+      rememberSection(section);
+      setActiveNav(section);
+      return render();
+    }
     if (target.id === "check-activation") return start();
     if (typeof target.getAttribute !== "function") return;
     var open = target.getAttribute("data-open-proposal");

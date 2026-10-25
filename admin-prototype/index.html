@@ -1,34 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex,nofollow">
-<title>Presidential Dashboard</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#061327">
+  <title>Presidential Command Center | Recovery Forward Foundation</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="executive.css">
 </head>
 <body>
-<div class="banner" role="alert">Private administrative application — Cloudflare Access and server authorization required. Not approved for deployment.</div>
-<header class="top">
-  <h1>Recovery Forward Foundation <span>Presidential Dashboard</span></h1>
-  <nav id="nav" aria-label="Sections">
-    <button data-s="overview" class="on">Overview</button>
-    <button data-s="proposals">Proposals</button>
-    <button data-s="meetings">Meetings</button>
-    <button data-s="calendar">Calendar</button>
-    <button data-s="members">Board Members</button>
-    <button data-s="applications">Applications</button>
-    <button data-s="registry">Grants</button>
-    <button data-s="finance">Finance</button>
-    <button data-s="comms">Communications</button>
-    <button data-s="documents">Documents</button>
-    <button data-s="security">Security</button>
-    <button data-s="board" hidden>Board access</button>
-    <button data-s="audit" hidden>Audit activity</button>
-  </nav>
-  <button id="logout" class="btn" type="button" hidden>Sign out</button>
-</header>
-<main id="main" aria-live="polite"></main>
-<script src="app.js"></script>
+  <div class="banner" role="alert">Private administrative application &mdash; Cloudflare Access and server authorization required. Not approved for deployment.</div>
+  <div class="app-layout">
+    <aside class="sidebar" aria-label="Command Center navigation">
+      <div class="brand" aria-label="Recovery Forward Foundation">
+        <span class="brand-monogram" aria-hidden="true">RFF<span class="brand-spark">✦</span></span>
+        <span class="brand-name">RECOVERY FORWARD<br>FOUNDATION</span>
+        <span class="brand-motto">People · Progress · Possibilities</span>
+      </div>
+      <div class="sidebar-caption">COMMAND CENTER</div>
+      <nav id="nav" aria-label="Sections">
+        <button data-s="overview" class="on" data-symbol="⌂" type="button">Overview</button>
+        <button data-s="proposals" data-symbol="✎" type="button">Proposals</button>
+        <button data-s="meetings" data-symbol="▦" type="button">Meetings</button>
+        <button data-s="calendar" data-symbol="▤" type="button">Calendar</button>
+        <button data-s="members" data-symbol="♧" type="button">Board Members</button>
+        <button data-s="applications" data-symbol="◫" type="button">Applications</button>
+        <button data-s="registry" data-symbol="◇" type="button">Grants</button>
+        <button data-s="finance" data-symbol="$" type="button">Finance</button>
+        <button data-s="comms" data-symbol="✉" type="button">Communications</button>
+        <button data-s="documents" data-symbol="▧" type="button">Documents</button>
+        <button data-s="security" data-symbol="♢" type="button">Security</button>
+        <button data-s="board" data-symbol="⊞" type="button" hidden>Board access</button>
+        <button data-s="audit" data-symbol="☷" type="button" hidden>Audit activity</button>
+      </nav>
+      <div class="sidebar-note">Advancing recovery.<br>Strengthening communities.</div>
+    </aside>
+    <div class="content-shell">
+      <header class="top">
+        <div class="page-heading">
+          <p class="eyebrow">RECOVERY FORWARD FOUNDATION · SECURE OPERATIONS</p>
+          <h1>Presidential <span>Command Center</span></h1>
+          <p class="heading-subtitle">A clear view of leadership, governance, and the work ahead.</p>
+        </div>
+        <div class="header-actions">
+          <span class="privacy-pill"><span class="privacy-dot" aria-hidden="true"></span> Private workspace</span>
+          <button id="logout" class="btn logout" type="button" hidden>Sign out</button>
+        </div>
+      </header>
+      <main id="main" aria-live="polite"></main>
+      <footer class="dashboard-footer">
+        <span class="footer-mark" aria-label="Recovery Forward Foundation">RFF</span>
+        <a class="footer-signature" href="mailto:matthewbrace@recoveryforwardfoundation.org">Matthewbrace@RecoveryForwardFoundation.org</a>
+        <span class="footer-caption">Recovery Forward Foundation · Private Operations</span>
+      </footer>
+    </div>
+  </div>
+  <script src="app.js"></script>
 </body>
 </html>
