@@ -1,0 +1,47 @@
+# Staging Worker: isolated from production (distinct Worker name, hostname and D1 database).
+# Production config is wrangler.toml and must never be used for staging work.
+# Run only with: wrangler <command> --config wrangler.staging.toml
+# Preflight: npm run staging:check   (fails while any placeholder below is unreplaced)
+
+name = "recovery-forward-control-center-staging"
+main = "src/worker.js"
+compatibility_date = "2026-10-16"
+workers_dev = false
+preview_urls = false
+
+# ACCESS_AUD, ACCESS_TEAM_DOMAIN and PRESIDENT_EMAIL are set as staging-only Worker secrets
+# (wrangler secret put <NAME> --config wrangler.staging.toml). Never reuse production values.
+# Without them the Worker fails closed with 503.
+keep_vars = true
+
+# Creating this custom domain adds a DNS record in the zone on first deploy; get approval first.
+routes = [
+  { pattern = "admin-staging.recoveryforwardfoundation.org", custom_domain = true }
+]
+
+[vars]
+APP_ENV = "staging"
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "recovery-forward-control-center-staging-db"
+database_id = "1f7d7b8d-9a94-4d9d-b5bc-580489b28a1e"
+migrations_dir = "migrations"
+
+# Private staging-only R2 bucket. Create it with approval (wrangler r2 bucket create) and never enable
+# public access (r2.dev or custom domain): files are served only through authorized Worker routes.
+[[r2_buckets]]
+binding = "DOCUMENTS"
+bucket_name = "recovery-forward-documents-staging"
+
+[assets]
+directory = "../admin-prototype"
+binding = "ASSETS"
+run_worker_first = true

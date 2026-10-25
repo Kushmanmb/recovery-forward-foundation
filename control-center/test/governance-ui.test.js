@@ -87,3 +87,18 @@ test("proposal views escape content and show vote buttons only to eligible direc
   app.handlers["main:click"]({ target: open }); await tick(); await tick(); await tick();
   assert.doesNotMatch(app.main.innerHTML, /data-choice=/);
 });
+
+test("documents section lists private storage, escapes titles and offers upload only where writable", async () => {
+  const store = { maxBytes: 10485760, allowedTypes: ["pdf"], folders: [{ id: "board", label: "Board", canWrite: true }, { id: "finance", label: "Finance", canWrite: false }] };
+  const app = await boot("President", ["documents:board:read"], {
+    "/api/registry/summary": summary, "/api/governance/resolutions": { resolutions: [] }, "/api/documents/folders": store,
+    "/api/documents": { documents: [{ id: 3, folder: "board", title: "<img src=x>", status: "active", currentVersion: 2, filename: "a.pdf", uploadedAt: 1 }] },
+  });
+  await app.go("documents");
+  assert.match(app.main.innerHTML, /Private bucket/);
+  assert.match(app.main.innerHTML, /id='doc-upload'/);
+  assert.match(app.main.innerHTML, /&lt;img src=x&gt;/);
+  assert.doesNotMatch(app.main.innerHTML, /<img src=x>/);
+  assert.match(app.main.innerHTML, /\/api\/documents\/3\/download/);
+  assert.doesNotMatch(app.main.innerHTML, /File storage not operational/);
+});

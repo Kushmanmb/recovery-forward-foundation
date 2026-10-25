@@ -88,7 +88,7 @@ function integrations(env) {
     { id: "applications", name: "Applications inbox", operational: false, note: "Not operational in this build; no applicant data is stored or shown." },
     { id: "finance", name: "Finance and payments", operational: false, note: "Not operational: no accounting or bank integration exists." },
     { id: "communications", name: "Communications and notices", operational: false, note: "Not operational: this system sends no email or notices. Meeting notice is recorded by attestation only." },
-    { id: "documents", name: "Document storage", operational: false, note: "Not operational: no file storage. Only resolutions and minutes stored in the database are available." },
+    { id: "documents", name: "Document storage (private R2)", operational: Boolean(env.DOCUMENTS), note: env.DOCUMENTS ? "Private bucket bound; access is checked per request." : "Not configured: the DOCUMENTS R2 binding is missing." },
   ];
 }
 
@@ -115,6 +115,7 @@ async function dashboard(env, member) {
   if (member.role === "President") {
     out.security = {
       accessConfigured: Boolean(env.ACCESS_TEAM_DOMAIN && env.ACCESS_AUD),
+      environment: typeof env.APP_ENV === "string" && env.APP_ENV ? env.APP_ENV : "unset",
       presidentEmailConfigured: Boolean(env.PRESIDENT_EMAIL),
       mfa: "Enforced by the Cloudflare Access policy; the application cannot verify the policy itself. Confirm it in the Cloudflare dashboard.",
     };
@@ -156,6 +157,8 @@ const ROUTES = [
 ];
 
 /** Caller must already hold an authenticated, active session. Authorization is decided here, server-side. */
+export const GOVERNANCE_ROUTES = ROUTES.map(([method, pattern, permission]) => ({ method, pattern, permission }));
+
 export async function governanceApi(request, env, member) {
   const url = new URL(request.url);
   const path = url.pathname.slice("/api/governance/".length).replace(/\/$/, "");

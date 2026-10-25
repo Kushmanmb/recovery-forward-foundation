@@ -35,6 +35,23 @@
     invalid_request: "Check the form values and try again."
   };
 
+  var DOC_ERRORS = {
+    unsupported_file_type: "That file type is not allowed.",
+    content_type_mismatch: "The file type does not match its extension.",
+    content_mismatch: "The file contents do not match its type.",
+    file_too_large: "The file is larger than the allowed size.",
+    empty_file: "The file is empty.",
+    invalid_filename: "The file name is not valid.",
+    version_conflict: "Someone else added a version first. Reload and try again.",
+    document_archived: "Archived documents cannot receive new versions.",
+    documents_unavailable: "Document storage is not configured.",
+    upload_unconfirmed: "The server did not confirm the upload. Reload the page to check the version history before trying again.",
+    storage_write_failed: "The file could not be stored. Nothing was saved. Please try again.",
+    database_write_failed: "The upload could not be recorded. Nothing was saved. Please try again.",
+    request_failed: "The upload failed. Nothing was saved.",
+    forbidden: "You do not have permission for this folder."
+  };
+
   var NOT_OPERATIONAL = {
     applications: ["Applications", "The applications inbox is not operational in this build. No applicant data is collected, stored or shown here."],
     finance: ["Finance", "Finance and payments are not operational. There is no accounting, banking or payment integration, and no balances are shown."],
@@ -47,6 +64,14 @@
 
   function escAttr(value) {
     return esc(value).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function formatBytes(bytes) {
+    var n = Number(bytes);
+    if (!(n >= 0)) return "";
+    if (n < 1024) return n + " B";
+    if (n < 1048576) return (n / 1024).toFixed(1) + " KB";
+    return (n / 1048576).toFixed(1) + " MB";
   }
 
   function when(timestamp) {
@@ -62,7 +87,11 @@
   async function api(path, options) {
     var response = await fetch(path, Object.assign({ credentials: "same-origin" }, options || {}));
     var body = await response.json().catch(function () { return {}; });
-    if (!response.ok) throw new Error(body.error || "request_failed");
+    if (!response.ok) {
+      var failure = new Error(body.error || "request_failed");
+      failure.requestId = typeof body.requestId === "string" ? body.requestId : null;
+      throw failure;
+    }
     return body;
   }
 
@@ -379,11 +408,84 @@
     main.innerHTML = html + "</section>";
   }
 
-  function renderDocuments(data) {
-    main.innerHTML = "<h2>Documents</h2><section class='card' role='note'><span class='tag warn'>File storage not operational</span><p class='muted'>Uploaded documents are not supported. Official resolutions and meeting minutes stored in the database are listed below.</p></section>" +
+  var docFolder = "";
+  var docDetail = null;
+
+  function renderStore(store) {
+    if (!store) return "<section class='card' role='note'><span class='tag warn'>File storage not operational</span><p class='muted'>Private document storage is unavailable. Official resolutions and meeting minutes stored in the database are listed below.</p></section>";
+    var writable = store.folders.filter(function (f) { return f.canWrite; });
+    var html = "<section class='card'><div class='row'><strong>Private document storage</strong><span class='tag ok'>Private bucket</span></div>" +
+      "<p class='muted'>Files are served only through authorized, audited downloads. Maximum " + esc(Math.round(store.maxBytes / 1048576)) + " MB; allowed: " + esc(store.allowedTypes.join(", ")) + ".</p>" +
+      "<label for='doc-folder-filter'>Folder</label><select id='doc-folder-filter'><option value=''>All folders</option>" + store.folders.map(function (f) {
+        return "<option value='" + escAttr(f.id) + "'" + (f.id === docFolder ? " selected" : "") + ">" + esc(f.label) + "</option>";
+      }).join("") + "</select></section>";
+    if (writable.length) html += "<section class='card'><h3>Upload a document</h3><form id='doc-upload'>" +
+      "<label>Folder<select name='folder'>" + writable.map(function (f) { return "<option value='" + escAttr(f.id) + "'>" + esc(f.label) + "</option>"; }).join("") + "</select></label>" +
+      "<label>Title<input name='title' type='text' maxlength='200' required></label>" +
+      "<label>Description<input name='description' type='text' maxlength='1000'></label>" +
+      "<label>File<input name='file' type='file' required></label><button class='btn primary'>Upload</button></form>" + msgBox() + "</section>";
+    else html += msgBox();
+    return html;
+  }
+
+  function renderDocList(list) {
+    if (!list) return "";
+    return "<h3>Documents</h3>" + (list.documents.length ? list.documents.map(function (d) {
+      return "<div class='card'><div class='row'><button class='btn' type='button' data-open-doc='" + Number(d.id) + "'>" + esc(d.title) + "</button>" + statusTag(d.status) + "</div>" +
+        "<p class='muted'>" + esc(d.folder) + " &middot; v" + Number(d.currentVersion) + " &middot; " + esc(d.filename) + " &middot; " + when(d.uploadedAt) + "</p>" +
+        "<p><a class='btn' href='/api/documents/" + Number(d.id) + "/download'>Download</a></p></div>";
+    }).join("") : "<div class='card muted'>No documents in this folder.</div>");
+  }
+
+  function renderDocDetail(detail, store) {
+    var d = detail.document;
+    var canWrite = store && store.folders.some(function (f) { return f.id === d.folder && f.canWrite; });
+    return "<p><button class='btn' type='button' data-doc-back='1'>Back</button></p><section class='card'><div class='row'><h3>" + esc(d.title) + "</h3>" + statusTag(d.status) + "</div>" +
+      "<p class='muted'>" + esc(d.folder) + " &middot; " + esc(d.description || "") + "</p>" +
+      "<ol class='version-list' aria-label='Version history'>" + detail.versions.map(function (v) {
+        return "<li class='version-card'><h4>Version " + Number(v.version) + (Number(v.version) === Number(d.currentVersion) ? " <span class='tag ok'>Current</span>" : "") + "</h4><dl>" +
+          "<div><dt>Filename</dt><dd>" + esc(v.filename) + "</dd></div>" +
+          "<div><dt>File size</dt><dd>" + esc(formatBytes(v.sizeBytes)) + "</dd></div>" +
+          "<div class='wide'><dt>SHA-256</dt><dd><code>" + esc(v.sha256) + "</code></dd></div>" +
+          "<div><dt>Uploaded by</dt><dd>" + esc(v.uploadedBy) + "</dd></div>" +
+          "<div><dt>Date</dt><dd>" + when(v.uploadedAt) + "</dd></div></dl>" +
+          "<a class='btn' href='/api/documents/" + Number(d.id) + "/download?version=" + Number(v.version) + "' aria-label='Download version " + Number(v.version) + ": " + escAttr(v.filename) + "'>Download</a></li>";
+      }).join("") + "</ol></section>" +
+      (canWrite && d.status === "active" ? "<section class='card'><h3>Add a new version</h3><form id='doc-upload' data-document='" + Number(d.id) + "' data-current-version='" + Number(d.currentVersion) + "'><label>File<input name='file' type='file' required></label><button class='btn primary'>Upload version</button></form>" +
+        "<button type='button' class='btn' data-doc-archive='" + Number(d.id) + "'>Archive document</button></section>" : "") + msgBox();
+  }
+
+  function renderDocuments(data, store, list, detail) {
+    main.innerHTML = "<h2>Documents</h2>" + (detail ? renderDocDetail(detail, store) : renderStore(store) + renderDocList(list)) +
       "<h3>Official resolutions</h3>" + (data.resolutions.length ? data.resolutions.map(function (x) {
         return "<div class='card'><div class='row'><button class='btn' type='button' data-open-proposal='" + Number(x.proposalId) + "'>" + esc(x.number) + " &mdash; " + esc(x.title) + "</button></div><p class='muted'>" + when(x.finalizedAt) + " &middot; SHA-256 " + esc(x.contentHash) + "</p></div>";
       }).join("") : "<div class='card muted'>No official resolutions.</div>");
+  }
+
+  async function uploadDocument(form) {
+    var fields = new FormData(form);
+    var file = fields.get("file");
+    var existing = form.getAttribute("data-document");
+    var previous = Number(form.getAttribute("data-current-version") || 0);
+    setMessage("");
+    if (!file || typeof file === "string" || !file.name || file.size === 0) return setMessage("Choose a non-empty file before uploading.");
+    var query = existing ? "documentId=" + encodeURIComponent(existing) : "folder=" + encodeURIComponent(fields.get("folder")) + "&title=" + encodeURIComponent(fields.get("title")) +
+      (fields.get("description") ? "&description=" + encodeURIComponent(fields.get("description")) : "");
+    setMessage("Uploading " + file.name + "\u2026");
+    try {
+      var result = await api("/api/documents?" + query + "&filename=" + encodeURIComponent(file.name), { method: "POST", headers: { "content-type": file.type || "application/octet-stream" }, body: file });
+      if (result.duplicate) {
+        await render();
+        return setMessage("No new version was created: this file is identical to the " + (existing ? "current version." : "existing document."));
+      }
+      if (!result.id || (existing && result.version !== previous + 1)) throw new Error("upload_unconfirmed");
+      var committed = await api("/api/documents/" + Number(result.id));
+      if (committed.document.currentVersion !== result.version) throw new Error("upload_unconfirmed");
+      await render();
+      setMessage(existing ? "Version " + Number(result.version) + " uploaded." : "Document uploaded.");
+    } catch (error) {
+      setMessage((DOC_ERRORS[error.message] || errorMessage(error.message)) + (error.requestId ? " Reference: " + error.requestId : ""));
+    }
   }
 
   async function renderGovernance(section, version) {
@@ -415,9 +517,14 @@
       return renderMembers(both[0], both[1]);
     }
     if (section === "documents") {
-      data = await api("/api/governance/resolutions");
+      var parts = await Promise.all([api("/api/governance/resolutions"), api("/api/documents/folders").catch(function () { return null; })]);
+      var store = parts[1];
+      var list = null;
+      var detail = null;
+      if (store && docDetail) detail = await api("/api/documents/" + Number(docDetail)).catch(function () { return null; });
+      else if (store) list = await api("/api/documents" + (docFolder ? "?folder=" + encodeURIComponent(docFolder) : "")).catch(function () { return null; });
       if (version !== renderVersion || current !== section) return;
-      return renderDocuments(data);
+      return renderDocuments(parts[0], store, list, detail);
     }
   }
 
@@ -469,7 +576,7 @@
   function securityExtras(dash) {
     var html = "";
     if (dash.security) {
-      html += "<div class='card'><h3>Deployment posture</h3><p>Cloudflare Access configured: <strong>" + (dash.security.accessConfigured ? "yes" : "NO") + "</strong></p>" +
+      html += "<div class='card'><h3>Deployment posture</h3><p>Environment: <strong>" + esc(dash.security.environment) + "</strong></p><p>Cloudflare Access configured: <strong>" + (dash.security.accessConfigured ? "yes" : "NO") + "</strong></p>" +
         "<p>President identity configured: <strong>" + (dash.security.presidentEmailConfigured ? "yes" : "NO") + "</strong></p><p class='muted'>" + esc(dash.security.mfa) + "</p></div>";
     }
     return html + integrationList(dash.integrations);
@@ -508,6 +615,17 @@
     return payload;
   }
 
+  // Keep the selected section across a browser refresh.
+  function rememberSection(section) {
+    try { if (window.history && window.history.replaceState) window.history.replaceState(null, "", "#" + section); } catch (error) { /* non-critical */ }
+  }
+
+  function restoreSection() {
+    var hash = window.location && typeof window.location.hash === "string" ? window.location.hash.slice(1) : "";
+    var button = Array.prototype.filter.call(nav.querySelectorAll("button"), function (b) { return b.getAttribute("data-s") === hash && !b.hidden; })[0];
+    if (button) { current = hash; setActiveNav(hash); }
+  }
+
   function setActiveNav(section) {
     Array.prototype.forEach.call(nav.querySelectorAll("button"), function (button) {
       button.classList.toggle("on", button.getAttribute("data-s") === section);
@@ -515,6 +633,10 @@
   }
 
   main.addEventListener("change", function (event) {
+    if (event.target && event.target.id === "doc-folder-filter") {
+      docFolder = event.target.value;
+      render();
+    }
     if (event.target && event.target.id === "proposal-filter") {
       proposalFilter = event.target.value;
       render();
@@ -528,6 +650,12 @@
     var open = target.getAttribute("data-open-proposal");
     var openMeeting = target.getAttribute("data-open-meeting");
     var post = target.getAttribute("data-gov-post");
+    if (target.getAttribute("data-open-doc")) { docDetail = Number(target.getAttribute("data-open-doc")); return render(); }
+    if (target.getAttribute("data-doc-back")) { docDetail = null; return render(); }
+    if (target.getAttribute("data-doc-archive")) {
+      if (!window.confirm("Archive this document? Its versions are kept.")) return;
+      try { await api("/api/documents/" + Number(target.getAttribute("data-doc-archive")) + "/archive", { method: "POST" }); docDetail = null; return render(); } catch (error) { return setMessage(DOC_ERRORS[error.message] || errorMessage(error.message)); }
+    }
     if (open) { current = "proposals"; proposalId = Number(open); setActiveNav(current); return render(); }
     if (openMeeting) { current = "meetings"; meetingId = Number(openMeeting); setActiveNav(current); return render(); }
     if (target.getAttribute("data-back")) { proposalId = null; meetingId = null; return render(); }
@@ -548,14 +676,22 @@
     current = section;
     proposalId = null;
     meetingId = null;
-    Array.prototype.forEach.call(nav.querySelectorAll("button"), function (button) {
-      button.classList.toggle("on", button === event.target);
-    });
+    docDetail = null;
+    rememberSection(section);
+    setActiveNav(section);
     render();
   });
 
   main.addEventListener("submit", async function (event) {
     var form = event.target;
+    if (form.id === "doc-upload") {
+      event.preventDefault();
+      var docSubmit = form.querySelector("button");
+      docSubmit.disabled = true;
+      await uploadDocument(form);
+      docSubmit.disabled = false;
+      return;
+    }
     var govPath = typeof form.getAttribute === "function" ? form.getAttribute("data-gov") : null;
     if (govPath) {
       event.preventDefault();
@@ -643,7 +779,7 @@
         if (section === "board" || section === "audit") button.hidden = member.role !== "President" || member.status !== "active";
       });
       if (member.setupRequired) showSetup();
-      else render();
+      else { restoreSection(); render(); }
     } catch (error) {
       if (error.message === "invitation_required") showInvitation();
       else showError(error.message);

@@ -3,10 +3,10 @@ export const ROLES = ["President", "VicePresident", "Secretary", "Treasurer", "B
 
 export const ROLE_PERMISSIONS = {
   President: ["members:invite", "members:activate", "members:suspend", "members:permissions", "security:read", "audit:read",
-    "documents:board:read", "meetings:request", "agenda:propose", "inbox:contact:read", "payments:authorize:president",
+    "documents:board:read", "documents:board:write", "documents:restricted:read", "documents:restricted:write", "meetings:request", "agenda:propose", "inbox:contact:read", "payments:authorize:president",
     "finance:read", "grants:summary:read"],
   VicePresident: ["documents:board:read", "meetings:request", "agenda:propose", "finance:read", "grants:summary:read"],
-  Secretary: ["documents:board:read", "documents:records:write", "minutes:draft", "meetings:request", "agenda:propose",
+  Secretary: ["documents:board:read", "documents:board:write", "documents:records:write", "minutes:draft", "meetings:request", "agenda:propose",
     "inbox:contact:read", "finance:read", "grants:summary:read"],
   Treasurer: ["documents:board:read", "documents:finance:write", "finance:read", "finance:write", "meetings:request",
     "agenda:propose", "payments:prepare", "payments:authorize:treasurer", "grants:summary:read"],

@@ -7,6 +7,7 @@ const MAX_REGISTRY_RESPONSE_BYTES = 64 * 1024;
 const ACCESS_KEY_CACHE_MS = 5 * 60 * 1000;
 let accessKeyCache;
 import { governanceApi } from "./governance-api.js";
+import { documentsApi } from "./documents-api.js";
 
 class AccessUnavailable extends Error {
   constructor(reason = "unknown", details = {}) {
@@ -345,6 +346,8 @@ async function handleApi(request, env, identity, url) {
 
   if (url.pathname.startsWith("/api/governance/")) return governanceApi(request, env, member);
 
+  if (url.pathname === "/api/documents" || url.pathname.startsWith("/api/documents/")) return documentsApi(request, env, member, url);
+
   if (url.pathname === "/api/audit" && request.method === "GET") {
     if (!can(member, "audit:read")) {
       await audit(env.DB, member.email, "authorization_denied", { permission: "audit:read" });
@@ -405,8 +408,10 @@ export async function handleRequest(request, env) {
   if (url.pathname.startsWith("/api/")) {
     try {
       return secureHeaders(await handleApi(request, env, identity, url));
-    } catch {
-      return secureHeaders(json({ error: "request_failed" }, 500));
+    } catch (error) {
+      const requestId = crypto.randomUUID();
+      console.error(JSON.stringify({ event: "api_request_failed", requestId, method: request.method, path: url.pathname, errorName: error?.name, errorMessage: String(error?.message ?? "").slice(0, 200) }));
+      return secureHeaders(json({ error: "request_failed", requestId }, 500));
     }
   }
   if (request.method !== "GET" && request.method !== "HEAD") {

@@ -4,5 +4,9 @@
   "private": true,
   "description": "President Control Center Cloudflare Worker and domain core.",
   "type": "module",
-  "scripts": { "test": "node --test test/*.test.js" }
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "staging:check": "node scripts/check-staging-config.mjs",
+    "staging:check:deploy": "node scripts/check-staging-config.mjs --deploy"
+  }
 }
