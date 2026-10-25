@@ -32,7 +32,7 @@ invocation_logs = true
 [[d1_databases]]
 binding = "DB"
 database_name = "recovery-forward-control-center-staging-db"
-database_id = "REPLACE_WITH_STAGING_D1_DATABASE_ID"
+database_id = "1f7d7b8d-9a94-4d9d-b5bc-580489b28a1e"
 migrations_dir = "migrations"
 
 # Private staging-only R2 bucket. Create it with approval (wrangler r2 bucket create) and never enable

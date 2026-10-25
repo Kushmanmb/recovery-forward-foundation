@@ -1,5 +1,5 @@
 import { can } from "./rbac.js";
-import { auditStatement, changed, cleanText, reply, sameOrigin, sha256Hex } from "./http.js";
+import { auditStatement, changed, cleanText, reply, sameOrigin, sha256Bytes } from "./http.js";
 
 export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 
@@ -184,36 +184,82 @@ async function upload(request, env, member, url) {
   const checked = validateFile(url.searchParams.get("filename"), request.headers.get("content-type"), bytes);
   if (!checked.ok) return reply({ error: checked.error }, checked.error === "file_too_large" ? 413 : 400);
 
-  const hash = await sha256Hex(bytes);
+  const requestId = crypto.randomUUID();
+  const { digest, hex: hash } = await sha256Bytes(bytes);
   const now = Date.now();
-  let id = existing?.id;
-  let expected = existing?.current_version ?? 0;
-  if (!existing) {
-    const created = await env.DB.prepare("INSERT INTO documents (folder, title, description, current_version, created_by, created_at) VALUES (?, ?, ?, 0, ?, ?)")
-      .bind(folder, title, description, member.email, now).run();
-    id = Number(created?.meta?.last_row_id ?? created?.lastInsertRowid);
+
+  // Idempotent retry: identical content already stored for this request is returned, never duplicated.
+  const replay = existing
+    ? await env.DB.prepare("SELECT d.id, d.current_version AS version, v.sha256 FROM documents d JOIN document_versions v ON v.document_id = d.id AND v.version = d.current_version WHERE d.id = ? AND v.sha256 = ?").bind(existing.id, hash).first()
+    : await env.DB.prepare("SELECT d.id, d.current_version AS version, v.sha256 FROM documents d JOIN document_versions v ON v.document_id = d.id AND v.version = 1 WHERE d.folder = ? AND d.title = ? AND d.created_by = ? AND d.current_version = 1 AND d.status = 'active' AND v.sha256 = ? ORDER BY d.id DESC LIMIT 1")
+      .bind(folder, title, member.email, hash).first();
+  if (replay) return reply({ id: replay.id, version: replay.version, sha256: hash, duplicate: true }, 200);
+
+  // The object is written first; no D1 row exists until the bytes are safely stored.
+  const key = `${folder}/${crypto.randomUUID()}`;
+  try {
+    // R2 verifies the digest server-side and rejects the write on mismatch.
+    const stored = await env.DOCUMENTS.put(key, bytes, { httpMetadata: { contentType: checked.mime }, sha256: digest.buffer });
+    const storedHash = stored?.checksums?.sha256;
+    if (!storedHash || toHex(storedHash) !== hash || (stored.size !== undefined && stored.size !== bytes.length)) {
+      throw new Error("stored_object_integrity_mismatch");
+    }
+  } catch (error) {
+    // A failed or unverifiable write may still have left an object behind; remove it.
+    await discardObject(env, key, requestId);
+    logFailure(error?.message === "stored_object_integrity_mismatch" ? "storage_integrity_failed" : "storage_write_failed", requestId, error);
+    return reply({ error: "storage_write_failed", requestId }, 502);
   }
+
+  const expected = existing?.current_version ?? 0;
   const version = expected + 1;
-  const key = `${folder}/${id}/${crypto.randomUUID()}`;
-  await env.DOCUMENTS.put(key, bytes, { httpMetadata: { contentType: checked.mime }, sha256: hash });
+  const action = "document_uploaded"; // detail_json.version distinguishes new versions
+  const versionColumns = "(document_id, version, object_key, filename, content_type, size_bytes, sha256, uploaded_by, uploaded_at)";
   let results;
   try {
-    results = await env.DB.batch([
-      env.DB.prepare("UPDATE documents SET current_version = ? WHERE id = ? AND current_version = ? AND status = 'active'").bind(version, id, expected),
-      env.DB.prepare(`INSERT INTO document_versions (document_id, version, object_key, filename, content_type, size_bytes, sha256, uploaded_by, uploaded_at)
-        SELECT ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE changes() > 0`).bind(id, version, key, checked.name, checked.mime, bytes.length, hash, member.email, now),
-      auditStatement(env.DB, member.email, existing ? "document_version_added" : "document_uploaded",
-        { documentId: id, version, folder, size: bytes.length, sha256: hash }, now, true),
-    ]);
-  } catch {
-    await env.DOCUMENTS.delete(key);
-    return reply({ error: "request_failed" }, 500);
+    // One atomic batch: a document row and its first version commit together or not at all.
+    results = existing
+      ? await env.DB.batch([
+        env.DB.prepare("UPDATE documents SET current_version = ? WHERE id = ? AND current_version = ? AND status = 'active'").bind(version, existing.id, expected),
+        env.DB.prepare(`INSERT INTO document_versions ${versionColumns} SELECT ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE changes() > 0`)
+          .bind(existing.id, version, key, checked.name, checked.mime, bytes.length, hash, member.email, now),
+        auditStatement(env.DB, member.email, action, { documentId: existing.id, version, folder, size: bytes.length, sha256: hash }, now, true),
+      ])
+      : await env.DB.batch([
+        env.DB.prepare("INSERT INTO documents (folder, title, description, current_version, created_by, created_at) VALUES (?, ?, ?, 1, ?, ?)")
+          .bind(folder, title, description, member.email, now),
+        env.DB.prepare(`INSERT INTO document_versions ${versionColumns} SELECT last_insert_rowid(), 1, ?, ?, ?, ?, ?, ?, ?`)
+          .bind(key, checked.name, checked.mime, bytes.length, hash, member.email, now),
+        env.DB.prepare(`INSERT INTO audit_log (actor_email, action, detail_json, created_at)
+          SELECT ?, ?, json_object('documentId', document_id, 'version', 1, 'folder', ?, 'size', ?, 'sha256', ?), ? FROM document_versions WHERE object_key = ?`)
+          .bind(member.email, action, folder, bytes.length, hash, now, key),
+      ]);
+  } catch (error) {
+    await discardObject(env, key, requestId);
+    logFailure("database_write_failed", requestId, error);
+    return reply({ error: "database_write_failed", requestId }, 500);
   }
   if (!changed(results[1])) {
-    await env.DOCUMENTS.delete(key);
+    await discardObject(env, key, requestId);
     return reply({ error: "version_conflict" }, 409);
   }
+  const id = existing ? existing.id : Number((await env.DB.prepare("SELECT document_id FROM document_versions WHERE object_key = ?").bind(key).first())?.document_id);
   return reply({ id, version, sha256: hash }, 201);
+}
+
+function toHex(buffer) {
+  return Array.from(new Uint8Array(buffer), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function discardObject(env, key, requestId) {
+  try { await env.DOCUMENTS.delete(key); } catch (error) {
+    // The object is unreferenced; its key is logged so it can be reaped without exposing contents.
+    logFailure("orphan_object_cleanup_failed", requestId, error, { objectKey: key });
+  }
+}
+
+function logFailure(stage, requestId, error, extra = {}) {
+  console.error(JSON.stringify({ event: "document_upload_failed", stage, requestId, errorName: error?.name, errorMessage: String(error?.message ?? "").slice(0, 200), ...extra }));
 }
 
 async function archive(request, env, member, id) {

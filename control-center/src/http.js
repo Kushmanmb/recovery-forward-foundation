@@ -40,6 +40,12 @@ export async function sha256Hex(value) {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+// Digest of the exact bytes; sha256Hex above hashes text and would stringify a Uint8Array.
+export async function sha256Bytes(bytes) {
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+  return { digest, hex: Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("") };
+}
+
 export function cleanText(value, min, max) {
   if (typeof value !== "string") return null;
   const text = value.trim();

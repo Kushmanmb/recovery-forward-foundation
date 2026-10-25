@@ -28,14 +28,19 @@ function createDb() {
 
 test("staging config is isolated from production and passes the preflight", () => {
   assert.deepEqual(validateStagingConfig(staging, production), []);
-  // Only the deploy-mode preflight fails while the staging D1 id is a placeholder.
-  assert.match(validateStagingConfig(staging, production, { forDeploy: true }).join(), /REPLACE_WITH_STAGING_D1_DATABASE_ID/);
+  // Deploy mode fails only while a placeholder remains; a configured staging id must pass it.
+  const deployProblems = validateStagingConfig(staging, production, { forDeploy: true }).join();
+  if (/REPLACE_WITH_/.test(staging)) assert.match(deployProblems, /placeholders remain/);
+  else assert.deepEqual(deployProblems, "");
+  const withId = (id) => staging.replace(/database_id = "[^"]*"/, `database_id = "${id}"`);
+  assert.match(validateStagingConfig(withId("REPLACE_WITH_STAGING_D1_DATABASE_ID"), production, { forDeploy: true }).join(), /placeholders remain/);
+  assert.deepEqual(validateStagingConfig(withId("11111111-2222-3333-4444-555555555555"), production, { forDeploy: true }), []);
 });
 
 test("preflight rejects configs that touch production resources", () => {
   const prodDbId = /database_id = "([^"]+)"/.exec(production)[1];
   const bad = (text) => validateStagingConfig(text, production).join("|");
-  assert.match(bad(staging.replace("REPLACE_WITH_STAGING_D1_DATABASE_ID", prodDbId)), /database_id is identical/);
+  assert.match(bad(staging.replace(/database_id = "[^"]*"/, `database_id = "${prodDbId}"`)), /database_id is identical/);
   assert.match(bad(staging.replace(/database_name = "[^"]+"/, 'database_name = "recovery-forward-control-center-db"')), /database_name/);
   assert.match(bad(staging.replace("admin-staging.", "admin.")), /route/);
   assert.match(bad(staging.replace('name = "recovery-forward-control-center-staging"', 'name = "recovery-forward-control-center"')), /Worker name/);

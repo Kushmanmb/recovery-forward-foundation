@@ -45,6 +45,10 @@
     version_conflict: "Someone else added a version first. Reload and try again.",
     document_archived: "Archived documents cannot receive new versions.",
     documents_unavailable: "Document storage is not configured.",
+    upload_unconfirmed: "The server did not confirm the upload. Reload the page to check the version history before trying again.",
+    storage_write_failed: "The file could not be stored. Nothing was saved. Please try again.",
+    database_write_failed: "The upload could not be recorded. Nothing was saved. Please try again.",
+    request_failed: "The upload failed. Nothing was saved.",
     forbidden: "You do not have permission for this folder."
   };
 
@@ -62,6 +66,14 @@
     return esc(value).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
+  function formatBytes(bytes) {
+    var n = Number(bytes);
+    if (!(n >= 0)) return "";
+    if (n < 1024) return n + " B";
+    if (n < 1048576) return (n / 1024).toFixed(1) + " KB";
+    return (n / 1048576).toFixed(1) + " MB";
+  }
+
   function when(timestamp) {
     return timestamp ? esc(new Date(timestamp).toLocaleString()) : "";
   }
@@ -75,7 +87,11 @@
   async function api(path, options) {
     var response = await fetch(path, Object.assign({ credentials: "same-origin" }, options || {}));
     var body = await response.json().catch(function () { return {}; });
-    if (!response.ok) throw new Error(body.error || "request_failed");
+    if (!response.ok) {
+      var failure = new Error(body.error || "request_failed");
+      failure.requestId = typeof body.requestId === "string" ? body.requestId : null;
+      throw failure;
+    }
     return body;
   }
 
@@ -426,11 +442,16 @@
     var canWrite = store && store.folders.some(function (f) { return f.id === d.folder && f.canWrite; });
     return "<p><button class='btn' type='button' data-doc-back='1'>Back</button></p><section class='card'><div class='row'><h3>" + esc(d.title) + "</h3>" + statusTag(d.status) + "</div>" +
       "<p class='muted'>" + esc(d.folder) + " &middot; " + esc(d.description || "") + "</p>" +
-      "<div class='table'><table><tr><th>Version</th><th>File</th><th>Size</th><th>SHA-256</th><th>Uploaded</th><th></th></tr>" + detail.versions.map(function (v) {
-        return "<tr><td>" + Number(v.version) + "</td><td>" + esc(v.filename) + "</td><td>" + Number(v.sizeBytes) + "</td><td>" + esc(v.sha256) + "</td><td>" + esc(v.uploadedBy) + " " + when(v.uploadedAt) +
-          "</td><td><a href='/api/documents/" + Number(d.id) + "/download?version=" + Number(v.version) + "'>Download</a></td></tr>";
-      }).join("") + "</table></div></section>" +
-      (canWrite && d.status === "active" ? "<section class='card'><h3>Add a new version</h3><form id='doc-upload' data-document='" + Number(d.id) + "'><label>File<input name='file' type='file' required></label><button class='btn primary'>Upload version</button></form>" +
+      "<ol class='version-list' aria-label='Version history'>" + detail.versions.map(function (v) {
+        return "<li class='version-card'><h4>Version " + Number(v.version) + (Number(v.version) === Number(d.currentVersion) ? " <span class='tag ok'>Current</span>" : "") + "</h4><dl>" +
+          "<div><dt>Filename</dt><dd>" + esc(v.filename) + "</dd></div>" +
+          "<div><dt>File size</dt><dd>" + esc(formatBytes(v.sizeBytes)) + "</dd></div>" +
+          "<div class='wide'><dt>SHA-256</dt><dd><code>" + esc(v.sha256) + "</code></dd></div>" +
+          "<div><dt>Uploaded by</dt><dd>" + esc(v.uploadedBy) + "</dd></div>" +
+          "<div><dt>Date</dt><dd>" + when(v.uploadedAt) + "</dd></div></dl>" +
+          "<a class='btn' href='/api/documents/" + Number(d.id) + "/download?version=" + Number(v.version) + "' aria-label='Download version " + Number(v.version) + ": " + escAttr(v.filename) + "'>Download</a></li>";
+      }).join("") + "</ol></section>" +
+      (canWrite && d.status === "active" ? "<section class='card'><h3>Add a new version</h3><form id='doc-upload' data-document='" + Number(d.id) + "' data-current-version='" + Number(d.currentVersion) + "'><label>File<input name='file' type='file' required></label><button class='btn primary'>Upload version</button></form>" +
         "<button type='button' class='btn' data-doc-archive='" + Number(d.id) + "'>Archive document</button></section>" : "") + msgBox();
   }
 
@@ -445,14 +466,25 @@
     var fields = new FormData(form);
     var file = fields.get("file");
     var existing = form.getAttribute("data-document");
+    var previous = Number(form.getAttribute("data-current-version") || 0);
+    setMessage("");
+    if (!file || typeof file === "string" || !file.name || file.size === 0) return setMessage("Choose a non-empty file before uploading.");
     var query = existing ? "documentId=" + encodeURIComponent(existing) : "folder=" + encodeURIComponent(fields.get("folder")) + "&title=" + encodeURIComponent(fields.get("title")) +
       (fields.get("description") ? "&description=" + encodeURIComponent(fields.get("description")) : "");
+    setMessage("Uploading " + file.name + "\u2026");
     try {
-      await api("/api/documents?" + query + "&filename=" + encodeURIComponent(file.name), { method: "POST", headers: { "content-type": file.type || "application/octet-stream" }, body: file });
+      var result = await api("/api/documents?" + query + "&filename=" + encodeURIComponent(file.name), { method: "POST", headers: { "content-type": file.type || "application/octet-stream" }, body: file });
+      if (result.duplicate) {
+        await render();
+        return setMessage("No new version was created: this file is identical to the " + (existing ? "current version." : "existing document."));
+      }
+      if (!result.id || (existing && result.version !== previous + 1)) throw new Error("upload_unconfirmed");
+      var committed = await api("/api/documents/" + Number(result.id));
+      if (committed.document.currentVersion !== result.version) throw new Error("upload_unconfirmed");
       await render();
-      setMessage("Uploaded.");
+      setMessage(existing ? "Version " + Number(result.version) + " uploaded." : "Document uploaded.");
     } catch (error) {
-      setMessage(DOC_ERRORS[error.message] || errorMessage(error.message));
+      setMessage((DOC_ERRORS[error.message] || errorMessage(error.message)) + (error.requestId ? " Reference: " + error.requestId : ""));
     }
   }
 

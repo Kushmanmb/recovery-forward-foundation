@@ -408,8 +408,10 @@ export async function handleRequest(request, env) {
   if (url.pathname.startsWith("/api/")) {
     try {
       return secureHeaders(await handleApi(request, env, identity, url));
-    } catch {
-      return secureHeaders(json({ error: "request_failed" }, 500));
+    } catch (error) {
+      const requestId = crypto.randomUUID();
+      console.error(JSON.stringify({ event: "api_request_failed", requestId, method: request.method, path: url.pathname, errorName: error?.name, errorMessage: String(error?.message ?? "").slice(0, 200) }));
+      return secureHeaders(json({ error: "request_failed", requestId }, 500));
     }
   }
   if (request.method !== "GET" && request.method !== "HEAD") {

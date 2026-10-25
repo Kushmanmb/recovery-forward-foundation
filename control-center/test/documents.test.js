@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { handleRequest } from "../src/worker.js";
 import { sanitizeFilename, validateFile } from "../src/documents-api.js";
@@ -8,7 +9,7 @@ import { validateStagingConfig } from "../scripts/check-staging-config.mjs";
 
 let counter = 0;
 const encode = (value) => Buffer.from(JSON.stringify(value)).toString("base64url");
-const migrations = ["0001_initial.sql", "0003_board_access.sql", "0010_governance_core.sql", "0011_governance_rules_lock.sql", "0020_documents.sql"];
+const migrations = ["0001_initial.sql", "0003_board_access.sql", "0010_governance_core.sql", "0011_governance_rules_lock.sql", "0020_documents.sql", "0021_documents_require_version.sql"];
 
 async function identity(email) {
   const domain = `docs-${++counter}.cloudflareaccess.com`;
@@ -39,7 +40,16 @@ function fakeBucket() {
   const objects = new Map();
   return {
     objects,
-    async put(key, value, options) { objects.set(key, { bytes: new Uint8Array(value), options }); },
+    async put(key, value, options) {
+      const bytes = new Uint8Array(value);
+      const actual = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+      if (options?.sha256 !== undefined) {
+        const expected = typeof options.sha256 === "string" ? options.sha256 : Buffer.from(options.sha256).toString("hex");
+        if (expected !== Buffer.from(actual).toString("hex")) throw new Error("The SHA-256 checksum you specified did not match what we received.");
+      }
+      objects.set(key, { bytes, options });
+      return { size: bytes.length, checksums: { sha256: actual.buffer } };
+    },
     async get(key) { const o = objects.get(key); return o ? { body: new Blob([o.bytes]).stream() } : null; },
     async delete(key) { objects.delete(key); },
   };
@@ -103,7 +113,8 @@ test("authorized upload stores bytes privately, records metadata and audits", as
   assert.equal(DOCUMENTS.objects.size, 1);
   const [key, stored] = [...DOCUMENTS.objects.entries()][0];
   assert.doesNotMatch(key, /bylaws/i, "object keys never embed user-supplied names");
-  assert.equal(stored.options.sha256, sha256);
+  assert.equal(Buffer.from(stored.options.sha256).toString("hex"), sha256);
+  assert.equal(sha256, createHash("sha256").update(PDF).digest("hex"), "digest covers the exact uploaded bytes");
   assert.ok(auditActions(DB).includes("document_uploaded"));
 
   const list = await (await call(people.board.who, env, "/api/documents", { cookie: people.board.cookie })).json();
@@ -196,7 +207,7 @@ test("a failed metadata commit removes the stored object and reports conflicts",
   const first = await (await upload(people.president, env, "folder=board&title=T&filename=a.pdf")).json();
   const realBatch = DB.batch;
   DB.batch = async (statements) => { DB.database.prepare("UPDATE documents SET current_version = 5 WHERE id = ?").run(first.id); return realBatch.call(DB, statements); };
-  const response = await upload(people.president, env, `documentId=${first.id}&filename=b.pdf`);
+  const response = await upload(people.president, env, `documentId=${first.id}&filename=b.pdf`, new TextEncoder().encode("%PDF-1.4 changed"));
   DB.batch = realBatch;
   assert.equal(response.status, 409);
   assert.equal(DOCUMENTS.objects.size, 1, "orphaned object removed");
@@ -219,4 +230,177 @@ test("the staging config binds only a private staging bucket", () => {
   assert.match(staging, /binding = "DOCUMENTS"/);
   assert.match(validateStagingConfig(staging.replace("documents-staging", "documents"), production).join(), /bucket_name must contain 'staging'/);
   assert.match(validateStagingConfig(staging + '\npublic_access = true\n', production).join(), /public/);
+});
+
+const counts = (DB) => ({
+  documents: DB.database.prepare("SELECT COUNT(*) n FROM documents").get().n,
+  versions: DB.database.prepare("SELECT COUNT(*) n FROM document_versions").get().n,
+});
+async function quietly(fn) {
+  const original = console.error; const logs = [];
+  console.error = (line) => logs.push(String(line));
+  try { return { result: await fn(), logs }; } finally { console.error = original; }
+}
+
+test("upload then download round-trips bytes, with version 1 and audit entries", async () => {
+  const { DB, DOCUMENTS, env, people } = await setup();
+  const response = await upload(people.president, env, "folder=board&title=Minutes&filename=minutes.pdf");
+  assert.equal(response.status, 201);
+  const { id, version } = await response.json();
+  assert.equal(version, 1);
+  assert.equal(DB.database.prepare("SELECT current_version FROM documents WHERE id = ?").get(id).current_version, 1);
+  assert.equal(DOCUMENTS.objects.size, 1);
+  const download = await call(people.president.who, env, `/api/documents/${id}/download`, { cookie: people.president.cookie });
+  assert.equal(download.status, 200);
+  assert.deepEqual(new Uint8Array(await download.arrayBuffer()), PDF);
+  assert.deepEqual(auditActions(DB).filter((a) => a.startsWith("document_")), ["document_uploaded", "document_downloaded"]);
+  const detail = JSON.parse(DB.database.prepare("SELECT detail_json FROM audit_log WHERE action = 'document_uploaded'").get().detail_json);
+  assert.equal(detail.documentId, id);
+});
+
+test("failed R2 upload leaves no document, version or object and reports a safe error", async () => {
+  const { DB, DOCUMENTS, env, people } = await setup();
+  DOCUMENTS.put = async () => { throw new Error("R2 exploded secret-token-123"); };
+  const { result: response, logs } = await quietly(() => upload(people.president, env, "folder=board&title=Minutes&filename=minutes.pdf"));
+  assert.equal(response.status, 502);
+  const body = await response.json();
+  assert.equal(body.error, "storage_write_failed");
+  assert.match(body.requestId, /^[0-9a-f-]{36}$/);
+  assert.deepEqual(counts(DB), { documents: 0, versions: 0 });
+  assert.equal(DOCUMENTS.objects.size, 0);
+  assert.ok(logs.some((line) => line.includes("storage_write_failed") && line.includes(body.requestId)));
+  assert.ok(!JSON.stringify(body).includes("secret-token"));
+  assert.ok(!logs.join().includes("PDF-1.4"));
+});
+
+test("failed D1 version insert rolls back atomically and removes the R2 object", async () => {
+  const { DB, DOCUMENTS, env, people } = await setup();
+  DB.database.exec("CREATE TRIGGER fail_version BEFORE INSERT ON document_versions BEGIN SELECT RAISE(ABORT, 'boom'); END;");
+  const { result: response } = await quietly(() => upload(people.president, env, "folder=board&title=Minutes&filename=minutes.pdf"));
+  assert.equal(response.status, 500);
+  assert.equal((await response.json()).error, "database_write_failed");
+  assert.deepEqual(counts(DB), { documents: 0, versions: 0 });
+  assert.equal(DOCUMENTS.objects.size, 0);
+  assert.equal(DB.database.prepare("SELECT COUNT(*) n FROM audit_log WHERE action = 'document_uploaded'").get().n, 0);
+  assert.equal(DB.database.prepare("SELECT COUNT(*) n FROM documents WHERE current_version = 0").get().n, 0);
+});
+
+test("failed cleanup of an unreferenced object is logged by key, not hidden", async () => {
+  const { DB, DOCUMENTS, env, people } = await setup();
+  DB.database.exec("CREATE TRIGGER fail_version BEFORE INSERT ON document_versions BEGIN SELECT RAISE(ABORT, 'boom'); END;");
+  DOCUMENTS.delete = async () => { throw new Error("delete failed"); };
+  const { result: response, logs } = await quietly(() => upload(people.president, env, "folder=board&title=Minutes&filename=minutes.pdf"));
+  assert.equal(response.status, 500);
+  assert.ok(logs.some((line) => line.includes("orphan_object_cleanup_failed") && line.includes([...DOCUMENTS.objects.keys()][0])));
+});
+
+test("a failed new-version upload leaves the current version intact", async () => {
+  const { DB, DOCUMENTS, env, people } = await setup();
+  const { id } = await (await upload(people.president, env, "folder=board&title=Minutes&filename=minutes.pdf")).json();
+  DB.database.exec("CREATE TRIGGER fail_version BEFORE INSERT ON document_versions BEGIN SELECT RAISE(ABORT, 'boom'); END;");
+  const next = new TextEncoder().encode("%PDF-1.4 second");
+  const { result: response } = await quietly(() => upload(people.president, env, `documentId=${id}&filename=minutes.pdf`, next));
+  assert.equal(response.status, 500);
+  assert.equal(DB.database.prepare("SELECT current_version FROM documents WHERE id = ?").get(id).current_version, 1);
+  assert.equal(DOCUMENTS.objects.size, 1);
+});
+
+test("duplicate retries are idempotent and do not create documents, versions or objects", async () => {
+  const { DB, DOCUMENTS, env, people } = await setup();
+  const first = await (await upload(people.president, env, "folder=board&title=Minutes&filename=minutes.pdf")).json();
+  const retry = await upload(people.president, env, "folder=board&title=Minutes&filename=minutes.pdf");
+  assert.equal(retry.status, 200);
+  assert.deepEqual(await retry.json(), { id: first.id, version: 1, sha256: first.sha256, duplicate: true });
+  const versionRetry = await upload(people.president, env, `documentId=${first.id}&filename=minutes.pdf`);
+  assert.equal((await versionRetry.json()).duplicate, true);
+  assert.deepEqual(counts(DB), { documents: 1, versions: 1 });
+  assert.equal(DOCUMENTS.objects.size, 1);
+});
+
+test("retry after a failed upload succeeds cleanly", async () => {
+  const { DB, DOCUMENTS, env, people } = await setup();
+  const put = DOCUMENTS.put;
+  DOCUMENTS.put = async () => { throw new Error("transient"); };
+  await quietly(() => upload(people.president, env, "folder=board&title=Minutes&filename=minutes.pdf"));
+  DOCUMENTS.put = put;
+  assert.equal((await upload(people.president, env, "folder=board&title=Minutes&filename=minutes.pdf")).status, 201);
+  assert.deepEqual(counts(DB), { documents: 1, versions: 1 });
+});
+
+test("schema refuses new document rows without a version and keeps history immutable", async () => {
+  const { DB, env, people } = await setup();
+  assert.throws(() => DB.database.prepare("INSERT INTO documents (folder, title, current_version, created_by, created_at) VALUES ('board', 't', 0, 'x', 1)").run(), /must be created with a version/);
+  const { id } = await (await upload(people.president, env, "folder=board&title=Minutes&filename=minutes.pdf")).json();
+  assert.throws(() => DB.database.prepare("UPDATE document_versions SET filename = 'x' WHERE document_id = ?").run(id), /immutable/);
+  assert.throws(() => DB.database.prepare("DELETE FROM audit_log").run(), /append-only/);
+});
+
+test("unauthorized and invalid uploads are still rejected before any write", async () => {
+  const { DB, DOCUMENTS, env, people } = await setup();
+  assert.equal((await upload(people.board, env, "folder=restricted&title=X&filename=x.pdf")).status, 403);
+  assert.equal((await upload(people.president, env, "folder=board&title=X&filename=x.pdf", new TextEncoder().encode("nope"))).status, 400);
+  assert.deepEqual(counts(DB), { documents: 0, versions: 0 });
+  assert.equal(DOCUMENTS.objects.size, 0);
+});
+
+test("R2 checksum mismatch fails safely: no rows, no object, no leaked detail", async () => {
+  const { DB, DOCUMENTS, env, people } = await setup();
+  const put = DOCUMENTS.put;
+  DOCUMENTS.put = (key, value, options) => put(key, value, { ...options, sha256: new Uint8Array(32).buffer });
+  const { result: response } = await quietly(() => upload(people.president, env, "folder=board&title=Minutes&filename=minutes.pdf"));
+  assert.equal(response.status, 502);
+  assert.equal((await response.json()).error, "storage_write_failed");
+  assert.deepEqual(counts(DB), { documents: 0, versions: 0 });
+  assert.equal(DOCUMENTS.objects.size, 0);
+});
+
+test("a stored object whose checksum differs from the computed digest is rejected and removed", async () => {
+  const { DB, DOCUMENTS, env, people } = await setup();
+  const put = DOCUMENTS.put;
+  DOCUMENTS.put = async (...args) => ({ ...(await put(...args)), checksums: { sha256: new Uint8Array(32).buffer } });
+  const { result: response } = await quietly(() => upload(people.president, env, "folder=board&title=Minutes&filename=minutes.pdf"));
+  assert.equal(response.status, 502);
+  assert.deepEqual(counts(DB), { documents: 0, versions: 0 });
+  assert.equal(DOCUMENTS.objects.size, 0);
+});
+
+test("a legacy-shaped document 5 receives version 2 atomically with a document_uploaded audit event", async () => {
+  const { DB, DOCUMENTS, env, people } = await setup();
+  const first = await (await upload(people.president, env, "folder=board&title=Bylaws&filename=a.pdf")).json();
+  const before = DB.database.prepare("SELECT * FROM document_versions WHERE document_id = ?").all(first.id);
+  const next = new TextEncoder().encode("%PDF-1.4 revised");
+  const response = await upload(people.president, env, `documentId=${first.id}&filename=b.pdf`, next);
+  assert.equal(response.status, 201);
+  assert.deepEqual(await response.json(), { id: first.id, version: 2, sha256: createHash("sha256").update(next).digest("hex") });
+  assert.equal(DB.database.prepare("SELECT current_version FROM documents WHERE id = ?").get(first.id).current_version, 2);
+  assert.deepEqual(DB.database.prepare("SELECT * FROM document_versions WHERE document_id = ? AND version = 1").all(first.id), before, "version 1 is untouched");
+  assert.equal(DB.database.prepare("SELECT COUNT(*) n FROM documents").get().n, 1, "same document ID, no new document");
+  const audits = DB.database.prepare("SELECT detail_json FROM audit_log WHERE action = 'document_uploaded' ORDER BY id").all().map((r) => JSON.parse(r.detail_json));
+  assert.deepEqual(audits.map((a) => a.version), [1, 2]);
+  assert.equal(audits[1].documentId, first.id);
+  assert.equal(DOCUMENTS.objects.size, 2);
+});
+
+test("re-uploading identical content is an explicit duplicate, not a new version or audit event", async () => {
+  const { DB, env, people } = await setup();
+  const first = await (await upload(people.president, env, "folder=board&title=Bylaws&filename=a.pdf")).json();
+  const audits = DB.database.prepare("SELECT COUNT(*) n FROM audit_log").get().n;
+  const again = await upload(people.president, env, `documentId=${first.id}&filename=a.pdf`);
+  assert.equal(again.status, 200);
+  const body = await again.json();
+  assert.equal(body.duplicate, true);
+  assert.equal(body.version, 1);
+  assert.equal(DB.database.prepare("SELECT current_version FROM documents WHERE id = ?").get(first.id).current_version, 1);
+  assert.equal(DB.database.prepare("SELECT COUNT(*) n FROM audit_log").get().n, audits);
+});
+
+test("unauthorized version uploads are denied before storage or database writes", async () => {
+  const { DB, DOCUMENTS, env, people } = await setup();
+  const first = await (await upload(people.president, env, "folder=board&title=Bylaws&filename=a.pdf")).json();
+  const next = new TextEncoder().encode("%PDF-1.4 other");
+  assert.equal((await upload(people.board, env, `documentId=${first.id}&filename=b.pdf`, next)).status, 403);
+  const denied = await upload(people.treasurer, env, `documentId=${first.id}&filename=b.pdf`, next);
+  assert.equal(denied.status, 403);
+  assert.equal(DOCUMENTS.objects.size, 1);
+  assert.equal(DB.database.prepare("SELECT current_version FROM documents WHERE id = ?").get(first.id).current_version, 1);
 });
