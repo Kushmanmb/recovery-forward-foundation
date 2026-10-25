@@ -709,6 +709,17 @@ footer > div:last-child {
   text-decoration: underline;
 }
 
+.footer-logo {
+  padding: 16px 5% 16px;
+}
+
+.footer-logo img {
+  display: block;
+  width: 75px;
+  max-width: 100%;
+  height: auto;
+}
+
 @keyframes signature-glow {
   0%, 100% { text-shadow: 0 0 6px rgba(102, 255, 153, .35), 0 0 14px rgba(212, 175, 55, .2); }
   50% { text-shadow: 0 0 10px rgba(102, 255, 153, .6), 0 0 22px rgba(212, 175, 55, .4); }
@@ -778,6 +789,10 @@ footer > div:last-child {
 
 
 @media (max-width: 700px) {
+
+  .footer-logo img {
+    width: 60px;
+  }
 
   .site-header {
     height: 68px;
