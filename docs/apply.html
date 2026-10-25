@@ -297,6 +297,9 @@ font-size: .85rem;
     }
   </style>
   <link rel="stylesheet" href="css/seasonal.css?v=4">
+  <link rel="stylesheet" href="css/interactive.css?v=1">
+  <script src="js/interactive-cards.js?v=1" defer></script>
+  <noscript><style>.rff-panel[hidden]{display:block !important}.rff-close{display:none}</style></noscript>
   <script src="js/seasonal-theme.js?v=4" defer></script>
 </head>
 
@@ -356,12 +359,85 @@ font-size: .85rem;
 
   </div>
 
-  <img
+  <figure class="rff-scenic" style="--rff-ar:1657 / 550;">
+    <img
     src="assets/images/recovery-application-assistance.png"
     alt="Illustration of Recovery Forward Foundation's proposed assistance program"
     class="program-journey-image"
     loading="lazy"
   >
+  </figure>
+  <section class="rff-apply-steps" aria-labelledby="apply-steps-heading">
+    <div class="rff-head">
+      <p class="section-kicker">WHAT TO EXPECT</p>
+      <h2 id="apply-steps-heading">From application to next step</h2>
+    </div>
+    <div class="rff-explorer" data-rff-explorer id="apply-steps" aria-label="What happens after you apply">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="apply-steps-start-your-application" data-tone="blue" data-icon="doc">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="apply-steps-start-your-application-btn" aria-expanded="false" aria-controls="apply-steps-start-your-application-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 1</span><span class="rff-title">Start Your Application</span><span class="rff-summary">Simple and confidential.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="apply-steps-start-your-application-panel" role="region" aria-labelledby="apply-steps-start-your-application-btn" data-tone="blue" hidden>
+        <h4>Start Your Application</h4>
+        <p>The application asks about your recovery journey, current needs and goals. It does not ask for your name, Social Security number, street address or wallet private keys.</p>
+        <div class="rff-actions"><a class="rff-link" href="#application-form">Go to the form ↓</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="apply-steps-receive-your-rcgi-id" data-tone="green" data-icon="id">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="apply-steps-receive-your-rcgi-id-btn" aria-expanded="false" aria-controls="apply-steps-receive-your-rcgi-id-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 2</span><span class="rff-title">Receive Your RCGI ID</span><span class="rff-summary">Your anonymous reference.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="apply-steps-receive-your-rcgi-id-panel" role="region" aria-labelledby="apply-steps-receive-your-rcgi-id-btn" data-tone="green" hidden>
+        <h4>Receive Your RCGI ID</h4>
+        <p>After you submit, you receive a unique RCGI ID. Use it to reference your application and check its status.</p><p class="rff-note">Keep your RCGI ID somewhere safe. If you lose it, you may not be able to recover your application reference.</p>
+        <div class="rff-actions"><a class="rff-link" href="index.html#status">Check status →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="apply-steps-application-review" data-tone="gold" data-icon="search">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="apply-steps-application-review-btn" aria-expanded="false" aria-controls="apply-steps-application-review-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 3</span><span class="rff-title">Application Review</span><span class="rff-summary">Reviewed under program rules.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="apply-steps-application-review-panel" role="region" aria-labelledby="apply-steps-application-review-btn" data-tone="gold" hidden>
+        <h4>Application Review</h4>
+        <p>Applications and applicable recovery milestones are intended to be reviewed through the foundation's verification process.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="apply-steps-connect-with-support" data-tone="blue" data-icon="link">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="apply-steps-connect-with-support-btn" aria-expanded="false" aria-controls="apply-steps-connect-with-support-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 4</span><span class="rff-title">Connect With Support</span><span class="rff-summary">If approved and funded.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="apply-steps-connect-with-support-panel" role="region" aria-labelledby="apply-steps-connect-with-support-btn" data-tone="blue" hidden>
+        <h4>Connect With Support</h4>
+        <p>Where assistance is approved and funded, the foundation intends to help connect participants with appropriate programs and resources.</p><p class="rff-note">Applying does not guarantee eligibility, approval, or a particular grant amount.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="apply-steps-build-a-brighter-tomorrow" data-tone="green" data-icon="sun">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="apply-steps-build-a-brighter-tomorrow-btn" aria-expanded="false" aria-controls="apply-steps-build-a-brighter-tomorrow-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 5</span><span class="rff-title">Build a Brighter Tomorrow</span><span class="rff-summary">Opportunities for lasting change.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="apply-steps-build-a-brighter-tomorrow-panel" role="region" aria-labelledby="apply-steps-build-a-brighter-tomorrow-btn" data-tone="green" hidden>
+        <h4>Build a Brighter Tomorrow</h4>
+        <p>Approved assistance is intended to help remove barriers and open opportunities such as housing support, job training and education as programs become available.</p>
+        <div class="rff-actions"><a class="rff-link" href="programs.html">Explore programs →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+    </div>
+  </div>
+  </section>
+
   <div class="privacy-banner">
 
     <strong>Privacy first.</strong>

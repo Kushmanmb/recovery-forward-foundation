@@ -105,6 +105,9 @@
     .site-header .nav-dropdown { margin-left: 0; align-self: center; }
   </style>
   <link rel="stylesheet" href="css/seasonal.css?v=4">
+  <link rel="stylesheet" href="css/interactive.css?v=1">
+  <script src="js/interactive-cards.js?v=1" defer></script>
+  <noscript><style>.rff-panel[hidden]{display:block !important}.rff-close{display:none}</style></noscript>
   <script src="js/seasonal-theme.js?v=4" defer></script>
 </head>
 <body class="mission-page">
@@ -131,10 +134,12 @@
 
 <main class="mission-shell">
 <section class="mission-hero">
-  <img
+  <figure class="rff-scenic rff-hero-crop" style="--rff-ar:1657 / 474;">
+    <img
     src="assets/images/mission/recovery-road.png"
     alt="Sunrise over a winding road symbolizing hope and recovery"
   >
+  </figure>
 </section>
   <p class="section-kicker">OUR PURPOSE</p>
   <h1>Recovery Should Lead Somewhere.</h1>
@@ -150,7 +155,22 @@
 
   <section class="mission-card">
     <h2>Our Mission</h2>
+    <figure class="rff-scenic rff-hotspot-figure rff-mission-hotspot-figure" style="--rff-ar:1657 / 949;">
     <img src="assets/images/recovery-founding-purpose.png" alt="Our Mission - Recovery Forward Foundation" class="program-journey-image" loading="lazy">
+
+<button type="button" class="rff-poster-hotspot" aria-label="Support Recovery" data-panel="support-recovery" style="left:1%;width:15.5%"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Expand Access to Care" data-panel="expand-access-to-care" style="left:17.5%;width:15.5%"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Build Opportunity" data-panel="build-opportunity" style="left:34%;width:15.5%"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Strengthen Communities" data-panel="strengthen-communities" style="left:50.5%;width:15.5%"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Promote Independence" data-panel="promote-independence" style="left:67%;width:15.5%"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Create Lasting Change" data-panel="create-lasting-change" style="left:83.5%;width:15.5%"></button>
+</figure>
+<dialog id="rff-mission-picture-dialog" class="rff-picture-dialog"
+ aria-labelledby="rff-picture-dialog-title">
+ <button type="button" class="rff-picture-close" aria-label="Close">×</button>
+ <h3 id="rff-picture-dialog-title"></h3>
+ <div id="rff-picture-dialog-body"></div>
+</dialog>
     <p>
       Recovery Forward Foundation exists to help individuals
       build stable and independent lives following substance-use
@@ -159,18 +179,284 @@
     </p>
   </section>
 
+  <section class="rff-mission-block" aria-labelledby="mission-aims-h">
+    <div class="rff-head">
+      <p class="section-kicker">HOW THE MISSION SHOWS UP</p>
+      <h2 id="mission-aims-h">Six ways we aim to help</h2>
+    </div>
+    <div class="rff-explorer" data-rff-explorer id="mission-aims" aria-label="Six ways we aim to help">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="mission-aims-support-recovery" data-tone="blue" data-icon="heart">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="mission-aims-support-recovery-btn" aria-expanded="false" aria-controls="mission-aims-support-recovery-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Support Recovery</span><span class="rff-summary">Encouragement and real opportunity.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="mission-aims-support-recovery-panel" role="region" aria-labelledby="mission-aims-support-recovery-btn" data-tone="blue" hidden>
+        <h4>Support Recovery</h4>
+        <p>Recovery Forward Foundation exists to help individuals build stable and independent lives following substance-use recovery.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="mission-aims-expand-access-to-care" data-tone="green" data-icon="link">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="mission-aims-expand-access-to-care-btn" aria-expanded="false" aria-controls="mission-aims-expand-access-to-care-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Expand Access to Care</span><span class="rff-summary">Bridging gaps in support services.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="mission-aims-expand-access-to-care-panel" role="region" aria-labelledby="mission-aims-expand-access-to-care-btn" data-tone="green" hidden>
+        <h4>Expand Access to Care</h4>
+        <p>The foundation intends to help connect people with recovery support services and community resources.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="mission-aims-build-opportunity" data-tone="gold" data-icon="sprout">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="mission-aims-build-opportunity-btn" aria-expanded="false" aria-controls="mission-aims-build-opportunity-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Build Opportunity</span><span class="rff-summary">Education, job training and housing support.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="mission-aims-build-opportunity-panel" role="region" aria-labelledby="mission-aims-build-opportunity-btn" data-tone="gold" hidden>
+        <h4>Build Opportunity</h4>
+        <p>Practical assistance and opportunity can include education, job training and housing support, subject to funding and approval.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="mission-aims-strengthen-communities" data-tone="blue" data-icon="people">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="mission-aims-strengthen-communities-btn" aria-expanded="false" aria-controls="mission-aims-strengthen-communities-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Strengthen Communities</span><span class="rff-summary">Reducing barriers for everyone.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="mission-aims-strengthen-communities-panel" role="region" aria-labelledby="mission-aims-strengthen-communities-btn" data-tone="blue" hidden>
+        <h4>Strengthen Communities</h4>
+        <p>Supporting people in recovery strengthens families, neighborhoods and communities.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="mission-aims-promote-independence" data-tone="green" data-icon="road">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="mission-aims-promote-independence-btn" aria-expanded="false" aria-controls="mission-aims-promote-independence-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Promote Independence</span><span class="rff-summary">Regaining stability and self-sufficiency.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="mission-aims-promote-independence-panel" role="region" aria-labelledby="mission-aims-promote-independence-btn" data-tone="green" hidden>
+        <h4>Promote Independence</h4>
+        <p>The aim is to help people regain stability and move toward lasting independence.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="mission-aims-create-lasting-change" data-tone="gold" data-icon="globe">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="mission-aims-create-lasting-change-btn" aria-expanded="false" aria-controls="mission-aims-create-lasting-change-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Create Lasting Change</span><span class="rff-summary">A more compassionate future.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="mission-aims-create-lasting-change-panel" role="region" aria-labelledby="mission-aims-create-lasting-change-btn" data-tone="gold" hidden>
+        <h4>Create Lasting Change</h4>
+        <p>The goal is to help people build a life worth protecting after recovery.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+    </div>
+  </div>
+  </section>
+
   <section class="mission-card">
     <h2>Our Vision</h2>
+    <figure class="rff-scenic rff-hotspot-figure rff-mission-hotspot-figure rff-vision-hotspot-figure" style="--rff-ar:1657 / 949;">
     <img src="assets/images/recovery-our-vision.png" alt="Our Vision - Recovery Forward Foundation" class="program-journey-image" loading="lazy">
+
+<button type="button" class="rff-poster-hotspot" aria-label="Better Health" data-panel="vision-outcomes-better-health" style="left:0.000%;width:16.667%;top:64%;height:34%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Stable Housing" data-panel="vision-outcomes-stable-housing" style="left:16.667%;width:16.667%;top:64%;height:34%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Education &amp; Skills" data-panel="vision-outcomes-education-skills" style="left:33.333%;width:16.667%;top:64%;height:34%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Meaningful Work" data-panel="vision-outcomes-meaningful-work" style="left:50.000%;width:16.667%;top:64%;height:34%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Stronger Families" data-panel="vision-outcomes-stronger-families" style="left:66.667%;width:16.667%;top:64%;height:34%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Thriving Communities" data-panel="vision-outcomes-thriving-communities" style="left:83.333%;width:16.667%;top:64%;height:34%;bottom:auto"></button>
+</figure>
     <p>
       Treatment → Recovery → Stability → Opportunity →
       Independence → Giving Back
     </p>
   </section>
 
+  <section class="rff-mission-block" aria-labelledby="vision-journey-h">
+    <div class="rff-head">
+      <p class="section-kicker">THE JOURNEY</p>
+      <h2 id="vision-journey-h">From treatment to giving back</h2>
+    </div>
+    <div class="rff-explorer" data-rff-explorer id="vision-journey" aria-label="Vision journey">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="vision-journey-treatment" data-tone="blue" data-icon="calendar">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="vision-journey-treatment-btn" aria-expanded="false" aria-controls="vision-journey-treatment-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">1</span><span class="rff-title">Treatment</span><span class="rff-summary">An important milestone.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="vision-journey-treatment-panel" role="region" aria-labelledby="vision-journey-treatment-btn" data-tone="blue" hidden>
+        <h4>Treatment</h4>
+        <p>Completing treatment is an important milestone, but recovery does not stop when treatment ends.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="vision-journey-recovery" data-tone="green" data-icon="pulse">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="vision-journey-recovery-btn" aria-expanded="false" aria-controls="vision-journey-recovery-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">2</span><span class="rff-title">Recovery</span><span class="rff-summary">Ongoing work and support.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="vision-journey-recovery-panel" role="region" aria-labelledby="vision-journey-recovery-btn" data-tone="green" hidden>
+        <h4>Recovery</h4>
+        <p>Long-term recovery is built through continued effort, community and recovery-oriented support.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="vision-journey-stability" data-tone="gold" data-icon="home">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="vision-journey-stability-btn" aria-expanded="false" aria-controls="vision-journey-stability-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">3</span><span class="rff-title">Stability</span><span class="rff-summary">A steady foundation.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="vision-journey-stability-panel" role="region" aria-labelledby="vision-journey-stability-btn" data-tone="gold" hidden>
+        <h4>Stability</h4>
+        <p>Housing, transportation, identification and other everyday essentials help create a stable footing.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="vision-journey-opportunity" data-tone="blue" data-icon="briefcase">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="vision-journey-opportunity-btn" aria-expanded="false" aria-controls="vision-journey-opportunity-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">4</span><span class="rff-title">Opportunity</span><span class="rff-summary">Work, education and training.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="vision-journey-opportunity-panel" role="region" aria-labelledby="vision-journey-opportunity-btn" data-tone="blue" hidden>
+        <h4>Opportunity</h4>
+        <p>Employment, education and training open doors to a more self-sufficient life.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="vision-journey-independence" data-tone="green" data-icon="road">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="vision-journey-independence-btn" aria-expanded="false" aria-controls="vision-journey-independence-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">5</span><span class="rff-title">Independence</span><span class="rff-summary">Sustainable self-sufficiency.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="vision-journey-independence-panel" role="region" aria-labelledby="vision-journey-independence-btn" data-tone="green" hidden>
+        <h4>Independence</h4>
+        <p>Independence means productive participation in one's community and a life that can be sustained.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="vision-journey-giving-back" data-tone="gold" data-icon="heart">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="vision-journey-giving-back-btn" aria-expanded="false" aria-controls="vision-journey-giving-back-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">6</span><span class="rff-title">Giving Back</span><span class="rff-summary">Strengthening the community.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="vision-journey-giving-back-panel" role="region" aria-labelledby="vision-journey-giving-back-btn" data-tone="gold" hidden>
+        <h4>Giving Back</h4>
+        <p>People who have rebuilt their lives can help strengthen the communities that supported them.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+    </div>
+  </div>
+  </section>
+
+  <section class="rff-mission-block" aria-labelledby="vision-outcomes-h">
+    <div class="rff-head">
+      <p class="section-kicker">A STRONGER FUTURE</p>
+      <h2 id="vision-outcomes-h">What the vision can look like</h2>
+    </div>
+    <div class="rff-explorer" data-rff-explorer id="vision-outcomes" aria-label="Vision outcomes">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="vision-outcomes-better-health" data-tone="blue" data-icon="pulse">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="vision-outcomes-better-health-btn" aria-expanded="false" aria-controls="vision-outcomes-better-health-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Better Health</span><span class="rff-summary">Physical, mental and emotional well-being.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="vision-outcomes-better-health-panel" role="region" aria-labelledby="vision-outcomes-better-health-btn" data-tone="blue" hidden>
+        <h4>Better Health</h4>
+        <p>Support for physical, mental and emotional well-being.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="vision-outcomes-stable-housing" data-tone="green" data-icon="home">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="vision-outcomes-stable-housing-btn" aria-expanded="false" aria-controls="vision-outcomes-stable-housing-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Stable Housing</span><span class="rff-summary">Safe and supportive living.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="vision-outcomes-stable-housing-panel" role="region" aria-labelledby="vision-outcomes-stable-housing-btn" data-tone="green" hidden>
+        <h4>Stable Housing</h4>
+        <p>Access to safe and supportive living environments.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="vision-outcomes-education-skills" data-tone="gold" data-icon="grad">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="vision-outcomes-education-skills-btn" aria-expanded="false" aria-controls="vision-outcomes-education-skills-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Education &amp; Skills</span><span class="rff-summary">Training that opens new doors.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="vision-outcomes-education-skills-panel" role="region" aria-labelledby="vision-outcomes-education-skills-btn" data-tone="gold" hidden>
+        <h4>Education &amp; Skills</h4>
+        <p>Training and education to open new opportunities.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="vision-outcomes-meaningful-work" data-tone="blue" data-icon="briefcase">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="vision-outcomes-meaningful-work-btn" aria-expanded="false" aria-controls="vision-outcomes-meaningful-work-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Meaningful Work</span><span class="rff-summary">Employment and financial independence.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="vision-outcomes-meaningful-work-panel" role="region" aria-labelledby="vision-outcomes-meaningful-work-btn" data-tone="blue" hidden>
+        <h4>Meaningful Work</h4>
+        <p>Pathways to employment and financial independence.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="vision-outcomes-stronger-families" data-tone="green" data-icon="people">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="vision-outcomes-stronger-families-btn" aria-expanded="false" aria-controls="vision-outcomes-stronger-families-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Stronger Families</span><span class="rff-summary">Rebuilding relationships.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="vision-outcomes-stronger-families-panel" role="region" aria-labelledby="vision-outcomes-stronger-families-btn" data-tone="green" hidden>
+        <h4>Stronger Families</h4>
+        <p>Rebuilding relationships and creating lasting support systems.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="vision-outcomes-thriving-communities" data-tone="gold" data-icon="sprout">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="vision-outcomes-thriving-communities-btn" aria-expanded="false" aria-controls="vision-outcomes-thriving-communities-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Thriving Communities</span><span class="rff-summary">Safer, healthier, more connected.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="vision-outcomes-thriving-communities-panel" role="region" aria-labelledby="vision-outcomes-thriving-communities-btn" data-tone="gold" hidden>
+        <h4>Thriving Communities</h4>
+        <p>Building safer, healthier and more connected communities.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+    </div>
+  </div>
+  </section>
+
   <section class="mission-card">
     <h2>The Six-Month Recovery Milestone</h2>
+    <figure class="rff-scenic rff-hotspot-figure rff-mission-hotspot-figure rff-milestone-hotspot-figure" style="--rff-ar:1657 / 949;">
     <img src="assets/images/recovery-support-pillars.png" alt="The Six-Month Recovery Milestone - Recovery Forward Foundation" class="program-journey-image" loading="lazy">
+
+<button type="button" class="rff-poster-hotspot" aria-label="Health &amp; Wellness" data-panel="milestone-areas-health-wellness" style="left:0%;width:20%;top:43%;height:55%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Education &amp; Skills" data-panel="milestone-areas-education-skills" style="left:20%;width:20%;top:43%;height:55%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Stable Housing" data-panel="milestone-areas-stable-housing" style="left:40%;width:20%;top:43%;height:55%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Meaningful Work" data-panel="milestone-areas-meaningful-work" style="left:60%;width:20%;top:43%;height:55%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Stronger Communities" data-panel="milestone-areas-stronger-communities" style="left:80%;width:20%;top:43%;height:55%;bottom:auto"></button>
+</figure>
     <p>
       Our proposed flagship program centers on six months
       of qualifying recovery progress. Participants who
@@ -180,47 +466,343 @@
     </p>
   </section>
 
-  <section class="mission-details">    
-<h2>What Assistance May Cover</h2>
-    <img src="assets/images/recovery-programs-overview.png" alt="What Assistance May Cover - Recovery Forward Foundation" class="program-journey-image" loading="lazy">
-    <div class="content">
-      <ul>
-        <li>Housing deposits and housing stability</li>
-        <li>Transportation and vehicle-related expenses</li>
-        <li>Employment tools, uniforms, and work-related needs</li>
-        <li>Education and vocational training</li>
-        <li>Identification documents and essential household items</li>
-        <li>Other approved recovery-stability needs</li>
-      </ul>
+  <section class="rff-mission-block" aria-labelledby="milestone-areas-h">
+    <div class="rff-head">
+      <p class="section-kicker">AREAS OF SUPPORT</p>
+      <h2 id="milestone-areas-h">What the milestone can open the door to</h2><p>All assistance is subject to independently verified milestones, program requirements, funding and approval.</p>
     </div>
+    <div class="rff-explorer" data-rff-explorer id="milestone-areas" aria-label="What the milestone can open the door to">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="milestone-areas-health-wellness" data-tone="blue" data-icon="pulse">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="milestone-areas-health-wellness-btn" aria-expanded="false" aria-controls="milestone-areas-health-wellness-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Health &amp; Wellness</span><span class="rff-summary">Support for whole-person well-being.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="milestone-areas-health-wellness-panel" role="region" aria-labelledby="milestone-areas-health-wellness-btn" data-tone="blue" hidden>
+        <h4>Health &amp; Wellness</h4>
+        <p>Qualifying recovery progress may help connect participants with resources that support physical, mental and emotional well-being.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="milestone-areas-education-skills" data-tone="green" data-icon="grad">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="milestone-areas-education-skills-btn" aria-expanded="false" aria-controls="milestone-areas-education-skills-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Education &amp; Skills</span><span class="rff-summary">Training and development.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="milestone-areas-education-skills-panel" role="region" aria-labelledby="milestone-areas-education-skills-btn" data-tone="green" hidden>
+        <h4>Education &amp; Skills</h4>
+        <p>Eligible participants may receive assistance toward education, vocational training and skills development.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="milestone-areas-stable-housing" data-tone="gold" data-icon="home">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="milestone-areas-stable-housing-btn" aria-expanded="false" aria-controls="milestone-areas-stable-housing-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Stable Housing</span><span class="rff-summary">Safe, stable living.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="milestone-areas-stable-housing-panel" role="region" aria-labelledby="milestone-areas-stable-housing-btn" data-tone="gold" hidden>
+        <h4>Stable Housing</h4>
+        <p>Housing deposits and housing stability are among the needs the program may address.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="milestone-areas-meaningful-work" data-tone="blue" data-icon="briefcase">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="milestone-areas-meaningful-work-btn" aria-expanded="false" aria-controls="milestone-areas-meaningful-work-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Meaningful Work</span><span class="rff-summary">Pathways to employment.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="milestone-areas-meaningful-work-panel" role="region" aria-labelledby="milestone-areas-meaningful-work-btn" data-tone="blue" hidden>
+        <h4>Meaningful Work</h4>
+        <p>Work-related needs, tools and uniforms may be supported where approved.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="milestone-areas-stronger-communities" data-tone="green" data-icon="people">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="milestone-areas-stronger-communities-btn" aria-expanded="false" aria-controls="milestone-areas-stronger-communities-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Stronger Communities</span><span class="rff-summary">Long-term community support.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="milestone-areas-stronger-communities-panel" role="region" aria-labelledby="milestone-areas-stronger-communities-btn" data-tone="green" hidden>
+        <h4>Stronger Communities</h4>
+        <p>Participants may be connected with community support that helps sustain recovery.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+    </div>
+  </div>
+  </section>
+
+  <section class="mission-details">
+<h2>What Assistance May Cover</h2>
+    <figure class="rff-scenic rff-hotspot-figure rff-mission-hotspot-figure" style="--rff-ar:1657 / 949;">
+    <img src="assets/images/recovery-programs-overview.png" alt="What Assistance May Cover - Recovery Forward Foundation" class="program-journey-image" loading="lazy">
+
+
+
+
+
+
+<button type="button" class="rff-poster-hotspot" aria-label="Recovery Support" data-panel="illustrated-support-recovery-support" style="left:2%;width:15%;top:46%;height:48%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Education &amp; Job Training" data-panel="illustrated-support-education-job-training" style="left:18.2%;width:15%;top:46%;height:48%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Housing Assistance" data-panel="illustrated-support-housing-assistance" style="left:34.4%;width:15%;top:46%;height:48%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Family Support" data-panel="illustrated-support-family-support" style="left:50.6%;width:15%;top:46%;height:48%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Community Outreach" data-panel="illustrated-support-community-outreach" style="left:66.8%;width:15%;top:46%;height:48%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Life Skills &amp; Wellness" data-panel="illustrated-support-life-skills-wellness" style="left:83%;width:15%;top:46%;height:48%;bottom:auto"></button>
+</figure>
+<div class="rff-panel" id="illustrated-support-recovery-support-panel" role="region" hidden><h4>Recovery Support</h4><p>Recovery-focused guidance, encouragement and connections to supportive resources are areas the Foundation is developing.</p><p>Specific assistance remains subject to approved policies, eligibility, funding and availability.</p><div class="rff-actions"><button type="button" class="rff-close">Close</button></div></div>
+
+<div class="rff-panel" id="illustrated-support-education-job-training-panel" role="region" hidden><h4>Education &amp; Job Training</h4><p>Potential support includes education, vocational training, certifications and career-readiness resources.</p><p>Specific assistance remains subject to approved policies, eligibility, funding and availability.</p><div class="rff-actions"><button type="button" class="rff-close">Close</button></div></div>
+
+<div class="rff-panel" id="illustrated-support-housing-assistance-panel" role="region" hidden><h4>Housing Assistance</h4><p>Housing stability is an important part of recovery. Housing-related assistance may be considered under approved program rules.</p><p>Specific assistance remains subject to approved policies, eligibility, funding and availability.</p><div class="rff-actions"><button type="button" class="rff-close">Close</button></div></div>
+
+<div class="rff-panel" id="illustrated-support-family-support-panel" role="region" hidden><h4>Family Support</h4><p>Strengthening relationships, family connections and personal support systems is part of the Foundation&#x27;s long-term vision.</p><p>Specific assistance remains subject to approved policies, eligibility, funding and availability.</p><div class="rff-actions"><button type="button" class="rff-close">Close</button></div></div>
+
+<div class="rff-panel" id="illustrated-support-community-outreach-panel" role="region" hidden><h4>Community Outreach</h4><p>Community partnerships and outreach can help connect individuals with resources and sustained support.</p><p>Specific assistance remains subject to approved policies, eligibility, funding and availability.</p><div class="rff-actions"><button type="button" class="rff-close">Close</button></div></div>
+
+<div class="rff-panel" id="illustrated-support-life-skills-wellness-panel" role="region" hidden><h4>Life Skills &amp; Wellness</h4><p>Practical life skills and physical, mental and emotional wellness resources can support independence.</p><p>Specific assistance remains subject to approved policies, eligibility, funding and availability.</p><div class="rff-actions"><button type="button" class="rff-close">Close</button></div></div>
+
+    <div class="rff-explorer" data-rff-explorer id="assistance-cover" aria-label="What assistance may cover">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="assistance-cover-housing-stability" data-tone="blue" data-icon="home">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="assistance-cover-housing-stability-btn" aria-expanded="false" aria-controls="assistance-cover-housing-stability-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Housing Stability</span><span class="rff-summary">Housing deposits and housing stability.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="assistance-cover-housing-stability-panel" role="region" aria-labelledby="assistance-cover-housing-stability-btn" data-tone="blue" hidden>
+        <h4>Housing Stability</h4>
+        <p>Housing deposits and housing stability.</p><p class="rff-note">Subject to program rules, funding and approval.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="assistance-cover-transportation" data-tone="green" data-icon="car">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="assistance-cover-transportation-btn" aria-expanded="false" aria-controls="assistance-cover-transportation-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Transportation</span><span class="rff-summary">Transportation and vehicle-related expenses.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="assistance-cover-transportation-panel" role="region" aria-labelledby="assistance-cover-transportation-btn" data-tone="green" hidden>
+        <h4>Transportation</h4>
+        <p>Transportation and vehicle-related expenses.</p><p class="rff-note">Subject to program rules, funding and approval.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="assistance-cover-employment-needs" data-tone="gold" data-icon="briefcase">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="assistance-cover-employment-needs-btn" aria-expanded="false" aria-controls="assistance-cover-employment-needs-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Employment Needs</span><span class="rff-summary">Tools, uniforms and work-related needs.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="assistance-cover-employment-needs-panel" role="region" aria-labelledby="assistance-cover-employment-needs-btn" data-tone="gold" hidden>
+        <h4>Employment Needs</h4>
+        <p>Employment tools, uniforms, and work-related needs.</p><p class="rff-note">Subject to program rules, funding and approval.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="assistance-cover-education-training" data-tone="blue" data-icon="grad">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="assistance-cover-education-training-btn" aria-expanded="false" aria-controls="assistance-cover-education-training-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Education &amp; Training</span><span class="rff-summary">Education and vocational training.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="assistance-cover-education-training-panel" role="region" aria-labelledby="assistance-cover-education-training-btn" data-tone="blue" hidden>
+        <h4>Education &amp; Training</h4>
+        <p>Education and vocational training.</p><p class="rff-note">Subject to program rules, funding and approval.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="assistance-cover-essentials" data-tone="green" data-icon="id">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="assistance-cover-essentials-btn" aria-expanded="false" aria-controls="assistance-cover-essentials-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Essentials</span><span class="rff-summary">Identification documents and household items.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="assistance-cover-essentials-panel" role="region" aria-labelledby="assistance-cover-essentials-btn" data-tone="green" hidden>
+        <h4>Essentials</h4>
+        <p>Identification documents and essential household items.</p><p class="rff-note">Subject to program rules, funding and approval.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="assistance-cover-other-approved-needs" data-tone="gold" data-icon="star">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="assistance-cover-other-approved-needs-btn" aria-expanded="false" aria-controls="assistance-cover-other-approved-needs-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Other Approved Needs</span><span class="rff-summary">Other recovery-stability needs.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="assistance-cover-other-approved-needs-panel" role="region" aria-labelledby="assistance-cover-other-approved-needs-btn" data-tone="gold" hidden>
+        <h4>Other Approved Needs</h4>
+        <p>Other approved recovery-stability needs.</p><p class="rff-note">Subject to program rules, funding and approval.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+    </div>
+  </div>
   </section>
 
   <section class="mission-details">
     <h2>How the Proposed Program Works</h2>
-<img
+<figure class="rff-scenic rff-hotspot-figure rff-mission-hotspot-figure" style="--rff-ar:1536 / 1024;">
+    <img
   src="assets/images/recovery-program-journey.png"
   alt="Recovery Forward Foundation's proposed recovery assistance journey"
   class="program-journey-image"
   loading="lazy"
 >
-    <div class="content">
-      <ol>
-        <li>Referral or application</li>
-        <li>Registration</li>
-        <li>Recovery milestone pending</li>
-        <li>Independent verification</li>
-        <li>Eligibility review</li>
-        <li>Grant application and review</li>
-        <li>Approval or decline</li>
-        <li>Assistance when approved and funded</li>
-        <li>Financial recordkeeping and audit</li>
-      </ol>
+
+
+
+
+
+
+
+
+
+<button type="button" class="rff-poster-hotspot" aria-label="Referral or Application" data-panel="program-journey-referral-or-application" style="left:1.8%;width:10%;top:45%;height:49%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Registration" data-panel="program-journey-registration" style="left:12.6%;width:10%;top:45%;height:49%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Recovery Milestone Pending" data-panel="program-journey-recovery-milestone-pending" style="left:23.2%;width:10%;top:45%;height:49%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Independent Verification" data-panel="program-journey-independent-verification" style="left:33.8%;width:10%;top:45%;height:49%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Eligibility Review" data-panel="program-journey-eligibility-review" style="left:44.4%;width:10%;top:45%;height:49%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Grant Application and Review" data-panel="program-journey-grant-application-and-review" style="left:55%;width:10%;top:45%;height:49%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Approval or Decline" data-panel="program-journey-approval-or-decline" style="left:65.6%;width:10%;top:45%;height:49%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Assistance When Approved and Funded" data-panel="program-journey-assistance" style="left:76.2%;width:10%;top:45%;height:49%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Financial Recordkeeping and Audit" data-panel="program-journey-recordkeeping-and-audit" style="left:86.8%;width:11%;top:45%;height:49%;bottom:auto"></button>
+</figure>
+    <div class="rff-explorer" data-rff-explorer id="program-journey" aria-label="How the proposed program works">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="program-journey-referral-or-application" data-tone="blue" data-icon="doc">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-journey-referral-or-application-btn" aria-expanded="false" aria-controls="program-journey-referral-or-application-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 1</span><span class="rff-title">Referral or Application</span><span class="rff-summary">Referred or apply directly.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="program-journey-referral-or-application-panel" role="region" aria-labelledby="program-journey-referral-or-application-btn" data-tone="blue" hidden>
+        <h4>Referral or Application</h4>
+        <p>An individual is referred or submits an application for assistance.</p>
+        <div class="rff-actions"><a class="rff-link" href="apply.html">Begin application →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="program-journey-registration" data-tone="green" data-icon="id">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-journey-registration-btn" aria-expanded="false" aria-controls="program-journey-registration-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 2</span><span class="rff-title">Registration</span><span class="rff-summary">Receive an RCGI ID.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="program-journey-registration-panel" role="region" aria-labelledby="program-journey-registration-btn" data-tone="green" hidden>
+        <h4>Registration</h4>
+        <p>The application is registered and assigned a randomized RCGI ID for tracking, with no personal information required.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="program-journey-recovery-milestone-pending" data-tone="gold" data-icon="calendar">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-journey-recovery-milestone-pending-btn" aria-expanded="false" aria-controls="program-journey-recovery-milestone-pending-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 3</span><span class="rff-title">Recovery Milestone Pending</span><span class="rff-summary">Working toward the milestone.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="program-journey-recovery-milestone-pending-panel" role="region" aria-labelledby="program-journey-recovery-milestone-pending-btn" data-tone="gold" hidden>
+        <h4>Recovery Milestone Pending</h4>
+        <p>The participant continues their recovery journey and works toward the required milestone.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="program-journey-independent-verification" data-tone="blue" data-icon="shield">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-journey-independent-verification-btn" aria-expanded="false" aria-controls="program-journey-independent-verification-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 4</span><span class="rff-title">Independent Verification</span><span class="rff-summary">Milestones confirmed by approved verifiers.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="program-journey-independent-verification-panel" role="region" aria-labelledby="program-journey-independent-verification-btn" data-tone="blue" hidden>
+        <h4>Independent Verification</h4>
+        <p>Approved verifiers confirm milestone completion through a secure process.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="program-journey-eligibility-review" data-tone="green" data-icon="search">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-journey-eligibility-review-btn" aria-expanded="false" aria-controls="program-journey-eligibility-review-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 5</span><span class="rff-title">Eligibility Review</span><span class="rff-summary">Reviewed for grant consideration.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="program-journey-eligibility-review-panel" role="region" aria-labelledby="program-journey-eligibility-review-btn" data-tone="green" hidden>
+        <h4>Eligibility Review</h4>
+        <p>The application is reviewed to confirm eligibility for grant consideration.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="program-journey-grant-application-and-review" data-tone="gold" data-icon="clipboard">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-journey-grant-application-and-review-btn" aria-expanded="false" aria-controls="program-journey-grant-application-and-review-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 6</span><span class="rff-title">Grant Application and Review</span><span class="rff-summary">Final application and review.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="program-journey-grant-application-and-review-panel" role="region" aria-labelledby="program-journey-grant-application-and-review-btn" data-tone="gold" hidden>
+        <h4>Grant Application and Review</h4>
+        <p>The final application is reviewed and approved, or declined, for funding.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="program-journey-approval-or-decline" data-tone="blue" data-icon="check">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-journey-approval-or-decline-btn" aria-expanded="false" aria-controls="program-journey-approval-or-decline-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 7</span><span class="rff-title">Approval or Decline</span><span class="rff-summary">The applicant is notified.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="program-journey-approval-or-decline-panel" role="region" aria-labelledby="program-journey-approval-or-decline-btn" data-tone="blue" hidden>
+        <h4>Approval or Decline</h4>
+        <p>The applicant is notified of the decision. If approved, funding is prepared for support services.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="program-journey-assistance" data-tone="green" data-icon="gift">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-journey-assistance-btn" aria-expanded="false" aria-controls="program-journey-assistance-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 8</span><span class="rff-title">Assistance</span><span class="rff-summary">When approved and funded.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="program-journey-assistance-panel" role="region" aria-labelledby="program-journey-assistance-btn" data-tone="green" hidden>
+        <h4>Assistance</h4>
+        <p>Funds may be released for approved needs such as housing, transportation, work tools, education and other essentials.</p><p class="rff-note">Assistance depends on approval and available funding.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="program-journey-recordkeeping-and-audit" data-tone="gold" data-icon="bank">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-journey-recordkeeping-and-audit-btn" aria-expanded="false" aria-controls="program-journey-recordkeeping-and-audit-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 9</span><span class="rff-title">Recordkeeping and Audit</span><span class="rff-summary">Documented and auditable.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="program-journey-recordkeeping-and-audit-panel" role="region" aria-labelledby="program-journey-recordkeeping-and-audit-btn" data-tone="gold" hidden>
+        <h4>Recordkeeping and Audit</h4>
+        <p>Financial activity is intended to be tracked with transparency and audited to support accountability.</p>
+        <div class="rff-actions"><a class="rff-link" href="transparency.html">Transparency →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
     </div>
+  </div>
   </section>
 
   <section class="mission-details">
     <h2>Privacy and Accountability</h2>
+    <figure class="rff-scenic rff-hotspot-figure rff-mission-hotspot-figure" style="--rff-ar:1657 / 949;">
     <img src="assets/images/recovery-privacy-accountability.png" alt="Privacy and Accountability - Recovery Forward Foundation" class="program-journey-image" loading="lazy">
+
+
+
+
+
+
+<button type="button" class="rff-poster-hotspot" aria-label="No Personal Information" data-panel="privacy-commitments-no-personal-information" style="left:1.7%;width:15%;top:44%;height:51%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Anonymous Application Process" data-panel="privacy-commitments-anonymous-application" style="left:18.1%;width:15%;top:44%;height:51%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Independent Verification" data-panel="privacy-commitments-independent-verification" style="left:34.5%;width:15%;top:44%;height:51%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Transparent Records" data-panel="privacy-commitments-transparent-records" style="left:50.9%;width:15%;top:44%;height:51%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Financial Accountability" data-panel="privacy-commitments-financial-accountability" style="left:67.3%;width:15%;top:44%;height:51%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Community Trust" data-panel="privacy-commitments-community-trust" style="left:83.7%;width:15%;top:44%;height:51%;bottom:auto"></button>
+</figure>
     <div class="content">
       <p>
         The Foundation intends to protect participant dignity
@@ -236,24 +818,204 @@
     </div>
   </section>
 
+  <section class="rff-mission-block" aria-labelledby="privacy-commitments-h">
+    <div class="rff-head">
+      <p class="section-kicker">PRIVACY BY DESIGN</p>
+      <h2 id="privacy-commitments-h">Six commitments</h2>
+    </div>
+    <div class="rff-explorer" data-rff-explorer id="privacy-commitments" aria-label="Six commitments">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="privacy-commitments-no-personal-information" data-tone="blue" data-icon="lock">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="privacy-commitments-no-personal-information-btn" aria-expanded="false" aria-controls="privacy-commitments-no-personal-information-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">No Personal Information</span><span class="rff-summary">Minimal data collection.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="privacy-commitments-no-personal-information-panel" role="region" aria-labelledby="privacy-commitments-no-personal-information-btn" data-tone="blue" hidden>
+        <h4>No Personal Information</h4>
+        <p>The foundation intends not to collect names, addresses, Social Security numbers or other unnecessary identifying information.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="privacy-commitments-anonymous-application" data-tone="green" data-icon="id">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="privacy-commitments-anonymous-application-btn" aria-expanded="false" aria-controls="privacy-commitments-anonymous-application-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Anonymous Application</span><span class="rff-summary">Randomized participant identifiers.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="privacy-commitments-anonymous-application-panel" role="region" aria-labelledby="privacy-commitments-anonymous-application-btn" data-tone="green" hidden>
+        <h4>Anonymous Application</h4>
+        <p>Applicants receive a randomized RCGI ID to track their application while keeping their identity private.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="privacy-commitments-independent-verification" data-tone="gold" data-icon="shield">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="privacy-commitments-independent-verification-btn" aria-expanded="false" aria-controls="privacy-commitments-independent-verification-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Independent Verification</span><span class="rff-summary">Milestones confirmed by others.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="privacy-commitments-independent-verification-panel" role="region" aria-labelledby="privacy-commitments-independent-verification-btn" data-tone="gold" hidden>
+        <h4>Independent Verification</h4>
+        <p>Recovery milestones are intended to be confirmed by approved, independent verifiers rather than self-verified.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="privacy-commitments-transparent-records" data-tone="blue" data-icon="doc">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="privacy-commitments-transparent-records-btn" aria-expanded="false" aria-controls="privacy-commitments-transparent-records-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Transparent Records</span><span class="rff-summary">Documented status updates.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="privacy-commitments-transparent-records-panel" role="region" aria-labelledby="privacy-commitments-transparent-records-btn" data-tone="blue" hidden>
+        <h4>Transparent Records</h4>
+        <p>Status updates, verifications and approvals are intended to be documented using privacy-conscious records.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="privacy-commitments-financial-accountability" data-tone="green" data-icon="bank">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="privacy-commitments-financial-accountability-btn" aria-expanded="false" aria-controls="privacy-commitments-financial-accountability-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Financial Accountability</span><span class="rff-summary">Separated responsibilities and oversight.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="privacy-commitments-financial-accountability-panel" role="region" aria-labelledby="privacy-commitments-financial-accountability-btn" data-tone="green" hidden>
+        <h4>Financial Accountability</h4>
+        <p>Financial responsibilities are intended to be separated, with documented oversight of how funds are used.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="privacy-commitments-community-trust" data-tone="gold" data-icon="people">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="privacy-commitments-community-trust-btn" aria-expanded="false" aria-controls="privacy-commitments-community-trust-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Community Trust</span><span class="rff-summary">Accountability that builds trust.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="privacy-commitments-community-trust-panel" role="region" aria-labelledby="privacy-commitments-community-trust-btn" data-tone="gold" hidden>
+        <h4>Community Trust</h4>
+        <p>Privacy, transparency and accountability are meant to strengthen trust among participants, supporters and the community.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+    </div>
+  </div>
+  </section>
+
   <section class="mission-details">
     <h2>Our Development Roadmap</h2>
+    <figure class="rff-scenic rff-hotspot-figure rff-mission-hotspot-figure" style="--rff-ar:1657 / 949;">
     <img src="assets/images/recovery-development-roadmap.png" alt="Our Development Roadmap - Recovery Forward Foundation" class="program-journey-image" loading="lazy">
-    <div class="content">
-      <ol>
-        <li>Nonprofit formation and governance</li>
-        <li>Program and eligibility policy development</li>
-        <li>Community and recovery partnerships</li>
-        <li>Fundraising and donor relationships</li>
-        <li>Controlled pilot program</li>
-        <li>Measured expansion into additional communities</li>
-      </ol>
+
+
+
+
+
+
+<button type="button" class="rff-poster-hotspot" aria-label="Establish Foundation" data-panel="illustrated-roadmap-foundation-governance" style="left:1.9%;width:13.0%;top:48%;height:46%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Build Infrastructure" data-panel="illustrated-roadmap-community-connections" style="left:16.8%;width:13.2%;top:48%;height:46%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Partner &amp; Expand" data-panel="illustrated-roadmap-recovery-partnerships" style="left:31.0%;width:13.0%;top:48%;height:46%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Secure Funding" data-panel="illustrated-roadmap-responsible-funding" style="left:44.0%;width:13.2%;top:48%;height:46%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Launch Assistance Programs" data-panel="illustrated-roadmap-programs-people" style="left:57.6%;width:13.0%;top:48%;height:46%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Measure Impact" data-panel="illustrated-roadmap-measuring-progress" style="left:71.3%;width:13.0%;top:48%;height:46%;bottom:auto"></button>
+<button type="button" class="rff-poster-hotspot" aria-label="Scale for the Future" data-panel="illustrated-roadmap-long-term-impact" style="left:85.4%;width:12.7%;top:48%;height:46%;bottom:auto"></button>
+</figure>
+<div class="rff-panel" id="illustrated-roadmap-foundation-governance-panel" role="region" hidden><h4>Establish Foundation</h4><p>Building the nonprofit&#x27;s legal foundation, governance practices and accountability systems.</p><p>Specific assistance remains subject to approved policies, eligibility, funding and availability.</p><div class="rff-actions"><button type="button" class="rff-close">Close</button></div></div>
+
+<div class="rff-panel" id="illustrated-roadmap-community-connections-panel" role="region" hidden><h4>Build Infrastructure</h4><p>Developing relationships with communities and organizations that support recovery.</p><p>Specific assistance remains subject to approved policies, eligibility, funding and availability.</p><div class="rff-actions"><button type="button" class="rff-close">Close</button></div></div>
+
+<div class="rff-panel" id="illustrated-roadmap-recovery-partnerships-panel" role="region" hidden><h4>Partner &amp; Expand</h4><p>Exploring partnerships with qualified recovery providers and community organizations.</p><p>Specific assistance remains subject to approved policies, eligibility, funding and availability.</p><div class="rff-actions"><button type="button" class="rff-close">Close</button></div></div>
+
+<div class="rff-panel" id="illustrated-roadmap-responsible-funding-panel" role="region" hidden><h4>Secure Funding</h4><p>Developing responsible funding, grant oversight and financial accountability processes.</p><p>Specific assistance remains subject to approved policies, eligibility, funding and availability.</p><div class="rff-actions"><button type="button" class="rff-close">Close</button></div></div>
+
+<div class="rff-panel" id="illustrated-roadmap-programs-people-panel" role="region" hidden><h4>Launch Assistance Programs</h4><p>Designing programs around people&#x27;s recovery needs and opportunities for independence.</p><p>Specific assistance remains subject to approved policies, eligibility, funding and availability.</p><div class="rff-actions"><button type="button" class="rff-close">Close</button></div></div>
+
+<div class="rff-panel" id="illustrated-roadmap-measuring-progress-panel" role="region" hidden><h4>Measure Impact</h4><p>Evaluating program results, responsible growth and opportunities to improve.</p><p>Specific assistance remains subject to approved policies, eligibility, funding and availability.</p><div class="rff-actions"><button type="button" class="rff-close">Close</button></div></div>
+
+<div class="rff-panel" id="illustrated-roadmap-long-term-impact-panel" role="region" hidden><h4>Scale for the Future</h4><p>Working toward lasting positive outcomes for people, families and communities.</p><p>Specific assistance remains subject to approved policies, eligibility, funding and availability.</p><div class="rff-actions"><button type="button" class="rff-close">Close</button></div></div>
+
+    <div class="rff-explorer" data-rff-explorer id="roadmap" aria-label="Development roadmap">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="roadmap-nonprofit-formation-and-governance" data-tone="blue" data-icon="doc">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="roadmap-nonprofit-formation-and-governance-btn" aria-expanded="false" aria-controls="roadmap-nonprofit-formation-and-governance-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Phase 1</span><span class="rff-title">Nonprofit formation and governance</span><span class="rff-summary">Legal and governance foundation.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="roadmap-nonprofit-formation-and-governance-panel" role="region" aria-labelledby="roadmap-nonprofit-formation-and-governance-btn" data-tone="blue" hidden>
+        <h4>Nonprofit formation and governance</h4>
+        <p>Nonprofit formation and governance.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="roadmap-program-and-eligibility-policy" data-tone="green" data-icon="clipboard">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="roadmap-program-and-eligibility-policy-btn" aria-expanded="false" aria-controls="roadmap-program-and-eligibility-policy-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Phase 2</span><span class="rff-title">Program and eligibility policy</span><span class="rff-summary">Defining the rules.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="roadmap-program-and-eligibility-policy-panel" role="region" aria-labelledby="roadmap-program-and-eligibility-policy-btn" data-tone="green" hidden>
+        <h4>Program and eligibility policy</h4>
+        <p>Program and eligibility policy development.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="roadmap-community-and-recovery-partnerships" data-tone="gold" data-icon="link">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="roadmap-community-and-recovery-partnerships-btn" aria-expanded="false" aria-controls="roadmap-community-and-recovery-partnerships-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Phase 3</span><span class="rff-title">Community and recovery partnerships</span><span class="rff-summary">Working with trusted partners.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="roadmap-community-and-recovery-partnerships-panel" role="region" aria-labelledby="roadmap-community-and-recovery-partnerships-btn" data-tone="gold" hidden>
+        <h4>Community and recovery partnerships</h4>
+        <p>Community and recovery partnerships.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="roadmap-fundraising-and-donors" data-tone="blue" data-icon="gift">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="roadmap-fundraising-and-donors-btn" aria-expanded="false" aria-controls="roadmap-fundraising-and-donors-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Phase 4</span><span class="rff-title">Fundraising and donors</span><span class="rff-summary">Fundraising and donor relationships.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="roadmap-fundraising-and-donors-panel" role="region" aria-labelledby="roadmap-fundraising-and-donors-btn" data-tone="blue" hidden>
+        <h4>Fundraising and donors</h4>
+        <p>Fundraising and donor relationships.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="roadmap-controlled-pilot-program" data-tone="green" data-icon="flag">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="roadmap-controlled-pilot-program-btn" aria-expanded="false" aria-controls="roadmap-controlled-pilot-program-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Phase 5</span><span class="rff-title">Controlled pilot program</span><span class="rff-summary">Starting small and learning.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="roadmap-controlled-pilot-program-panel" role="region" aria-labelledby="roadmap-controlled-pilot-program-btn" data-tone="green" hidden>
+        <h4>Controlled pilot program</h4>
+        <p>A controlled pilot program.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="roadmap-measured-expansion" data-tone="gold" data-icon="globe">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="roadmap-measured-expansion-btn" aria-expanded="false" aria-controls="roadmap-measured-expansion-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Phase 6</span><span class="rff-title">Measured expansion</span><span class="rff-summary">Growing into more communities.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="roadmap-measured-expansion-panel" role="region" aria-labelledby="roadmap-measured-expansion-btn" data-tone="gold" hidden>
+        <h4>Measured expansion</h4>
+        <p>Measured expansion into additional communities.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
     </div>
+  </div>
   </section>
 
   <section class="mission-card">
     <h2>Our Founding Purpose</h2>
+    <figure class="rff-scenic" style="--rff-ar:1657 / 418;">
     <img src="assets/images/recovery-founders-message.png" alt="Our Founding Purpose - Recovery Forward Foundation" class="program-journey-image" loading="lazy">
+  </figure>
     <p>
       Recovery deserves more than congratulations.
       It deserves a pathway forward.

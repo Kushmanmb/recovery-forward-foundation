@@ -1,0 +1,577 @@
+/* Recovery Forward Foundation - interactive cards, scenic frames and motion polish.
+   Loaded after style.css. Every rule is namespaced (.rff-*) so existing pages keep working. */
+
+:root {
+  --rff-blue: 74, 163, 255;
+  --rff-green: 139, 195, 74;
+  --rff-gold: 244, 166, 42;
+  --rff-radius: 18px;
+  --rff-ease: cubic-bezier(.22, .61, .36, 1);
+}
+
+/* ---------- Blocks and headings ---------- */
+
+.rff-block {
+  width: min(1180px, 92%);
+  margin: 0 auto;
+  padding: 64px 0 24px;
+}
+
+.rff-head {
+  max-width: 820px;
+  margin: 0 auto 28px;
+  text-align: center;
+}
+
+.rff-head .section-kicker,
+.rff-kicker-line {
+  color: var(--green);
+  font-size: .8rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  margin-bottom: 14px;
+}
+
+.rff-head h2 {
+  color: var(--white);
+  font-size: clamp(1.9rem, 4.4vw, 3.2rem);
+  line-height: 1.1;
+}
+
+.rff-head h2 span { color: var(--green-bright); }
+
+.rff-head p:not(.section-kicker) {
+  margin-top: 16px;
+  color: var(--text);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.rff-hint {
+  margin: 0 auto 4px;
+  text-align: center;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+/* ---------- Explorer grid ---------- */
+
+/* Padding gives the glow room so the perimeter is never clipped by an ancestor. */
+.rff-explorer {
+  position: relative;
+  padding: 18px;
+  margin: 8px -18px;
+  overflow: visible;
+}
+
+.rff-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  align-items: stretch;
+  overflow: visible;
+}
+
+@media (min-width: 900px) {
+  .rff-grid.rff-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .rff-grid.rff-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rff-grid.rff-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .rff-grid.rff-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+@media (max-width: 899px) {
+  .rff-grid.rff-cols-2,
+  .rff-grid.rff-cols-3,
+  .rff-grid.rff-cols-4,
+  .rff-grid.rff-cols-5 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .rff-explorer { padding: 14px; margin: 6px -14px; }
+  .rff-grid { grid-template-columns: 1fr !important; gap: 16px; }
+}
+
+/* ---------- Card ---------- */
+
+.rff-card {
+  --tone: var(--rff-blue);
+  position: relative;
+  display: flex;
+  min-width: 0;
+  border: 1px solid rgba(var(--tone), .6);
+  border-radius: var(--rff-radius);
+  background: #0b1510;
+  /* Symmetric zero-offset shadows: the glow wraps the whole perimeter evenly. */
+  box-shadow:
+    0 0 0 1px rgba(var(--tone), .14),
+    0 0 14px 1px rgba(var(--tone), .28);
+  transition:
+    transform .28s var(--rff-ease),
+    box-shadow .28s var(--rff-ease),
+    border-color .28s var(--rff-ease);
+}
+
+.rff-card[data-tone="green"] { --tone: var(--rff-green); }
+.rff-card[data-tone="gold"] { --tone: var(--rff-gold); }
+
+/* Scenic backdrop: sky glow, sun and layered ridgelines, tinted per card. */
+.rff-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 86% 14%, rgba(255, 215, 130, .55) 0, rgba(255, 190, 90, .18) 9%, transparent 30%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 120' preserveAspectRatio='none'%3E%3Cpath d='M0 120V74l38-26 34 22 46-40 52 44 40-28 50 38 40-26v62z' fill='%23ffffff' fill-opacity='.07'/%3E%3Cpath d='M0 120V94l50-26 40 24 56-30 60 34 48-22 46 24v22z' fill='%23020905' fill-opacity='.55'/%3E%3C/svg%3E") bottom / 100% 55% no-repeat,
+    linear-gradient(165deg, rgba(var(--tone), .34), rgba(7, 16, 13, .94) 68%);
+  opacity: .95;
+  transition: opacity .28s var(--rff-ease);
+}
+
+.rff-card[data-open="true"] {
+  border-color: rgba(var(--tone), .95);
+  box-shadow:
+    0 0 0 1px rgba(var(--tone), .35),
+    0 0 26px 2px rgba(var(--tone), .45);
+}
+
+.rff-trigger {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  align-content: start;
+  gap: 12px;
+  width: 100%;
+  min-height: 210px;
+  padding: 24px 16px 54px;
+  text-align: center;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--white);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(var(--tone), .25);
+  touch-action: manipulation;
+}
+
+.rff-card-heading { display: contents; font: inherit; }
+
+.rff-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(var(--tone), .85);
+  background: rgba(5, 12, 9, .72);
+  color: rgb(var(--tone));
+  box-shadow: 0 0 12px rgba(var(--tone), .35);
+  transition: transform .28s var(--rff-ease), box-shadow .28s var(--rff-ease);
+}
+
+.rff-icon svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rff-card-text { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+
+.rff-chevron { position: absolute; left: 50%; bottom: 14px; margin-left: -13px; }
+
+.rff-card .rff-kicker {
+  color: rgb(var(--tone));
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.rff-title {
+  color: var(--white);
+  font-size: 1.12rem;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.rff-summary {
+  color: #cdd8d1;
+  font-size: .95rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.rff-chevron {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--tone), .6);
+  transition: transform .28s var(--rff-ease), background-color .28s var(--rff-ease);
+}
+
+.rff-chevron::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid rgb(var(--tone));
+  border-bottom: 2px solid rgb(var(--tone));
+  transform: translate(-50%, -70%) rotate(45deg);
+}
+
+.rff-card[data-open="true"] .rff-chevron { transform: rotate(180deg); background: rgba(var(--tone), .2); }
+
+.rff-card.rff-nav .rff-chevron { transform: none; }
+.rff-card.rff-nav .rff-chevron::before { transform: translate(-65%, -50%) rotate(-45deg); }
+
+@media (hover: hover) {
+  .rff-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(var(--tone), .95);
+    box-shadow:
+      0 0 0 1px rgba(var(--tone), .35),
+      0 0 26px 3px rgba(var(--tone), .42);
+  }
+  .rff-card:hover .rff-icon { transform: scale(1.06); box-shadow: 0 0 18px rgba(var(--tone), .55); }
+}
+
+.rff-card:active { transform: scale(.985); }
+
+.rff-trigger:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(var(--tone), .45);
+}
+
+@media (min-width: 900px) {
+  .rff-grid.rff-cols-2 .rff-trigger { grid-template-columns: 54px minmax(0, 1fr) 28px; justify-items: stretch; align-content: center; align-items: center; text-align: left; min-height: 112px; padding: 18px 16px; }
+  .rff-grid.rff-cols-2 .rff-card-text { align-items: flex-start; }
+  .rff-grid.rff-cols-2 .rff-chevron { position: relative; left: auto; bottom: auto; margin-left: 0; }
+}
+
+/* ---------- Detail panel ---------- */
+
+.rff-panel {
+  --tone: var(--rff-blue);
+  position: relative;
+  grid-column: 1 / -1;
+  padding: 26px 28px;
+  border: 1px solid rgba(var(--tone), .7);
+  border-radius: var(--rff-radius);
+  background:
+    radial-gradient(circle at 96% 0, rgba(255, 214, 120, .14), transparent 36%),
+    linear-gradient(160deg, rgba(var(--tone), .16), rgba(8, 17, 13, .97) 60%);
+  box-shadow: 0 0 0 1px rgba(var(--tone), .2), 0 0 22px rgba(var(--tone), .28);
+  color: var(--text);
+  animation: rff-reveal .34s var(--rff-ease) both;
+}
+
+.rff-panel[hidden] { display: none; }
+.rff-panel[data-tone="green"] { --tone: var(--rff-green); }
+.rff-panel[data-tone="gold"] { --tone: var(--rff-gold); }
+
+.rff-panel h4 {
+  margin-bottom: 10px;
+  color: var(--white);
+  font-size: 1.3rem;
+  line-height: 1.25;
+}
+
+.rff-panel p { margin: 0 0 12px; font-size: 1rem; line-height: 1.75; overflow-wrap: anywhere; }
+
+.rff-panel ul { margin: 4px 0 14px 1.2rem; }
+.rff-panel li { margin-bottom: 6px; line-height: 1.6; overflow-wrap: anywhere; }
+.rff-panel li::marker { color: rgb(var(--tone)); }
+
+.rff-note {
+  padding: 12px 14px;
+  border-left: 3px solid rgb(var(--tone));
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .28);
+  color: #d9e2dc;
+  font-size: .95rem;
+}
+
+.rff-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+
+.rff-link,
+.rff-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform .2s var(--rff-ease), box-shadow .2s var(--rff-ease), background-color .2s var(--rff-ease);
+}
+
+.rff-link {
+  border: 1px solid rgb(var(--tone));
+  background: rgba(var(--tone), .2);
+  color: var(--white);
+}
+
+.rff-close {
+  border: 1px solid rgba(255, 255, 255, .28);
+  background: transparent;
+  color: var(--text);
+}
+
+.rff-link:hover { transform: translateY(-2px); box-shadow: 0 0 16px rgba(var(--tone), .5); background: rgba(var(--tone), .32); }
+.rff-close:hover { transform: translateY(-2px); background: rgba(255, 255, 255, .08); }
+.rff-link:active, .rff-close:active { transform: scale(.97); }
+
+.rff-link:focus-visible,
+.rff-close:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+@keyframes rff-reveal {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Row layout: single-column phones, and two-column desktop grids with wide cards. */
+@media (max-width: 560px) {
+  .rff-trigger { grid-template-columns: 48px minmax(0, 1fr) 26px; justify-items: stretch; align-content: center; align-items: center; text-align: left; gap: 12px; min-height: 96px; padding: 16px 14px; }
+  .rff-card-text { align-items: flex-start; }
+  .rff-chevron { position: relative; left: auto; bottom: auto; margin-left: 0; }
+  .rff-icon { width: 48px; height: 48px; }
+  .rff-panel { padding: 22px 18px; }
+  .rff-link, .rff-close { flex: 1 1 100%; }
+}
+
+/* ---------- Scenic poster frames ---------- */
+
+/* Posters carry baked-in text; the tile strip is cropped away so the real HTML cards
+   below are the only copy of that content. The artwork stays as a decorative visual. */
+.rff-scenic {
+  position: relative;
+  width: min(1100px, 100%);
+  margin: 28px auto;
+  padding: 0;
+  border: 1px solid rgba(var(--rff-gold), .55);
+  border-radius: 20px;
+  background: #07100d;
+  box-shadow: 0 0 0 1px rgba(var(--rff-green), .2), 0 0 24px rgba(var(--rff-gold), .26), 0 0 44px rgba(var(--rff-green), .14);
+  overflow: hidden;
+  transition: box-shadow .3s var(--rff-ease);
+}
+
+.rff-scenic img,
+body .rff-scenic img.program-journey-image {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  min-height: 200px;
+  margin: 0;
+  border-radius: 0;
+  aspect-ratio: var(--rff-ar, 16 / 7);
+  object-fit: cover;
+  object-position: 50% 0;
+}
+
+.rff-scenic::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 70%, rgba(7, 16, 13, .55));
+}
+
+@media (hover: hover) {
+  .rff-scenic:hover { box-shadow: 0 0 0 1px rgba(var(--rff-green), .4), 0 0 34px rgba(var(--rff-gold), .38), 0 0 54px rgba(var(--rff-green), .22); }
+}
+
+/* Mission hero: the road photo without its baked headline (the real h1 follows). */
+.rff-scenic.rff-hero-crop { aspect-ratio: 21 / 8; min-height: 190px; }
+
+.rff-scenic.rff-hero-crop img,
+body .rff-scenic.rff-hero-crop img.program-journey-image {
+  position: absolute;
+  right: 0;
+  top: var(--rff-top, -127%);
+  width: 286%;
+  max-width: none;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+
+@media (max-width: 560px) {
+  .rff-scenic.rff-hero-crop { aspect-ratio: 16 / 9; }
+  .rff-scenic.rff-hero-crop img,
+  body .rff-scenic.rff-hero-crop img.program-journey-image { top: var(--rff-top-m, -60%); width: 300%; }
+}
+
+/* ---------- Page-wide polish ---------- */
+
+.button,
+.card-button,
+.header-apply,
+.submit-button,
+.crypto-copy {
+  transition: transform .22s var(--rff-ease), box-shadow .22s var(--rff-ease), background-color .22s var(--rff-ease), border-color .22s var(--rff-ease);
+}
+
+@media (hover: hover) {
+  .button:hover,
+  .card-button:hover,
+  .header-apply:hover,
+  .submit-button:hover,
+  .crypto-copy:hover { transform: translateY(-2px); box-shadow: 0 0 18px rgba(var(--rff-green), .35); }
+}
+
+.button:active,
+.card-button:active,
+.header-apply:active,
+.submit-button:active { transform: scale(.98); }
+
+/* Hero action tiles: glow wraps the full perimeter. */
+.hero .hero-links .hero-link {
+  box-shadow: 0 0 0 1px rgba(var(--rff-green), .12), 0 0 14px rgba(var(--rff-green), .2);
+  transition: transform .22s var(--rff-ease), box-shadow .22s var(--rff-ease), border-color .22s var(--rff-ease);
+}
+
+.hero .hero-links .hero-link:hover {
+  box-shadow: 0 0 0 1px rgba(var(--rff-gold), .3), 0 0 24px rgba(var(--rff-gold), .38);
+}
+
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.nav-dropdown summary { min-height: 44px; }
+.dropdown-links a { min-height: 44px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rff-card,
+  .rff-icon,
+  .rff-chevron,
+  .rff-link,
+  .rff-close,
+  .rff-scenic,
+  .button,
+  .card-button,
+  .header-apply,
+  .submit-button,
+  .crypto-copy,
+  .hero .hero-links .hero-link { transition: none; }
+  .rff-panel { animation: none; }
+  .rff-card:hover,
+  .rff-card:active,
+  .rff-link:hover,
+  .rff-close:hover,
+  .button:hover,
+  .card-button:hover,
+  .hero .hero-links .hero-link:hover { transform: none; }
+  html { scroll-behavior: auto; }
+}
+
+@media print {
+  .rff-panel[hidden] { display: block; }
+}
+
+
+/* Clickable illustrated boxes: preserve the original artwork */
+.rff-hotspot-figure { position: relative; }
+.rff-poster-hotspot {
+  position: absolute;
+  z-index: 5;
+  top: 55%;
+  height: 39%;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.rff-poster-hotspot:is(:hover,:focus-visible) {
+  outline: 2px solid #a0e35e;
+  outline-offset: -3px;
+  box-shadow: inset 0 0 12px #43dfab,
+              0 0 20px #39e8b8;
+}
+.rff-picture-dialog {
+  width: min(92vw, 600px);
+  max-height: 80vh;
+  overflow: auto;
+  padding: 28px;
+  color: #f5fff7;
+  background: #10231f;
+  border: 2px solid #86d54b;
+  border-radius: 18px;
+  box-shadow: 0 0 30px #54d77780;
+}
+.rff-picture-dialog::backdrop {
+  background: rgba(0,0,0,.75);
+}
+.rff-picture-close {
+  float: right;
+  color: white;
+  background: transparent;
+  border: 1px solid #86d54b;
+  border-radius: 8px;
+  font-size: 28px;
+  cursor: pointer;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rff-poster-hotspot { transition: box-shadow .2s; }
+}
+
+
+/* RFF centered illustration dialogs */
+dialog#rff-home-picture-dialog[open],
+dialog#rff-mission-picture-dialog[open] {
+  position: fixed !important;
+  inset: auto !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  width: min(92vw, 620px) !important;
+  max-width: calc(100vw - 24px) !important;
+  max-height: 78dvh !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+/* End RFF centered illustration dialogs */
+
+
+/* RFF precise illustrated hotspot glow */
+.rff-hotspot-figure .rff-poster-hotspot:is(:hover, :focus-visible) {
+    outline: 2px solid #a0e35e;
+    outline-offset: -4px;
+    box-shadow:
+        inset 0 0 0 1px rgba(160,227,94,.5),
+        inset 0 0 9px rgba(67,223,171,.55),
+        0 0 8px rgba(57,232,184,.45);
+}
+/* End precise illustrated hotspot glow */

@@ -26,6 +26,7 @@
 
   var TIMEZONE = "America/Indiana/Indianapolis";
   var CARD_SELECTOR = [
+    ".rff-card",
     ".portal-card", ".mission-card", ".crypto-card", ".daily-prayer-card",
     ".warning-box", ".privacy-banner", ".generated-id", ".result",
     ".form-section", ".lifeline-monitor", ".demo-notice", ".mission-note", ".mission-details"
@@ -33,7 +34,7 @@
   var SECTION_SELECTOR = [
     ".hero", ".section", ".intro", ".portal", ".mission-section",
     ".mission-hero", ".contact-section", ".crypto-section",
-    ".daily-prayer-section", ".lifeline", ".trust-strip", ".process"
+    ".daily-prayer-section", ".lifeline", ".trust-strip", ".process", ".rff-block"
   ].join(",");
   var HEADING_SELECTOR = ".section-heading, .application-heading, .contact-section > h2, .mission-hero h1";
   var HEADER_SELECTOR = ".site-header";

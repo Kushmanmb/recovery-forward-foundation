@@ -13,6 +13,9 @@
 
   <link rel="stylesheet" href="css/style.css?v=4action-cards-1">
   <link rel="stylesheet" href="css/seasonal.css?v=4">
+  <link rel="stylesheet" href="css/interactive.css?v=1">
+  <script src="js/interactive-cards.js?v=1" defer></script>
+  <noscript><style>.rff-panel[hidden]{display:block !important}.rff-close{display:none}</style></noscript>
   <script src="js/seasonal-theme.js?v=4" defer></script>
 </head>
 
@@ -121,12 +124,83 @@
       </p>
 
     </div>
+    <figure class="rff-scenic" style="--rff-ar:1657 / 541;">
     <img
       src="assets/images/recovery-transparency-trust.png"
       alt="Transparency, accountability, and trust at Recovery Forward Foundation"
       class="program-journey-image"
       loading="lazy"
     >
+  </figure>
+  <div class="rff-head">
+      <p class="eyebrow rff-kicker-line">OUR TRANSPARENCY GOALS</p>
+      <h2>What we are working toward.</h2>
+    </div>
+    <div class="rff-explorer" data-rff-explorer id="goals" aria-label="Transparency goals">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="goals-financial-transparency" data-tone="blue" data-icon="bank">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="goals-financial-transparency-btn" aria-expanded="false" aria-controls="goals-financial-transparency-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Financial Transparency</span><span class="rff-summary">Clear information on funds and use.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="goals-financial-transparency-panel" role="region" aria-labelledby="goals-financial-transparency-btn" data-tone="blue" hidden>
+        <h4>Financial Transparency</h4>
+        <p>As financial activity develops, the foundation intends to provide clear, accessible information about donations received and how resources are used.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="goals-impact-reporting" data-tone="green" data-icon="chart">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="goals-impact-reporting-btn" aria-expanded="false" aria-controls="goals-impact-reporting-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Impact Reporting</span><span class="rff-summary">Outcomes without exposing identities.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="goals-impact-reporting-panel" role="region" aria-labelledby="goals-impact-reporting-btn" data-tone="green" hidden>
+        <h4>Impact Reporting</h4>
+        <p>Aggregate program statistics and outcomes can be shared without identifying participants.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="goals-community-accountability" data-tone="gold" data-icon="people">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="goals-community-accountability-btn" aria-expanded="false" aria-controls="goals-community-accountability-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Community Accountability</span><span class="rff-summary">Working with trusted partners.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="goals-community-accountability-panel" role="region" aria-labelledby="goals-community-accountability-btn" data-tone="gold" hidden>
+        <h4>Community Accountability</h4>
+        <p>The foundation intends to work with trusted partners, verifiers and advisors so that assistance is responsible and measurable.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="goals-open-governance" data-tone="blue" data-icon="doc">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="goals-open-governance-btn" aria-expanded="false" aria-controls="goals-open-governance-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Open Governance</span><span class="rff-summary">Adopted policies made public.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="goals-open-governance-panel" role="region" aria-labelledby="goals-open-governance-btn" data-tone="blue" hidden>
+        <h4>Open Governance</h4>
+        <p>Bylaws, policies and decision-making processes can be published as they are formally adopted.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="goals-continuous-improvement" data-tone="green" data-icon="loop">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="goals-continuous-improvement-btn" aria-expanded="false" aria-controls="goals-continuous-improvement-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Continuous Improvement</span><span class="rff-summary">Regular review of how we operate.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="goals-continuous-improvement-panel" role="region" aria-labelledby="goals-continuous-improvement-btn" data-tone="green" hidden>
+        <h4>Continuous Improvement</h4>
+        <p>Programs and processes are meant to be reviewed over time and strengthened based on feedback and results.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+    </div>
+  </div>
+
   </section>
 
 
@@ -134,92 +208,82 @@
 
   <section class="section">
 
-    <div class="card-grid">
-
-      <article class="portal-card">
-        <span class="card-number">01</span>
-
-        <h3>Governance</h3>
-
-        <p>
-          Foundation governance documents, board structure,
-          organizational policies, and other appropriate
-          public records can be published as they are
-          formally adopted.
-        </p>
+    <div class="rff-explorer" data-rff-explorer id="areas" aria-label="Transparency areas">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="areas-governance" data-tone="blue" data-icon="doc">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="areas-governance-btn" aria-expanded="false" aria-controls="areas-governance-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">01</span><span class="rff-title">Governance</span><span class="rff-summary">Documents, board structure and policies.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-        <span class="card-number">02</span>
-
-        <h3>Program Rules</h3>
-
-        <p>
-          Grant and assistance programs should have
-          documented eligibility requirements, review
-          procedures, authorization rules, and funding
-          limitations.
-        </p>
+      <div class="rff-panel" id="areas-governance-panel" role="region" aria-labelledby="areas-governance-btn" data-tone="blue" hidden>
+        <h4>Governance</h4>
+        <p>Foundation governance documents, board structure, organizational policies, and other appropriate public records can be published as they are formally adopted.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="areas-program-rules" data-tone="green" data-icon="clipboard">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="areas-program-rules-btn" aria-expanded="false" aria-controls="areas-program-rules-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">02</span><span class="rff-title">Program Rules</span><span class="rff-summary">Documented eligibility and review.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-        <span class="card-number">03</span>
-
-        <h3>Grant Accountability</h3>
-
-        <p>
-          Recovery Forward Foundation is developing a
-          structured registry for tracking grant progress
-          through defined stages without unnecessarily
-          publishing applicants' personal information.
-        </p>
+      <div class="rff-panel" id="areas-program-rules-panel" role="region" aria-labelledby="areas-program-rules-btn" data-tone="green" hidden>
+        <h4>Program Rules</h4>
+        <p>Grant and assistance programs should have documented eligibility requirements, review procedures, authorization rules, and funding limitations.</p>
+        <div class="rff-actions"><a class="rff-link" href="programs.html">View programs →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="areas-grant-accountability" data-tone="gold" data-icon="scale">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="areas-grant-accountability-btn" aria-expanded="false" aria-controls="areas-grant-accountability-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">03</span><span class="rff-title">Grant Accountability</span><span class="rff-summary">A structured registry of grant progress.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-        <span class="card-number">04</span>
-
-        <h3>Financial Reporting</h3>
-
-        <p>
-          As financial activity develops, appropriate
-          reports and disclosures can provide insight into
-          funding received, program expenditures, grants,
-          and organizational expenses.
-        </p>
+      <div class="rff-panel" id="areas-grant-accountability-panel" role="region" aria-labelledby="areas-grant-accountability-btn" data-tone="gold" hidden>
+        <h4>Grant Accountability</h4>
+        <p>Recovery Forward Foundation is developing a structured registry for tracking grant progress through defined stages without unnecessarily publishing applicants' personal information.</p>
+        <div class="rff-actions"><a class="rff-link" href="#registry">Registry stages ↓</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="areas-financial-reporting" data-tone="blue" data-icon="bank">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="areas-financial-reporting-btn" aria-expanded="false" aria-controls="areas-financial-reporting-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">04</span><span class="rff-title">Financial Reporting</span><span class="rff-summary">Reports and disclosures as activity develops.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-        <span class="card-number">05</span>
-
-        <h3>Verification</h3>
-
-        <p>
-          Program milestones and grant approvals are being
-          designed around documented verification and
-          authorization procedures rather than informal
-          or undocumented decisions.
-        </p>
+      <div class="rff-panel" id="areas-financial-reporting-panel" role="region" aria-labelledby="areas-financial-reporting-btn" data-tone="blue" hidden>
+        <h4>Financial Reporting</h4>
+        <p>As financial activity develops, appropriate reports and disclosures can provide insight into funding received, program expenditures, grants, and organizational expenses.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="areas-verification" data-tone="green" data-icon="shield">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="areas-verification-btn" aria-expanded="false" aria-controls="areas-verification-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">05</span><span class="rff-title">Verification</span><span class="rff-summary">Documented milestone and approval steps.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-        <span class="card-number">06</span>
-
-        <h3>Privacy</h3>
-
-        <p>
-          Transparency does not mean exposing someone's
-          recovery history. Public accountability should
-          coexist with meaningful protection of applicant
-          privacy.
-        </p>
+      <div class="rff-panel" id="areas-verification-panel" role="region" aria-labelledby="areas-verification-btn" data-tone="green" hidden>
+        <h4>Verification</h4>
+        <p>Program milestones and grant approvals are being designed around documented verification and authorization procedures rather than informal or undocumented decisions.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="areas-privacy" data-tone="gold" data-icon="lock">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="areas-privacy-btn" aria-expanded="false" aria-controls="areas-privacy-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">06</span><span class="rff-title">Privacy</span><span class="rff-summary">Accountability that protects dignity.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
+      <div class="rff-panel" id="areas-privacy-panel" role="region" aria-labelledby="areas-privacy-btn" data-tone="gold" hidden>
+        <h4>Privacy</h4>
+        <p>Transparency does not mean exposing someone's recovery history. Public accountability should coexist with meaningful protection of applicant privacy.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
     </div>
+  </div>
 
   </section>
 
@@ -246,56 +310,82 @@
     </div>
 
 
-    <div class="card-grid">
-
-      <article class="portal-card">
-        <h3>Registered</h3>
-        <p>
-          An application has entered the grant process.
-        </p>
+    <div class="rff-explorer" data-rff-explorer id="registry-stages" aria-label="Grant registry stages">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="registry-stages-registered" data-tone="blue" data-icon="doc">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="registry-stages-registered-btn" aria-expanded="false" aria-controls="registry-stages-registered-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Stage 1</span><span class="rff-title">Registered</span><span class="rff-summary">Entered the grant process.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-      <article class="portal-card">
-        <h3>Milestone Pending</h3>
-        <p>
-          Applicable recovery requirements have not yet
-          completed the verification process.
-        </p>
+      <div class="rff-panel" id="registry-stages-registered-panel" role="region" aria-labelledby="registry-stages-registered-btn" data-tone="blue" hidden>
+        <h4>Registered</h4>
+        <p>An application has entered the grant process.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="registry-stages-milestone-pending" data-tone="green" data-icon="calendar">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="registry-stages-milestone-pending-btn" aria-expanded="false" aria-controls="registry-stages-milestone-pending-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Stage 2</span><span class="rff-title">Milestone Pending</span><span class="rff-summary">Awaiting milestone verification.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-      <article class="portal-card">
-        <h3>Verified</h3>
-        <p>
-          Required milestone information has completed
-          the applicable verification process.
-        </p>
+      <div class="rff-panel" id="registry-stages-milestone-pending-panel" role="region" aria-labelledby="registry-stages-milestone-pending-btn" data-tone="green" hidden>
+        <h4>Milestone Pending</h4>
+        <p>Applicable recovery requirements have not yet completed the verification process.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="registry-stages-verified" data-tone="gold" data-icon="shield">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="registry-stages-verified-btn" aria-expanded="false" aria-controls="registry-stages-verified-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Stage 3</span><span class="rff-title">Verified</span><span class="rff-summary">Milestone verified.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-      <article class="portal-card">
-        <h3>Eligible</h3>
-        <p>
-          Program requirements have been satisfied for
-          eligibility consideration.
-        </p>
+      <div class="rff-panel" id="registry-stages-verified-panel" role="region" aria-labelledby="registry-stages-verified-btn" data-tone="gold" hidden>
+        <h4>Verified</h4>
+        <p>Required milestone information has completed the applicable verification process.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="registry-stages-eligible" data-tone="blue" data-icon="search">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="registry-stages-eligible-btn" aria-expanded="false" aria-controls="registry-stages-eligible-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Stage 4</span><span class="rff-title">Eligible</span><span class="rff-summary">Eligible for consideration.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-      <article class="portal-card">
-        <h3>Approved</h3>
-        <p>
-          Assistance has received the required
-          authorization under the applicable program.
-        </p>
+      <div class="rff-panel" id="registry-stages-eligible-panel" role="region" aria-labelledby="registry-stages-eligible-btn" data-tone="blue" hidden>
+        <h4>Eligible</h4>
+        <p>Program requirements have been satisfied for eligibility consideration.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="registry-stages-approved" data-tone="green" data-icon="check">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="registry-stages-approved-btn" aria-expanded="false" aria-controls="registry-stages-approved-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Stage 5</span><span class="rff-title">Approved</span><span class="rff-summary">Authorization received.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-      <article class="portal-card">
-        <h3>Paid</h3>
-        <p>
-          An approved grant payment has been recorded
-          through the applicable process.
-        </p>
+      <div class="rff-panel" id="registry-stages-approved-panel" role="region" aria-labelledby="registry-stages-approved-btn" data-tone="green" hidden>
+        <h4>Approved</h4>
+        <p>Assistance has received the required authorization under the applicable program.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="registry-stages-paid" data-tone="gold" data-icon="gift">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="registry-stages-paid-btn" aria-expanded="false" aria-controls="registry-stages-paid-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Stage 6</span><span class="rff-title">Paid</span><span class="rff-summary">Payment recorded.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
+      <div class="rff-panel" id="registry-stages-paid-panel" role="region" aria-labelledby="registry-stages-paid-btn" data-tone="gold" hidden>
+        <h4>Paid</h4>
+        <p>An approved grant payment has been recorded through the applicable process.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
     </div>
+  </div>
 
   </section>
 
@@ -383,42 +473,58 @@
     </div>
 
 
-    <div class="card-grid">
-
-      <article class="portal-card">
-        <h3>Governance Documents</h3>
-        <p>
-          Adopted bylaws and appropriate organizational
-          policies.
-        </p>
+    <div class="rff-explorer" data-rff-explorer id="future-reporting" aria-label="Future public reporting">
+    <div class="rff-grid rff-cols-2">
+      <article class="rff-card" id="future-reporting-governance-documents" data-tone="blue" data-icon="doc">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="future-reporting-governance-documents-btn" aria-expanded="false" aria-controls="future-reporting-governance-documents-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Governance Documents</span><span class="rff-summary">Adopted bylaws and policies.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-      <article class="portal-card">
-        <h3>Program Statistics</h3>
-        <p>
-          Aggregate application, eligibility, approval,
-          and grant statistics without exposing applicant
-          identities.
-        </p>
+      <div class="rff-panel" id="future-reporting-governance-documents-panel" role="region" aria-labelledby="future-reporting-governance-documents-btn" data-tone="blue" hidden>
+        <h4>Governance Documents</h4>
+        <p>Adopted bylaws and appropriate organizational policies.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="future-reporting-program-statistics" data-tone="green" data-icon="chart">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="future-reporting-program-statistics-btn" aria-expanded="false" aria-controls="future-reporting-program-statistics-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Program Statistics</span><span class="rff-summary">Aggregate numbers, no identities.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-      <article class="portal-card">
-        <h3>Financial Information</h3>
-        <p>
-          Appropriate financial reporting and required
-          public filings as they become available.
-        </p>
+      <div class="rff-panel" id="future-reporting-program-statistics-panel" role="region" aria-labelledby="future-reporting-program-statistics-btn" data-tone="green" hidden>
+        <h4>Program Statistics</h4>
+        <p>Aggregate application, eligibility, approval, and grant statistics without exposing applicant identities.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="future-reporting-financial-information" data-tone="gold" data-icon="bank">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="future-reporting-financial-information-btn" aria-expanded="false" aria-controls="future-reporting-financial-information-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Financial Information</span><span class="rff-summary">Reports and required filings.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-      <article class="portal-card">
-        <h3>Grant Activity</h3>
-        <p>
-          Privacy-conscious information showing how
-          foundation assistance is being put to work.
-        </p>
+      <div class="rff-panel" id="future-reporting-financial-information-panel" role="region" aria-labelledby="future-reporting-financial-information-btn" data-tone="gold" hidden>
+        <h4>Financial Information</h4>
+        <p>Appropriate financial reporting and required public filings as they become available.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="future-reporting-grant-activity" data-tone="blue" data-icon="gift">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="future-reporting-grant-activity-btn" aria-expanded="false" aria-controls="future-reporting-grant-activity-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Grant Activity</span><span class="rff-summary">Privacy-conscious grant updates.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
+      <div class="rff-panel" id="future-reporting-grant-activity-panel" role="region" aria-labelledby="future-reporting-grant-activity-btn" data-tone="blue" hidden>
+        <h4>Grant Activity</h4>
+        <p>Privacy-conscious information showing how foundation assistance is being put to work.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
     </div>
+  </div>
 
   </section>
 

@@ -13,6 +13,9 @@
 
   <link rel="stylesheet" href="css/style.css?v=4action-cards-1">
   <link rel="stylesheet" href="css/seasonal.css?v=4">
+  <link rel="stylesheet" href="css/interactive.css?v=1">
+  <script src="js/interactive-cards.js?v=1" defer></script>
+  <noscript><style>.rff-panel[hidden]{display:block !important}.rff-close{display:none}</style></noscript>
   <script src="js/seasonal-theme.js?v=4" defer></script>
 </head>
 
@@ -97,12 +100,16 @@
   <!-- PROGRAMS -->
 
   <section id="programs" class="section">
+    <figure class="rff-scenic" style="--rff-ar:1657 / 522;">
     <img
       src="assets/images/recovery-our-programs.png"
       alt="Recovery Forward Foundation programs and opportunities"
       class="program-journey-image"
       loading="lazy"
     >
+</figure>
+
+
 
     <div class="section-heading">
 
@@ -127,134 +134,82 @@
     </div>
 
 
-    <div class="card-grid">
-
-      <article class="portal-card">
-
-        <span class="card-number">01</span>
-
-        <h3>Recovery Milestone Grants</h3>
-
-        <p>
-          A grant program being developed to recognize
-          meaningful recovery milestones and provide
-          approved participants with assistance that can
-          help support their continued progress.
-        </p>
-
-        <p>
-          Eligibility, verification requirements, available
-          funding, and grant amounts will depend on the
-          foundation's approved program rules and resources.
-        </p>
-
+    <div class="rff-explorer" data-rff-explorer id="program-areas" aria-label="Program areas">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="program-areas-recovery-milestone-grants" data-tone="blue" data-icon="gift">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-areas-recovery-milestone-grants-btn" aria-expanded="false" aria-controls="program-areas-recovery-milestone-grants-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">01</span><span class="rff-title">Recovery Milestone Grants</span><span class="rff-summary">Recognizing meaningful recovery milestones.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-
-        <span class="card-number">02</span>
-
-        <h3>Employment & Career Support</h3>
-
-        <p>
-          Employment can be one of the strongest foundations
-          for independence.
-        </p>
-
-        <p>
-          This program area is intended to support needs such
-          as job readiness, work-related requirements,
-          certifications, training, and other barriers to
-          entering or returning to the workforce.
-        </p>
-
+      <div class="rff-panel" id="program-areas-recovery-milestone-grants-panel" role="region" aria-labelledby="program-areas-recovery-milestone-grants-btn" data-tone="blue" hidden>
+        <h4>Recovery Milestone Grants</h4>
+        <p>A grant program being developed to recognize meaningful recovery milestones and provide approved participants with assistance that can help support their continued progress.</p><p>Eligibility, verification requirements, available funding, and grant amounts will depend on the foundation's approved program rules and resources.</p>
+        <div class="rff-actions"><a class="rff-link" href="apply.html">Apply for support →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="program-areas-employment-career-support" data-tone="green" data-icon="briefcase">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-areas-employment-career-support-btn" aria-expanded="false" aria-controls="program-areas-employment-career-support-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">02</span><span class="rff-title">Employment &amp; Career Support</span><span class="rff-summary">Job readiness, certifications and training.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-
-        <span class="card-number">03</span>
-
-        <h3>Education & Skills</h3>
-
-        <p>
-          Recovery can open the door to an entirely new
-          direction in life.
-        </p>
-
-        <p>
-          Educational assistance may support eligible
-          opportunities such as vocational programs,
-          certifications, skills development, and other
-          pathways toward long-term self-sufficiency.
-        </p>
-
+      <div class="rff-panel" id="program-areas-employment-career-support-panel" role="region" aria-labelledby="program-areas-employment-career-support-btn" data-tone="green" hidden>
+        <h4>Employment &amp; Career Support</h4>
+        <p>Employment can be one of the strongest foundations for independence.</p><p>This program area is intended to support needs such as job readiness, work-related requirements, certifications, training, and other barriers to entering or returning to the workforce.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="program-areas-education-skills" data-tone="gold" data-icon="grad">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-areas-education-skills-btn" aria-expanded="false" aria-controls="program-areas-education-skills-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">03</span><span class="rff-title">Education &amp; Skills</span><span class="rff-summary">Vocational programs and skills development.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-
-        <span class="card-number">04</span>
-
-        <h3>Transportation Assistance</h3>
-
-        <p>
-          Getting to treatment, work, meetings, interviews,
-          education, and important appointments can become
-          difficult without reliable transportation.
-        </p>
-
-        <p>
-          Transportation assistance is intended to help
-          eligible participants overcome those barriers
-          when resources are available.
-        </p>
-
+      <div class="rff-panel" id="program-areas-education-skills-panel" role="region" aria-labelledby="program-areas-education-skills-btn" data-tone="gold" hidden>
+        <h4>Education &amp; Skills</h4>
+        <p>Recovery can open the door to an entirely new direction in life.</p><p>Educational assistance may support eligible opportunities such as vocational programs, certifications, skills development, and other pathways toward long-term self-sufficiency.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="program-areas-transportation-assistance" data-tone="blue" data-icon="car">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-areas-transportation-assistance-btn" aria-expanded="false" aria-controls="program-areas-transportation-assistance-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">04</span><span class="rff-title">Transportation Assistance</span><span class="rff-summary">Getting to work, meetings and appointments.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-
-        <span class="card-number">05</span>
-
-        <h3>Stability & Rebuilding</h3>
-
-        <p>
-          Starting over often comes with everyday obstacles
-          that can quickly become overwhelming.
-        </p>
-
-        <p>
-          This program area is being designed around
-          practical needs that contribute to stability,
-          independence, and continued recovery.
-        </p>
-
+      <div class="rff-panel" id="program-areas-transportation-assistance-panel" role="region" aria-labelledby="program-areas-transportation-assistance-btn" data-tone="blue" hidden>
+        <h4>Transportation Assistance</h4>
+        <p>Getting to treatment, work, meetings, interviews, education, and important appointments can become difficult without reliable transportation.</p><p>Transportation assistance is intended to help eligible participants overcome those barriers when resources are available.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="program-areas-stability-rebuilding" data-tone="green" data-icon="home">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-areas-stability-rebuilding-btn" aria-expanded="false" aria-controls="program-areas-stability-rebuilding-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">05</span><span class="rff-title">Stability &amp; Rebuilding</span><span class="rff-summary">Practical needs behind independence.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-
-        <span class="card-number">06</span>
-
-        <h3>Recovery Resources</h3>
-
-        <p>
-          No single organization can provide every resource
-          someone may need.
-        </p>
-
-        <p>
-          Recovery Forward Foundation intends to help connect
-          participants with appropriate community,
-          educational, employment, and recovery-oriented
-          resources whenever possible.
-        </p>
-
+      <div class="rff-panel" id="program-areas-stability-rebuilding-panel" role="region" aria-labelledby="program-areas-stability-rebuilding-btn" data-tone="green" hidden>
+        <h4>Stability &amp; Rebuilding</h4>
+        <p>Starting over often comes with everyday obstacles that can quickly become overwhelming.</p><p>This program area is being designed around practical needs that contribute to stability, independence, and continued recovery.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="program-areas-recovery-resources" data-tone="gold" data-icon="people">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="program-areas-recovery-resources-btn" aria-expanded="false" aria-controls="program-areas-recovery-resources-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">06</span><span class="rff-title">Recovery Resources</span><span class="rff-summary">Connections to community resources.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
+      <div class="rff-panel" id="program-areas-recovery-resources-panel" role="region" aria-labelledby="program-areas-recovery-resources-btn" data-tone="gold" hidden>
+        <h4>Recovery Resources</h4>
+        <p>No single organization can provide every resource someone may need.</p><p>Recovery Forward Foundation intends to help connect participants with appropriate community, educational, employment, and recovery-oriented resources whenever possible.</p>
+        <div class="rff-actions"><a class="rff-link" href="support.html">Partner with us →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
     </div>
+  </div>
 
   </section>
 
@@ -279,100 +234,90 @@
 
     </div>
 
+    <figure class="rff-scenic" style="--rff-ar:1657 / 550;">
     <img
       src="assets/images/recovery-application-assistance.png"
       alt="Recovery Forward Foundation proposed application and assistance process"
       class="program-journey-image"
       loading="lazy"
     >
-    <div class="card-grid">
-
-      <article class="portal-card">
-
-        <span class="card-number">01</span>
-
-        <h3>Application</h3>
-
-        <p>
-          A participant submits a privacy-conscious
-          application and receives a unique RCGI ID.
-        </p>
-
+  </figure>
+    <div class="rff-explorer" data-rff-explorer id="milestone-steps" aria-label="Milestone program steps">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="milestone-steps-application" data-tone="blue" data-icon="doc">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="milestone-steps-application-btn" aria-expanded="false" aria-controls="milestone-steps-application-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 1</span><span class="rff-title">Application</span><span class="rff-summary">Apply and receive an RCGI ID.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-
-        <span class="card-number">02</span>
-
-        <h3>Milestone Pending</h3>
-
-        <p>
-          The participant works toward the recovery
-          milestone required by the applicable program.
-        </p>
-
+      <div class="rff-panel" id="milestone-steps-application-panel" role="region" aria-labelledby="milestone-steps-application-btn" data-tone="blue" hidden>
+        <h4>Application</h4>
+        <p>A participant submits a privacy-conscious application and receives a unique RCGI ID.</p>
+        <div class="rff-actions"><a class="rff-link" href="apply.html">Begin application →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="milestone-steps-milestone-pending" data-tone="green" data-icon="calendar">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="milestone-steps-milestone-pending-btn" aria-expanded="false" aria-controls="milestone-steps-milestone-pending-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 2</span><span class="rff-title">Milestone Pending</span><span class="rff-summary">Working toward the required milestone.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-
-        <span class="card-number">03</span>
-
-        <h3>Verification</h3>
-
-        <p>
-          An approved verification process confirms that
-          applicable program requirements have been met.
-        </p>
-
+      <div class="rff-panel" id="milestone-steps-milestone-pending-panel" role="region" aria-labelledby="milestone-steps-milestone-pending-btn" data-tone="green" hidden>
+        <h4>Milestone Pending</h4>
+        <p>The participant works toward the recovery milestone required by the applicable program.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="milestone-steps-verification" data-tone="gold" data-icon="shield">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="milestone-steps-verification-btn" aria-expanded="false" aria-controls="milestone-steps-verification-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 3</span><span class="rff-title">Verification</span><span class="rff-summary">Requirements confirmed through an approved process.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-
-        <span class="card-number">04</span>
-
-        <h3>Eligibility Review</h3>
-
-        <p>
-          Meeting a milestone can make an applicant eligible
-          for consideration. Eligibility does not by itself
-          guarantee funding.
-        </p>
-
+      <div class="rff-panel" id="milestone-steps-verification-panel" role="region" aria-labelledby="milestone-steps-verification-btn" data-tone="gold" hidden>
+        <h4>Verification</h4>
+        <p>An approved verification process confirms that applicable program requirements have been met.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="milestone-steps-eligibility-review" data-tone="blue" data-icon="search">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="milestone-steps-eligibility-review-btn" aria-expanded="false" aria-controls="milestone-steps-eligibility-review-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 4</span><span class="rff-title">Eligibility Review</span><span class="rff-summary">Eligible does not mean funded.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-
-        <span class="card-number">05</span>
-
-        <h3>Approval</h3>
-
-        <p>
-          Eligible assistance is reviewed under the
-          foundation's program rules, available resources,
-          and authorization procedures.
-        </p>
-
+      <div class="rff-panel" id="milestone-steps-eligibility-review-panel" role="region" aria-labelledby="milestone-steps-eligibility-review-btn" data-tone="blue" hidden>
+        <h4>Eligibility Review</h4>
+        <p>Meeting a milestone can make an applicant eligible for consideration. Eligibility does not by itself guarantee funding.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="milestone-steps-approval" data-tone="green" data-icon="check">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="milestone-steps-approval-btn" aria-expanded="false" aria-controls="milestone-steps-approval-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 5</span><span class="rff-title">Approval</span><span class="rff-summary">Reviewed under program rules and resources.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
-
-      <article class="portal-card">
-
-        <span class="card-number">06</span>
-
-        <h3>Forward</h3>
-
-        <p>
-          Approved assistance can then be documented and
-          provided through the applicable program process.
-        </p>
-
+      <div class="rff-panel" id="milestone-steps-approval-panel" role="region" aria-labelledby="milestone-steps-approval-btn" data-tone="green" hidden>
+        <h4>Approval</h4>
+        <p>Eligible assistance is reviewed under the foundation's program rules, available resources, and authorization procedures.</p>
+        <div class="rff-actions"><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="milestone-steps-forward" data-tone="gold" data-icon="sprout">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="milestone-steps-forward-btn" aria-expanded="false" aria-controls="milestone-steps-forward-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">Step 6</span><span class="rff-title">Forward</span><span class="rff-summary">Approved assistance is documented.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
       </article>
-
+      <div class="rff-panel" id="milestone-steps-forward-panel" role="region" aria-labelledby="milestone-steps-forward-btn" data-tone="gold" hidden>
+        <h4>Forward</h4>
+        <p>Approved assistance can then be documented and provided through the applicable program process.</p>
+        <div class="rff-actions"><a class="rff-link" href="transparency.html">Grant registry →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
     </div>
+  </div>
 
   </section>
 
@@ -386,12 +331,14 @@
       <p class="eyebrow">PRIVACY-CONSCIOUS BY DESIGN</p>
 
       <h2>Your RCGI ID</h2>
-<img
+<figure class="rff-scenic" style="--rff-ar:1657 / 361;">
+    <img
   src="assets/images/recovery-privacy-accountability.png"
   alt="Privacy and accountability at Recovery Forward Foundation"
   class="program-journey-image"
   loading="lazy"
 >
+  </figure>
 
       <p>
         Recovery Forward Foundation's application system is

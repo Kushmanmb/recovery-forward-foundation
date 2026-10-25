@@ -13,6 +13,9 @@
 
   <link rel="stylesheet" href="css/style.css?v=4action-cards-1">
   <link rel="stylesheet" href="css/seasonal.css?v=4">
+  <link rel="stylesheet" href="css/interactive.css?v=1">
+  <script src="js/interactive-cards.js?v=1" defer></script>
+  <noscript><style>.rff-panel[hidden]{display:block !important}.rff-close{display:none}</style></noscript>
   <script src="js/seasonal-theme.js?v=4" defer></script>
 </head>
 
@@ -100,113 +103,105 @@
   </p>
 
 </section>
-<img
+<figure class="rff-scenic" style="--rff-ar:1657 / 493;">
+    <img
   src="assets/images/recovery-get-involved.png"
   alt="Get involved with Recovery Forward Foundation"
   class="program-journey-image"
   loading="lazy"
 >
+  </figure>
 
-<section class="portal">
-
-  <article class="portal-card featured">
-
-    <div class="card-icon">♥</div>
-
-    <div class="card-content">
-
-      <p class="card-number">01 • DONATE</p>
-
-      <h3>Make a Difference</h3>
-
-      <p>
-        Financial support helps Recovery Forward Foundation
-        develop recovery assistance programs and expand
-        opportunities for people working toward stability.
-      </p>
-
-      <p class="privacy-note">
-        Secure donation options are being finalized.
-        We will publish official donation instructions here
-        when they are ready.
-      </p>
-
-      <a
-        href="mailto:contact@recoveryforwardfoundation.org?subject=Donation%20Information"
-        class="card-button"
-      >
-        REQUEST DONATION INFORMATION →
-      </a>
-
+<section class="rff-block" id="ways-to-help" aria-label="Ways to support Recovery Forward Foundation">
+  <div class="rff-explorer" data-rff-explorer id="ways-to-help-cards" aria-label="Ways to support Recovery Forward Foundation">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="ways-to-help-cards-make-a-difference" data-tone="blue" data-icon="gift">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="ways-to-help-cards-make-a-difference-btn" aria-expanded="false" aria-controls="ways-to-help-cards-make-a-difference-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">01 • Donate</span><span class="rff-title">Make a Difference</span><span class="rff-summary">Support recovery assistance programs.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="ways-to-help-cards-make-a-difference-panel" role="region" aria-labelledby="ways-to-help-cards-make-a-difference-btn" data-tone="blue" hidden>
+        <h4>Make a Difference</h4>
+        <p>Financial support helps Recovery Forward Foundation develop recovery assistance programs and expand opportunities for people working toward stability.</p><p class="rff-note">Secure donation options are being finalized. We will publish official donation instructions here when they are ready.</p>
+        <div class="rff-actions"><a class="rff-link" href="mailto:contact@recoveryforwardfoundation.org?subject=Donation%20Information">REQUEST DONATION INFORMATION →</a><a class="rff-link" href="#crypto-donations">Cryptocurrency details ↓</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="ways-to-help-cards-become-a-partner" data-tone="green" data-icon="link">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="ways-to-help-cards-become-a-partner-btn" aria-expanded="false" aria-controls="ways-to-help-cards-become-a-partner-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">02 • Partner</span><span class="rff-title">Become a Partner</span><span class="rff-summary">Organizations and employers.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="ways-to-help-cards-become-a-partner-panel" role="region" aria-labelledby="ways-to-help-cards-become-a-partner-btn" data-tone="green" hidden>
+        <h4>Become a Partner</h4>
+        <p>Recovery organizations, treatment providers, employers, businesses, nonprofits and community organizations can work with us to expand support and opportunity.</p>
+        <div class="rff-actions"><a class="rff-link" href="mailto:contact@recoveryforwardfoundation.org?subject=Recovery%20Forward%20Partnership%20Inquiry">BECOME A PARTNER →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="ways-to-help-cards-sponsor-a-program" data-tone="gold" data-icon="star">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="ways-to-help-cards-sponsor-a-program-btn" aria-expanded="false" aria-controls="ways-to-help-cards-sponsor-a-program-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">03 • Sponsor</span><span class="rff-title">Sponsor a Program</span><span class="rff-summary">Fund a specific initiative.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="ways-to-help-cards-sponsor-a-program-panel" role="region" aria-labelledby="ways-to-help-cards-sponsor-a-program-btn" data-tone="gold" hidden>
+        <h4>Sponsor a Program</h4>
+        <p>Organizations and supporters interested in funding a specific Recovery Forward initiative can contact the Foundation to discuss sponsorship opportunities.</p>
+        <div class="rff-actions"><a class="rff-link" href="mailto:contact@recoveryforwardfoundation.org?subject=Program%20Sponsorship%20Inquiry">DISCUSS SPONSORSHIP →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="ways-to-help-cards-volunteer" data-tone="blue" data-icon="people">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="ways-to-help-cards-volunteer-btn" aria-expanded="false" aria-controls="ways-to-help-cards-volunteer-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">04 • Volunteer</span><span class="rff-title">Volunteer</span><span class="rff-summary">Share your time and skills.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="ways-to-help-cards-volunteer-panel" role="region" aria-labelledby="ways-to-help-cards-volunteer-btn" data-tone="blue" hidden>
+        <h4>Volunteer</h4>
+        <p>Formal volunteer opportunities are not listed yet. If you would like to offer your time or skills as the foundation grows, send us a note.</p>
+        <div class="rff-actions"><a class="rff-link" href="mailto:contact@recoveryforwardfoundation.org?subject=Volunteer%20Inquiry">ASK ABOUT VOLUNTEERING →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="ways-to-help-cards-spread-awareness" data-tone="green" data-icon="megaphone">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="ways-to-help-cards-spread-awareness-btn" aria-expanded="false" aria-controls="ways-to-help-cards-spread-awareness-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">05 • Spread the Word</span><span class="rff-title">Spread Awareness</span><span class="rff-summary">Help hope reach further.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="ways-to-help-cards-spread-awareness-panel" role="region" aria-labelledby="ways-to-help-cards-spread-awareness-btn" data-tone="green" hidden>
+        <h4>Spread Awareness</h4>
+        <p>Sharing the mission helps more people learn that recovery is possible and that support is being built.</p>
+        <div class="rff-actions"><a class="rff-link" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Frecoveryforwardfoundation.org%2F" target="_blank" rel="noopener noreferrer">Share on Facebook</a><a class="rff-link" href="https://x.com/recoveryfwdfdn" target="_blank" rel="noopener noreferrer">Follow on X</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="ways-to-help-cards-get-involved-today" data-tone="gold" data-icon="mail">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="ways-to-help-cards-get-involved-today-btn" aria-expanded="false" aria-controls="ways-to-help-cards-get-involved-today-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-kicker">06 • Get Involved</span><span class="rff-title">Get Involved Today</span><span class="rff-summary">Questions or ideas? Reach out.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="ways-to-help-cards-get-involved-today-panel" role="region" aria-labelledby="ways-to-help-cards-get-involved-today-btn" data-tone="gold" hidden>
+        <h4>Get Involved Today</h4>
+        <p>Whether you want to donate, partner, sponsor, volunteer or simply learn more, we'd like to hear from you.</p>
+        <div class="rff-actions"><a class="rff-link" href="mailto:contact@recoveryforwardfoundation.org?subject=Recovery%20Forward%20Foundation%20Inquiry">CONTACT THE FOUNDATION →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
     </div>
+  </div>
+</section>
 
-  </article>
 
-
-  <article class="portal-card">
-
-    <div class="card-icon">🤝</div>
-
-    <div class="card-content">
-
-      <p class="card-number">02 • PARTNER</p>
-
-      <h3>Become a Partner</h3>
-<img
+<figure class="rff-scenic" style="--rff-ar:1657 / 550;">
+    <img
   src="assets/images/recovery-volunteer-partnerships.png"
   alt="Volunteers and community partnerships supporting recovery"
   class="program-journey-image"
   loading="lazy"
 >
-      <p>
-        Recovery organizations, treatment providers, employers,
-        businesses, nonprofits and community organizations can
-        work with us to expand support and opportunity.
-      </p>
+  </figure>
 
-      <a
-        href="mailto:contact@recoveryforwardfoundation.org?subject=Recovery%20Forward%20Partnership%20Inquiry"
-        class="card-button"
-      >
-        BECOME A PARTNER →
-      </a>
-
-    </div>
-
-  </article>
-
-
-  <article class="portal-card">
-
-    <div class="card-icon">★</div>
-
-    <div class="card-content">
-
-      <p class="card-number">03 • SPONSOR</p>
-
-      <h3>Sponsor a Program</h3>
-
-      <p>
-        Organizations and supporters interested in funding
-        a specific Recovery Forward initiative can contact
-        the Foundation to discuss sponsorship opportunities.
-      </p>
-
-      <a
-        href="mailto:contact@recoveryforwardfoundation.org?subject=Program%20Sponsorship%20Inquiry"
-        class="card-button"
-      >
-        DISCUSS SPONSORSHIP →
-      </a>
-
-    </div>
-
-  </article>
-
-</section>
-
-
-<section class="mission-section">
+<section class="mission-section rff-approach">
 
   <div>
 
@@ -219,35 +214,45 @@
 
   </div>
 
-  <div class="mission-grid">
-
-    <article>
-      <span>01</span>
-      <h3>Responsible Assistance</h3>
-      <p>
-        Resources should be connected to meaningful goals
-        and responsible program standards.
-      </p>
-    </article>
-
-    <article>
-      <span>02</span>
-      <h3>Privacy First</h3>
-      <p>
-        We are building systems designed to minimize
-        unnecessary collection of sensitive information.
-      </p>
-    </article>
-
-    <article>
-      <span>03</span>
-      <h3>Transparency</h3>
-      <p>
-        We want supporters and participants to understand
-        how programs operate and where assistance goes.
-      </p>
-    </article>
-
+  <div class="rff-explorer" data-rff-explorer id="approach" aria-label="Our approach">
+    <div class="rff-grid rff-cols-3">
+      <article class="rff-card" id="approach-responsible-assistance" data-tone="blue" data-icon="scale">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="approach-responsible-assistance-btn" aria-expanded="false" aria-controls="approach-responsible-assistance-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Responsible Assistance</span><span class="rff-summary">Resources tied to meaningful goals.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="approach-responsible-assistance-panel" role="region" aria-labelledby="approach-responsible-assistance-btn" data-tone="blue" hidden>
+        <h4>Responsible Assistance</h4>
+        <p>Resources should be connected to meaningful goals and responsible program standards.</p>
+        <div class="rff-actions"><a class="rff-link" href="programs.html">Program areas →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="approach-privacy-first" data-tone="green" data-icon="lock">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="approach-privacy-first-btn" aria-expanded="false" aria-controls="approach-privacy-first-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Privacy First</span><span class="rff-summary">Minimize sensitive data collection.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="approach-privacy-first-panel" role="region" aria-labelledby="approach-privacy-first-btn" data-tone="green" hidden>
+        <h4>Privacy First</h4>
+        <p>We are building systems designed to minimize unnecessary collection of sensitive information.</p>
+        <div class="rff-actions"><a class="rff-link" href="mission.html">Privacy &amp; accountability →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+      <article class="rff-card" id="approach-transparency" data-tone="gold" data-icon="eye">
+        <h3 class="rff-card-heading"><button type="button" class="rff-trigger" id="approach-transparency-btn" aria-expanded="false" aria-controls="approach-transparency-panel">
+          <span class="rff-icon" aria-hidden="true"></span>
+          <span class="rff-card-text"><span class="rff-title">Transparency</span><span class="rff-summary">Understand how programs operate.</span></span>
+          <span class="rff-chevron" aria-hidden="true"></span>
+        </button></h3>
+      </article>
+      <div class="rff-panel" id="approach-transparency-panel" role="region" aria-labelledby="approach-transparency-btn" data-tone="gold" hidden>
+        <h4>Transparency</h4>
+        <p>We want supporters and participants to understand how programs operate and where assistance goes.</p>
+        <div class="rff-actions"><a class="rff-link" href="transparency.html">Transparency center →</a><button type="button" class="rff-close">Close</button></div>
+      </div>
+    </div>
   </div>
 
 </section>
@@ -277,12 +282,14 @@
   <p class="section-kicker">LET'S WORK TOGETHER</p>
 
   <h2>Have an idea?</h2>
-  <img
+  <figure class="rff-scenic" style="--rff-ar:1657 / 674;">
+    <img
     src="assets/images/recovery-thank-you-supporters.png"
     alt="Thank you to everyone supporting Recovery Forward Foundation"
     class="program-journey-image"
     loading="lazy"
   >
+  </figure>
   <p>
     If you are interested in donating, partnering, sponsoring
     a program, volunteering, or helping Recovery Forward Foundation
