@@ -1646,3 +1646,45 @@ body .portal-card:not(:last-child) {
   .hero .hero-links .hero-link { transition: none; }
   .hero .hero-links .hero-link:hover { transform: none; }
 }
+
+
+/* Recovery barriers poster: an accessible, responsive clickable hotspot over
+   the green 'See how we help' button already printed into the JPEG. */
+.barriers-support { scroll-margin-top: 88px; }
+.barriers-support-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+  gap: clamp(20px, 4vw, 52px);
+  align-items: start;
+}
+.barriers-poster { position: relative; width: 100%; max-width: 420px; }
+.barriers-poster img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 15px;
+  box-shadow: 0 15px 45px rgba(0,0,0,.3);
+}
+.barriers-poster-cta {
+  position: absolute;
+  display: block;
+  left: 5.4%;
+  top: 86.5%;
+  width: 41.5%;
+  height: 7.2%;
+  z-index: 1;
+  cursor: pointer;
+  border-radius: 15px;
+  text-decoration: none;
+}
+.barriers-poster-cta:hover { outline: 2px solid rgba(255,255,255,.8); outline-offset: 2px; }
+.barriers-poster-cta:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.barriers-support-copy { min-width: 0; scroll-margin-top: 88px; }
+.barriers-support-copy h2 { margin-top: 0; }
+.barriers-support-copy ul { padding-left: 1.4rem; }
+.barriers-support-copy li { margin-bottom: .7rem; }
+.barriers-support-notice { font-size: .95rem; opacity: .85; }
+@media (max-width: 780px) {
+  .barriers-support-grid { grid-template-columns: minmax(0, 1fr); }
+  .barriers-poster { margin: 0 auto; }
+}
