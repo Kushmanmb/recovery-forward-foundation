@@ -177,7 +177,7 @@ test("intake stores a validated submission with an RCGI reference and a content-
   assert.equal(response.headers.get("cache-control"), "no-store");
   assert.equal(registryRequest.url.pathname, "/integration/participants/RCGI-0123456789ab/exists");
   assert.equal(registryRequest.url.search, "");
-  assert.equal(registryRequest.options.headers.authorization.split(" ")[1], SERVER_REGISTRY_TOKEN);
+  assert.equal(registryRequest.options.headers.authorization, `Bearer ${SERVER_REGISTRY_TOKEN}`);
   assert.equal(registryRequest.options.redirect, "manual");
   const row = db.database.prepare("SELECT * FROM applications").get();
   assert.equal(row.rcgi, "RCGI-0123456789ab");
@@ -283,6 +283,30 @@ test("intake fails closed when the Registry existence token is missing", async (
   assert.equal(response.status, 503);
   assert.equal(registryCalls, 0);
   assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM applications").get().c, 0);
+});
+
+test("Registry token is never sent outside the fixed HTTPS existence endpoint", async () => {
+  for (const verifyUrl of [
+    "http://api.recoveryforwardfoundation.org/integration/participants",
+    "https://example.org/integration/participants",
+    "https://api.recoveryforwardfoundation.org:8443/integration/participants",
+    "https://api.recoveryforwardfoundation.org/v1/participants",
+    "https://api.recoveryforwardfoundation.org/integration/participants?debug=true",
+    "https://user:password@api.recoveryforwardfoundation.org/integration/participants",
+  ]) {
+    const db = makeDb();
+    let registryCalls = 0;
+    const response = await intake(db, validBody(), {
+      registry: async () => {
+        registryCalls += 1;
+        return Response.json({ exists: true });
+      },
+      env: { REGISTRY_RCGI_VERIFY_URL: verifyUrl },
+    });
+    assert.equal(response.status, 503, verifyUrl);
+    assert.equal(registryCalls, 0, verifyUrl);
+    assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM applications").get().c, 0, verifyUrl);
+  }
 });
 
 test("malformed Registry responses fail closed without storing", async () => {

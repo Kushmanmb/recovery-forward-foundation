@@ -108,7 +108,10 @@ async function readRegistryJson(response) {
 }
 
 async function verifyRegistryRcgi(rcgi, env) {
-  if (!env.REGISTRY_RCGI_VERIFY_URL || !env.REGISTRY_EXISTENCE_TOKEN) throw new Error("registry verification unavailable");
+  const token = env.REGISTRY_EXISTENCE_TOKEN;
+  if (!env.REGISTRY_RCGI_VERIFY_URL || typeof token !== "string" || !token.trim()) {
+    throw new Error("registry verification unavailable");
+  }
   let url;
   try {
     url = new URL(env.REGISTRY_RCGI_VERIFY_URL);
@@ -116,13 +119,14 @@ async function verifyRegistryRcgi(rcgi, env) {
     throw new Error("registry verification unavailable");
   }
   if (url.protocol !== "https:" || url.hostname !== "api.recoveryforwardfoundation.org"
-    || url.username || url.password || url.search || url.hash) {
+    || url.port || url.username || url.password || url.search || url.hash
+    || url.pathname.replace(/\/+$/, "") !== "/integration/participants") {
     throw new Error("registry verification unavailable");
   }
   url.pathname = `${url.pathname.replace(/\/+$/, "")}/${encodeURIComponent(rcgi)}/exists`;
   const response = await fetch(url, {
     method: "GET",
-    headers: { accept: "application/json", authorization: "Bearer " + env.REGISTRY_EXISTENCE_TOKEN },
+    headers: { accept: "application/json", authorization: `Bearer ${token}` },
     redirect: "manual",
     signal: AbortSignal.timeout(5000),
   });
