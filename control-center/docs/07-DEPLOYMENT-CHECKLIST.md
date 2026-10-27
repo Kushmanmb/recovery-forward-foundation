@@ -4,7 +4,7 @@ Status: **NOT approved for deployment.** Nothing here has been run. Intake stays
 
 ## Deployment blockers
 - [ ] Registry owners confirm `GET /integration/participants/{RCGI-ID}/exists` and the `{"exists": true|false}` response. This is an **unverified proposed contract**.
-- [ ] Registry owners confirm `REGISTRY_INTEGRATION_TOKEN` is read-only and least-privilege.
+- [ ] Registry owners confirm `REGISTRY_EXISTENCE_TOKEN` is read-only and least-privilege, and provide the same secret value to the Registry and Foundation intake Worker through their secret stores.
 - [ ] Cloudflare Bot Management, WAF managed challenge and network rate limits enabled on the intake hostname.
 - [ ] Data retention and deletion policy defined for free-text answers (no field-level encryption yet).
 - [ ] Decision on a separate intake database/queue (both Workers share one D1 database).
@@ -31,7 +31,7 @@ Status: **NOT approved for deployment.** Nothing here has been run. Intake stays
 
 ## 4. Cloudflare secrets and configuration
 - [ ] `INTAKE_RATE_LIMIT_SECRET`: random, at least 32 characters; set with `wrangler secret put` on the intake Worker only.
-- [ ] `REGISTRY_INTEGRATION_TOKEN`: set with `wrangler secret put` on the intake Worker only.
+- [ ] `REGISTRY_EXISTENCE_TOKEN`: set with `wrangler secret put` on the intake Worker using the same read-only value configured in the Registry; never expose the value.
 - [ ] `REGISTRY_RCGI_VERIFY_URL`: `https://api.recoveryforwardfoundation.org/integration/participants` (fixed host enforced in code).
 - [ ] Never place secrets in source, `wrangler*.toml`, browser code, logs, URLs, issues, or PRs. Rotate any secret that is exposed.
 

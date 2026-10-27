@@ -108,7 +108,7 @@ async function readRegistryJson(response) {
 }
 
 async function verifyRegistryRcgi(rcgi, env) {
-  if (!env.REGISTRY_RCGI_VERIFY_URL || !env.REGISTRY_INTEGRATION_TOKEN) throw new Error("registry verification unavailable");
+  if (!env.REGISTRY_RCGI_VERIFY_URL || !env.REGISTRY_EXISTENCE_TOKEN) throw new Error("registry verification unavailable");
   let url;
   try {
     url = new URL(env.REGISTRY_RCGI_VERIFY_URL);
@@ -122,7 +122,7 @@ async function verifyRegistryRcgi(rcgi, env) {
   url.pathname = `${url.pathname.replace(/\/+$/, "")}/${encodeURIComponent(rcgi)}/exists`;
   const response = await fetch(url, {
     method: "GET",
-    headers: { accept: "application/json", authorization: "Bearer " + env.REGISTRY_INTEGRATION_TOKEN },
+    headers: { accept: "application/json", authorization: "Bearer " + env.REGISTRY_EXISTENCE_TOKEN },
     redirect: "manual",
     signal: AbortSignal.timeout(5000),
   });

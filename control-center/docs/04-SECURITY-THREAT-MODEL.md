@@ -24,8 +24,8 @@
 - [ ] Bootstrap works only for the configured President when the member table is empty; policy acknowledgement is recorded; uninvited identities cannot register.
 - [ ] Every API route has a role-authorization test; session expiry, logout revocation, suspended-account denial, and CSRF checks are verified.
 - [ ] Registry owners approve the exact read-only endpoint/schema and least-privilege token; an integration test confirms no applicant data or token reaches the browser or logs.
-- [ ] Registry owners verify the proposed `GET /integration/participants/{RCGI-ID}/exists` endpoint and `{"exists":true|false}` response, then approve least-privilege access for `REGISTRY_INTEGRATION_TOKEN`; staging proves valid, nonexistent, malformed, unauthorized, and unavailable cases fail safely.
-- [ ] Only after that verification, set `REGISTRY_RCGI_VERIFY_URL`, `REGISTRY_INTEGRATION_TOKEN`, and a random `INTAKE_RATE_LIMIT_SECRET` in the intake Worker environment; verify secrets never appear in browser responses, logs, or URLs.
+- [ ] Registry owners verify the proposed `GET /integration/participants/{RCGI-ID}/exists` endpoint and `{"exists":true|false}` response, then approve the read-only, least-privilege `REGISTRY_EXISTENCE_TOKEN`; staging proves valid, nonexistent, malformed, unauthorized, and unavailable cases fail safely.
+- [ ] Only after that verification, set the same `REGISTRY_EXISTENCE_TOKEN` value in the Registry and intake Worker secret stores, along with a random `INTAKE_RATE_LIMIT_SECRET`; verify secrets never appear in browser responses, logs, or URLs.
 - [ ] Configure and test Cloudflare Bot Management, WAF managed challenge, and network-level rate limits for the public intake hostname; verify the Worker receives the expected bot score.
 - [ ] Apply migrations `0004_applications.sql` and `0005_intake_abuse_controls.sql` only to the approved environment after backup and President authorization. `0003_board_access.sql` is the main-branch board-access migration and must not be overwritten.
 - [ ] D1 backups, retention, restore drill, audit export/retention, monitoring, and incident response are approved.

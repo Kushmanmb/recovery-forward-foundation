@@ -8,7 +8,7 @@ import { validateSubmission } from "../src/applications.js";
 
 const ORIGIN = "https://admin.example.org";
 const SITE = "https://recoveryforwardfoundation.org";
-const SERVER_REGISTRY_TOKEN = ["synthetic", "registry", "token"].join("-");
+const SERVER_REGISTRY_TOKEN = ["synthetic", "registry", "existence", "token"].join("-");
 const encode = (value) => Buffer.from(JSON.stringify(value)).toString("base64url");
 let counter = 0;
 
@@ -92,7 +92,7 @@ async function intake(db, body, {
       DB: db,
       INTAKE_RATE_LIMIT_SECRET: "synthetic-intake-rate-limit-secret-0123456789",
       REGISTRY_RCGI_VERIFY_URL: "https://api.recoveryforwardfoundation.org/integration/participants",
-      REGISTRY_INTEGRATION_TOKEN: SERVER_REGISTRY_TOKEN,
+      REGISTRY_EXISTENCE_TOKEN: SERVER_REGISTRY_TOKEN,
       ...envOverrides,
     });
   } finally {
@@ -267,6 +267,21 @@ test("unauthorized Registry access fails closed and caller credentials are never
   });
   assert.equal(response.status, 503);
   assert.ok(!(await response.text()).includes("synthetic-registry-token"));
+  assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM applications").get().c, 0);
+});
+
+test("intake fails closed when the Registry existence token is missing", async () => {
+  const db = makeDb();
+  let registryCalls = 0;
+  const response = await intake(db, validBody(), {
+    registry: async () => {
+      registryCalls += 1;
+      return Response.json({ exists: true });
+    },
+    env: { REGISTRY_EXISTENCE_TOKEN: undefined },
+  });
+  assert.equal(response.status, 503);
+  assert.equal(registryCalls, 0);
   assert.equal(db.database.prepare("SELECT COUNT(*) AS c FROM applications").get().c, 0);
 });
 
