@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 const html = readFileSync(new URL("../../docs/apply.html", import.meta.url), "utf8");
+const stagingHtml = readFileSync(new URL("../../docs/apply-staging.html", import.meta.url), "utf8");
 const block = html.match(/\/\/ INTAKE-BEGIN([\s\S]*?)\/\/ INTAKE-END/)[1];
 const docs = (name) => readFileSync(new URL(`../docs/${name}`, import.meta.url), "utf8");
 
@@ -17,6 +18,13 @@ const payload = { rcgi: "RCGI-0123456789ab", goals: "secret answer" };
 test("intake is dormant in the shipped page", () => {
   assert.match(html, /const INTAKE_URL = null;/);
   assert.equal(html.match(/const INTAKE_URL\s*=/g).length, 1);
+});
+
+test("staging Pages application exists and cannot register or submit intake", () => {
+  assert.match(stagingHtml, /STAGING TEST ENVIRONMENT/);
+  assert.match(stagingHtml, /registration remains disabled/);
+  assert.match(stagingHtml, /does not create RCGI IDs or submit application answers/);
+  assert.doesNotMatch(stagingHtml, /<form\b|fetch\s*\(|api\.recoveryforwardfoundation\.org/i);
 });
 
 test("disabled intake never calls fetch or transmits answers", async () => {
